@@ -1,16 +1,27 @@
-import type { ProjectType } from '@/features/projects/types/project.types';
 import { create } from 'zustand';
 
-type ProjectState = {
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
-  projects: ProjectType[];
-  setProjects: (projects: ProjectType[]) => void;
+import type { ProjectFilters } from '@/features/projects/types/project.types';
+
+type ProjectUIState = {
+  filters: ProjectFilters;
+  wizardStep: number;
+  setFilters: (f: Partial<ProjectFilters>) => void;
+  resetFilters: () => void;
+  setWizardStep: (n: number) => void;
 };
 
-export const useProjectStore = create<ProjectState>((set) => ({
-  selectedId: null,
-  setSelectedId: (id) => set({ selectedId: id }),
-  projects: [],
-  setProjects: (projects) => set({ projects }),
+const defaultFilters: ProjectFilters = {
+  sortBy: 'updatedAt',
+  sortDir: 'desc',
+};
+
+export const useProjectStore = create<ProjectUIState>((set) => ({
+  filters: defaultFilters,
+  wizardStep: 0,
+  setFilters: (f) =>
+    set((s) => ({
+      filters: { ...s.filters, ...f },
+    })),
+  resetFilters: () => set({ filters: defaultFilters }),
+  setWizardStep: (n) => set({ wizardStep: n }),
 }));

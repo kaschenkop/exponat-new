@@ -41,6 +41,10 @@ func main() {
 	dashboardSvc := services.NewDashboardService(repo, redisCache)
 	dashboardHandlers := handlers.NewDashboardHandlers(dashboardSvc)
 
+	projectRepo := repository.NewProjectRepository(database)
+	projectSvc := services.NewProjectService(projectRepo, redisCache)
+	projectHandlers := handlers.NewProjectHandlers(projectSvc)
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(ginLogger())
@@ -56,6 +60,20 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	r.GET("/api/projects/ws", projectHandlers.CollaborationWS(redisCache))
+
+	projects := r.Group("/api/projects")
+	projects.Use(middleware.AuthMiddleware())
+	{
+		projects.GET("", projectHandlers.List)
+		projects.POST("", projectHandlers.Create)
+		projects.PATCH("/:id/status", projectHandlers.PatchStatus)
+		projects.PATCH("/:id/phases/:phaseId", projectHandlers.PatchPhase)
+		projects.GET("/:id", projectHandlers.Get)
+		projects.PATCH("/:id", projectHandlers.Update)
+		projects.DELETE("/:id", projectHandlers.Delete)
+	}
 
 	api := r.Group("/api/dashboard")
 	api.Use(middleware.AuthMiddleware())

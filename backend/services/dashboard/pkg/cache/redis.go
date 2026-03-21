@@ -71,3 +71,17 @@ func (c *RedisCache) Set(ctx context.Context, key string, v any, ttl time.Durati
 	}
 	return c.client.Set(ctx, key, b, ttl).Err()
 }
+
+func (c *RedisCache) Publish(ctx context.Context, channel string, message string) error {
+	if c == nil || c.client == nil {
+		return nil
+	}
+	return c.client.Publish(ctx, channel, message).Err()
+}
+
+func (c *RedisCache) Subscribe(ctx context.Context, channels ...string) *redis.PubSub {
+	if c == nil || c.client == nil {
+		return nil
+	}
+	return c.client.Subscribe(ctx, channels...)
+}

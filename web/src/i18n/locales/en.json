@@ -84,7 +84,11 @@
         "status": {
           "draft": "Draft",
           "active": "Active",
-          "archived": "Archived"
+          "archived": "Archived",
+          "planning": "Planning",
+          "on_hold": "On hold",
+          "completed": "Completed",
+          "cancelled": "Cancelled"
         }
       },
       "budgetChart": {
@@ -116,6 +120,143 @@
         "today": "Today",
         "yesterday": "Yesterday"
       }
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "List, filters, and exhibition project management.",
+    "new": "New project",
+    "kanbanLink": "Kanban",
+    "loading": "Loading…",
+    "error": "Could not load projects",
+    "retry": "Retry",
+    "card": {
+      "progress": "Progress"
+    },
+    "list": {
+      "empty": "No projects match the filters"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Name or description…",
+      "sortBy": "Sort by",
+      "sortDir": "Order",
+      "sort": {
+        "updatedAt": "Updated",
+        "name": "Name",
+        "budget": "Budget",
+        "endDate": "End date",
+        "startDate": "Start date"
+      },
+      "dir": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "status": "Statuses",
+      "type": "Type",
+      "allTypes": "All types",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "budgetMin": "Budget min",
+      "budgetMax": "Budget max",
+      "reset": "Reset filters"
+    },
+    "status": {
+      "draft": "Draft",
+      "planning": "Planning",
+      "active": "Active",
+      "on_hold": "On hold",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "museum": "Museum",
+      "corporate": "Corporate",
+      "expo_forum": "Expo / forum",
+      "other": "Other"
+    },
+    "phaseStatus": {
+      "pending": "Pending",
+      "in_progress": "In progress",
+      "completed": "Done"
+    },
+    "role": {
+      "manager": "Manager",
+      "coordinator": "Coordinator",
+      "designer": "Designer",
+      "logistics": "Logistics",
+      "other": "Other"
+    },
+    "wizard": {
+      "step1": "Basics",
+      "step2": "Timeline & budget",
+      "step3": "Location & team",
+      "next": "Next",
+      "back": "Back"
+    },
+    "form": {
+      "name": "Name",
+      "description": "Description",
+      "type": "Project type",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "budget": "Budget (RUB)",
+      "venue": "Venue",
+      "address": "Address",
+      "city": "City",
+      "country": "Country",
+      "manager": "Project manager",
+      "teamOptional": "Team (optional)",
+      "submit": "Create project",
+      "status": "Status"
+    },
+    "newPage": {
+      "title": "New project",
+      "subtitle": "Project creation wizard"
+    },
+    "detail": {
+      "eyebrow": "Project",
+      "back": "Back to list",
+      "edit": "Edit",
+      "kanban": "Kanban",
+      "infoTitle": "Information",
+      "dates": "Period",
+      "location": "Location",
+      "metrics": "Metrics",
+      "exhibits": "Exhibits",
+      "participants": "Participants",
+      "timelineTitle": "Phases",
+      "timelineEmpty": "No phases defined",
+      "teamTitle": "Team",
+      "teamEmpty": "No team members",
+      "budgetTitle": "Budget",
+      "budgetTotal": "Total",
+      "budgetSpent": "Spent",
+      "budgetHint": "{pct}% of budget used",
+      "filesTitle": "Files",
+      "filesEmpty": "No files attached",
+      "activityTitle": "Activity",
+      "activityEmpty": "No activity yet"
+    },
+    "edit": {
+      "title": "Edit",
+      "autoSave": "Changes save automatically",
+      "reset": "Reset"
+    },
+    "delete": {
+      "title": "Delete project?",
+      "description": "Project “{name}” will be permanently removed.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "kanban": {
+      "title": "Project kanban",
+      "subtitle": "Drag cards between status columns",
+      "open": "Open"
+    },
+    "gantt": {
+      "title": "Phase timeline",
+      "empty": "No phases to display"
     }
   },
   "landing": {

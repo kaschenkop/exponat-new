@@ -84,7 +84,11 @@
         "status": {
           "draft": "Черновик",
           "active": "Активен",
-          "archived": "Архив"
+          "archived": "Архив",
+          "planning": "Планирование",
+          "on_hold": "На паузе",
+          "completed": "Завершён",
+          "cancelled": "Отменён"
         }
       },
       "budgetChart": {
@@ -116,6 +120,143 @@
         "today": "Сегодня",
         "yesterday": "Вчера"
       }
+    }
+  },
+  "projects": {
+    "title": "Проекты",
+    "subtitle": "Список, фильтры и управление выставочными проектами.",
+    "new": "Новый проект",
+    "kanbanLink": "Канбан",
+    "loading": "Загрузка…",
+    "error": "Не удалось загрузить проекты",
+    "retry": "Повторить",
+    "card": {
+      "progress": "Прогресс"
+    },
+    "list": {
+      "empty": "Нет проектов по выбранным фильтрам"
+    },
+    "filters": {
+      "search": "Поиск",
+      "searchPlaceholder": "Название или описание…",
+      "sortBy": "Сортировка",
+      "sortDir": "Порядок",
+      "sort": {
+        "updatedAt": "По обновлению",
+        "name": "По названию",
+        "budget": "По бюджету",
+        "endDate": "По дате окончания",
+        "startDate": "По дате начала"
+      },
+      "dir": {
+        "asc": "По возрастанию",
+        "desc": "По убыванию"
+      },
+      "status": "Статусы",
+      "type": "Тип",
+      "allTypes": "Все типы",
+      "dateFrom": "Дата от",
+      "dateTo": "Дата до",
+      "budgetMin": "Бюджет от",
+      "budgetMax": "Бюджет до",
+      "reset": "Сбросить фильтры"
+    },
+    "status": {
+      "draft": "Черновик",
+      "planning": "Планирование",
+      "active": "Активен",
+      "on_hold": "На паузе",
+      "completed": "Завершён",
+      "cancelled": "Отменён"
+    },
+    "type": {
+      "museum": "Музей",
+      "corporate": "Корпоратив",
+      "expo_forum": "Форум / экспо",
+      "other": "Другое"
+    },
+    "phaseStatus": {
+      "pending": "Ожидает",
+      "in_progress": "В работе",
+      "completed": "Готово"
+    },
+    "role": {
+      "manager": "Руководитель",
+      "coordinator": "Координатор",
+      "designer": "Дизайнер",
+      "logistics": "Логистика",
+      "other": "Другое"
+    },
+    "wizard": {
+      "step1": "Основное",
+      "step2": "Сроки и бюджет",
+      "step3": "Локация и команда",
+      "next": "Далее",
+      "back": "Назад"
+    },
+    "form": {
+      "name": "Название",
+      "description": "Описание",
+      "type": "Тип проекта",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания",
+      "budget": "Бюджет (₽)",
+      "venue": "Площадка",
+      "address": "Адрес",
+      "city": "Город",
+      "country": "Страна",
+      "manager": "Руководитель проекта",
+      "teamOptional": "Команда (опционально)",
+      "submit": "Создать проект",
+      "status": "Статус"
+    },
+    "newPage": {
+      "title": "Новый проект",
+      "subtitle": "Мастер создания проекта"
+    },
+    "detail": {
+      "eyebrow": "Проект",
+      "back": "К списку",
+      "edit": "Редактировать",
+      "kanban": "Канбан",
+      "infoTitle": "Информация",
+      "dates": "Период",
+      "location": "Локация",
+      "metrics": "Метрики",
+      "exhibits": "Экспонаты",
+      "participants": "Участники",
+      "timelineTitle": "Этапы",
+      "timelineEmpty": "Этапы не заданы",
+      "teamTitle": "Команда",
+      "teamEmpty": "Нет участников команды",
+      "budgetTitle": "Бюджет",
+      "budgetTotal": "Всего",
+      "budgetSpent": "Потрачено",
+      "budgetHint": "Использовано {pct}% бюджета",
+      "filesTitle": "Файлы",
+      "filesEmpty": "Нет прикреплённых файлов",
+      "activityTitle": "История",
+      "activityEmpty": "Нет записей"
+    },
+    "edit": {
+      "title": "Редактирование",
+      "autoSave": "Изменения сохраняются автоматически",
+      "reset": "Сбросить"
+    },
+    "delete": {
+      "title": "Удалить проект?",
+      "description": "Проект «{name}» будет удалён безвозвратно.",
+      "cancel": "Отмена",
+      "confirm": "Удалить"
+    },
+    "kanban": {
+      "title": "Канбан проектов",
+      "subtitle": "Перетаскивайте карточки между колонками статусов",
+      "open": "Открыть"
+    },
+    "gantt": {
+      "title": "Диаграмма этапов",
+      "empty": "Нет этапов для отображения"
     }
   },
   "landing": {
