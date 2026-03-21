@@ -69,7 +69,7 @@ export function ActivityFeed(): React.ReactElement {
     );
   }
 
-  if (!data.length) {
+  if (!data?.length) {
     return (
       <Card>
         <CardHeader>

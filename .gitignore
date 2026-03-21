@@ -1,0 +1,6 @@
+# Go build artifacts
+backend/services/dashboard/bin/
+*.exe
+
+# TypeScript incremental
+**/tsconfig.tsbuildinfo

@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"exponat/dashboard/internal/models"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -39,7 +41,21 @@ WHERE organization_id = $1::uuid
 `
 	err := r.pool.QueryRow(ctx, q, orgID).Scan(&activeCount, &totalBudget, &exhibitsCount, &participantsCount)
 	if err != nil {
-		return nil, fmt.Errorf("query dashboard_stats: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			// MV не содержит строки (не делали REFRESH или пустая БД при CREATE) — считаем «вживую»
+			err = r.pool.QueryRow(ctx, `
+SELECT
+  (SELECT COUNT(*)::bigint FROM projects p WHERE p.organization_id = $1::uuid AND p.status = 'active'),
+  (SELECT COALESCE(SUM(p.total_budget), 0)::float8 FROM projects p WHERE p.organization_id = $1::uuid AND p.status = 'active'),
+  (SELECT COUNT(*)::bigint FROM exhibits e JOIN projects p ON e.project_id = p.id WHERE p.organization_id = $1::uuid),
+  (SELECT COUNT(*)::bigint FROM participants pt JOIN projects p ON pt.project_id = p.id WHERE p.organization_id = $1::uuid)
+`, orgID).Scan(&activeCount, &totalBudget, &exhibitsCount, &participantsCount)
+			if err != nil {
+				return nil, fmt.Errorf("query stats live: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("query dashboard_stats: %w", err)
+		}
 	}
 
 	apCh, err := r.changeRatio(ctx, orgID, `
