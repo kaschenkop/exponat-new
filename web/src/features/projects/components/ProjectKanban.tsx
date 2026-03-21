@@ -1,16 +1,8 @@
 'use client';
 
-import { useProjects } from '@/features/projects/hooks/useProjects';
-import { useProjectMutations } from '@/features/projects/hooks/useProjectMutations';
-import type { Project, ProjectStatus } from '@/features/projects/types/project.types';
-import { kanbanColumns, statusBadgeClass } from '@/features/projects/utils/projectHelpers';
-import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import {
   DndContext,
   DragEndEvent,
-  DragOverlay,
   PointerSensor,
   useDraggable,
   useDroppable,
@@ -18,145 +10,116 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { useProjects } from '@/features/projects/hooks/useProjects';
+import { useProjectMutations } from '@/features/projects/hooks/useProjectMutations';
+import type { Project, ProjectStatus } from '@/features/projects/types/project.types';
+import { Card, CardContent } from '@/shared/ui/card';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
 
-function DraggableCard({ project }: { project: Project }): React.ReactElement {
-  const t = useTranslations('projects');
+const COLUMNS: ProjectStatus[] = [
+  'draft',
+  'planning',
+  'active',
+  'on_hold',
+  'completed',
+  'cancelled',
+];
+
+function DraggableProject({ project }: { project: Project }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: project.id,
   });
+
   const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
+    transform: CSS.Transform.toString(transform),
+    opacity: isDragging ? 0.85 : 1,
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className="rounded-md border bg-card p-3 shadow-sm"
-    >
-      <p className="font-medium leading-snug">{project.name}</p>
-      <span
-        className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(project.status)}`}
-      >
-        {t(`status.${project.status}`)}
-      </span>
-      <Button asChild variant="link" className="mt-2 h-auto px-0 text-xs">
-        <Link href={`/dashboard/projects/${project.id}`}>{t('kanban.open')}</Link>
-      </Button>
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      <Card className="cursor-grab active:cursor-grabbing">
+        <CardContent className="p-3 text-sm">
+          <p className="font-medium">{project.name}</p>
+          <p className="text-xs text-muted-foreground">{project.progress}%</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-function Column({
+function KanbanColumn({
   status,
-  projects,
+  title,
+  children,
 }: {
   status: ProjectStatus;
-  projects: Project[];
-}): React.ReactElement {
-  const t = useTranslations('projects');
+  title: string;
+  children: React.ReactNode;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-[320px] flex-1 flex-col rounded-lg border bg-muted/30 p-3 ${
-        isOver ? 'ring-2 ring-primary/40' : ''
+      className={`min-h-[200px] rounded-lg border p-2 ${
+        isOver ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
       }`}
     >
-      <div className="mb-3 text-sm font-semibold">{t(`status.${status}`)}</div>
-      <div className="flex flex-1 flex-col gap-2">
-        {projects.map((p) => (
-          <DraggableCard key={p.id} project={p} />
-        ))}
-      </div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 }
 
 export function ProjectKanban(): React.ReactElement {
   const t = useTranslations('projects');
-  const { data, isPending, isError, refetch } = useProjects();
-  const { patchStatus } = useProjectMutations();
-  const [active, setActive] = useState<Project | null>(null);
+  const { data, isLoading } = useProjects({ limit: 100, page: 1 });
+  const { updateStatus } = useProjectMutations();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
-  const cols = kanbanColumns();
-
-  const grouped = useMemo(() => {
-    const m = new Map<ProjectStatus, Project[]>();
-    cols.forEach((c) => m.set(c, []));
-    for (const p of data?.items ?? []) {
-      const list = m.get(p.status);
-      if (list) list.push(p);
-    }
-    return m;
-  }, [data?.items, cols]);
+  const byStatus = (s: ProjectStatus) =>
+    data?.data.filter((p) => p.status === s) ?? [];
 
   const onDragEnd = (e: DragEndEvent) => {
     const pid = String(e.active.id);
     const overId = e.over?.id;
-    if (!overId) return;
-    const nextStatus = String(overId) as ProjectStatus;
-    const proj = data?.items.find((x) => x.id === pid);
-    if (!proj || proj.status === nextStatus) return;
-    patchStatus.mutate({ id: pid, status: nextStatus });
+    if (!overId || typeof overId !== 'string') {
+      return;
+    }
+    const next = overId as ProjectStatus;
+    if (!COLUMNS.includes(next)) {
+      return;
+    }
+    const current = data?.data.find((p) => p.id === pid);
+    if (!current || current.status === next) {
+      return;
+    }
+    void updateStatus.mutateAsync({ id: pid, status: next });
   };
 
-  if (isPending) {
-    return <p className="text-muted-foreground">{t('loading')}</p>;
-  }
-  if (isError) {
-    return (
-      <div className="rounded-md border border-destructive/40 p-4 text-sm">
-        {t('error')}
-        <button type="button" className="ml-2 underline" onClick={() => refetch()}>
-          {t('retry')}
-        </button>
-      </div>
-    );
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">{t('loadError')}</p>;
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={({ active }) => {
-        const p = data?.items.find((x) => x.id === String(active.id));
-        setActive(p ?? null);
-      }}
-      onDragEnd={(e) => {
-        setActive(null);
-        onDragEnd(e);
-      }}
-      onDragCancel={() => setActive(null)}
-    >
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {cols.map((status) => (
-          <Column key={status} status={status} projects={grouped.get(status) ?? []} />
-        ))}
-      </div>
-      <DragOverlay>
-        {active ? (
-          <Card className="w-64">
-            <CardHeader className="p-3">
-              <CardTitle className="text-base">{active.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 text-xs text-muted-foreground">
-              {t(`status.${active.status}`)}
-            </CardContent>
-          </Card>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">{t('kanban.hint')}</p>
+      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+        <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          {COLUMNS.map((col) => (
+            <KanbanColumn key={col} status={col} title={t(`status.${col}`)}>
+              {byStatus(col).map((p) => (
+                <DraggableProject key={p.id} project={p} />
+              ))}
+            </KanbanColumn>
+          ))}
+        </div>
+      </DndContext>
+    </div>
   );
 }

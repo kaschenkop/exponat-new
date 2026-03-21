@@ -1,8 +1,6 @@
 'use client';
 
-import { useProjectFilters } from '@/features/projects/hooks/useProjectFilters';
-import type { ProjectStatus, ProjectType } from '@/features/projects/types/project.types';
-import { useDebounce } from '@/shared/hooks/use-debounce';
+import type { ProjectFilters as PF } from '@/features/projects/types/project.types';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -14,118 +12,86 @@ import {
   SelectValue,
 } from '@/shared/ui/select';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
 
-const STATUSES: ProjectStatus[] = [
+const STATUS_LIST = [
   'draft',
   'planning',
   'active',
   'on_hold',
   'completed',
   'cancelled',
-];
+] as const;
 
-const TYPES: ProjectType[] = ['museum', 'corporate', 'expo_forum', 'other'];
+const TYPES = ['museum', 'corporate', 'expo_forum', 'other'] as const;
 
-export function ProjectFilters(): React.ReactElement {
+export function ProjectFilters({
+  filters,
+  onFiltersChange,
+  onReset,
+}: {
+  filters: PF;
+  onFiltersChange: (f: Partial<PF>) => void;
+  onReset: () => void;
+}): React.ReactElement {
   const t = useTranslations('projects');
-  const { filters, setFilters, resetFilters, setSearch } = useProjectFilters();
-  const [q, setQ] = useState(filters.search ?? '');
-  const debounced = useDebounce(q, 300);
-
-  useEffect(() => {
-    setQ(filters.search ?? '');
-  }, [filters.search]);
-
-  useEffect(() => {
-    setSearch(debounced);
-  }, [debounced, setSearch]);
-
-  const toggleStatus = (s: ProjectStatus) => {
-    const cur = filters.status ?? [];
-    const next = cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s];
-    setFilters({ status: next.length ? next : undefined });
-  };
 
   return (
     <div className="space-y-4 rounded-lg border bg-card p-4">
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-end">
-        <div className="space-y-2">
-          <Label htmlFor="project-search">{t('filters.search')}</Label>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-2 lg:col-span-2">
+          <Label htmlFor="project-search">{t('search')}</Label>
           <Input
             id="project-search"
-            value={q}
-            placeholder={t('filters.searchPlaceholder')}
-            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('searchPlaceholder')}
+            value={filters.search ?? ''}
+            onChange={(e) => onFiltersChange({ search: e.target.value, page: 1 })}
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('filters.sortBy')}</Label>
+          <Label>{t('sortBy')}</Label>
           <Select
             value={filters.sortBy ?? 'updatedAt'}
+            onValueChange={(v) => onFiltersChange({ sortBy: v, page: 1 })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updatedAt">{t('sort.updatedAt')}</SelectItem>
+              <SelectItem value="name">{t('sort.name')}</SelectItem>
+              <SelectItem value="startDate">{t('sort.startDate')}</SelectItem>
+              <SelectItem value="totalBudget">{t('sort.budget')}</SelectItem>
+              <SelectItem value="progress">{t('sort.progress')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>{t('sortOrder')}</Label>
+          <Select
+            value={filters.sortOrder ?? 'desc'}
             onValueChange={(v) =>
-              setFilters({
-                sortBy: v as typeof filters.sortBy,
-              })
+              onFiltersChange({ sortOrder: v as 'asc' | 'desc', page: 1 })
             }
           >
-            <SelectTrigger className="w-full min-w-[200px]">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="updatedAt">{t('filters.sort.updatedAt')}</SelectItem>
-              <SelectItem value="name">{t('filters.sort.name')}</SelectItem>
-              <SelectItem value="totalBudget">{t('filters.sort.budget')}</SelectItem>
-              <SelectItem value="endDate">{t('filters.sort.endDate')}</SelectItem>
-              <SelectItem value="startDate">{t('filters.sort.startDate')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>{t('filters.sortDir')}</Label>
-          <Select
-            value={filters.sortDir ?? 'desc'}
-            onValueChange={(v) => setFilters({ sortDir: v as 'asc' | 'desc' })}
-          >
-            <SelectTrigger className="w-full min-w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="desc">{t('filters.dir.desc')}</SelectItem>
-              <SelectItem value="asc">{t('filters.dir.asc')}</SelectItem>
+              <SelectItem value="desc">{t('sort.desc')}</SelectItem>
+              <SelectItem value="asc">{t('sort.asc')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label>{t('filters.status')}</Label>
-        <div className="flex flex-wrap gap-2">
-          {STATUSES.map((s) => {
-            const active = filters.status?.includes(s);
-            return (
-              <Button
-                key={s}
-                type="button"
-                size="sm"
-                variant={active ? 'default' : 'outline'}
-                onClick={() => toggleStatus(s)}
-              >
-                {t(`status.${s}`)}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
-          <Label>{t('filters.type')}</Label>
+          <Label>{t('filterStatus')}</Label>
           <Select
-            value={filters.type?.[0] ?? 'all'}
+            value={(filters.status?.[0] as string) ?? 'all'}
             onValueChange={(v) =>
-              setFilters({
-                type: v === 'all' ? undefined : ([v] as ProjectType[]),
+              onFiltersChange({
+                status: v === 'all' ? undefined : [v as (typeof STATUS_LIST)[number]],
+                page: 1,
               })
             }
           >
@@ -133,68 +99,65 @@ export function ProjectFilters(): React.ReactElement {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('filters.allTypes')}</SelectItem>
-              {TYPES.map((tp) => (
-                <SelectItem key={tp} value={tp}>
-                  {t(`type.${tp}`)}
+              <SelectItem value="all">{t('all')}</SelectItem>
+              {STATUS_LIST.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {t(`status.${s}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="df">{t('filters.dateFrom')}</Label>
+          <Label>{t('filterType')}</Label>
+          <Select
+            value={(filters.type?.[0] as string) ?? 'all'}
+            onValueChange={(v) =>
+              onFiltersChange({
+                type: v === 'all' ? undefined : [v as (typeof TYPES)[number]],
+                page: 1,
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all')}</SelectItem>
+              {TYPES.map((ty) => (
+                <SelectItem key={ty} value={ty}>
+                  {t(`type.${ty}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="dateFrom">{t('dateFrom')}</Label>
           <Input
-            id="df"
+            id="dateFrom"
             type="date"
             value={filters.dateFrom ?? ''}
-            onChange={(e) => setFilters({ dateFrom: e.target.value || undefined })}
+            onChange={(e) =>
+              onFiltersChange({ dateFrom: e.target.value || undefined, page: 1 })
+            }
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dt">{t('filters.dateTo')}</Label>
+          <Label htmlFor="dateTo">{t('dateTo')}</Label>
           <Input
-            id="dt"
+            id="dateTo"
             type="date"
             value={filters.dateTo ?? ''}
-            onChange={(e) => setFilters({ dateTo: e.target.value || undefined })}
+            onChange={(e) =>
+              onFiltersChange({ dateTo: e.target.value || undefined, page: 1 })
+            }
           />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-2">
-            <Label htmlFor="bmin">{t('filters.budgetMin')}</Label>
-            <Input
-              id="bmin"
-              type="number"
-              min={0}
-              value={filters.budgetMin ?? ''}
-              onChange={(e) =>
-                setFilters({
-                  budgetMin: e.target.value ? Number(e.target.value) : undefined,
-                })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="bmax">{t('filters.budgetMax')}</Label>
-            <Input
-              id="bmax"
-              type="number"
-              min={0}
-              value={filters.budgetMax ?? ''}
-              onChange={(e) =>
-                setFilters({
-                  budgetMax: e.target.value ? Number(e.target.value) : undefined,
-                })
-              }
-            />
-          </div>
-        </div>
       </div>
-
-      <div className="flex justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={resetFilters}>
-          {t('filters.reset')}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={onReset}>
+          {t('resetFilters')}
         </Button>
       </div>
     </div>

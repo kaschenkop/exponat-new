@@ -4,29 +4,36 @@ import type { ProjectTeamMember } from '@/features/projects/types/project.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { useTranslations } from 'next-intl';
 
-export function ProjectTeam({ team }: { team: ProjectTeamMember[] }): React.ReactElement {
+export function ProjectTeam({
+  members,
+}: {
+  members: ProjectTeamMember[] | null | undefined;
+}): React.ReactElement {
   const t = useTranslations('projects');
+  const list = members ?? [];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('detail.teamTitle')}</CardTitle>
+        <CardTitle>{t('detail.team')}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {team.map((m) => (
-          <div
-            key={`${m.userId}-${m.role}`}
-            className="flex items-center justify-between gap-2 rounded-md border px-3 py-2"
-          >
-            <div>
-              <p className="font-medium">{m.userName}</p>
-              <p className="text-xs text-muted-foreground">{t(`role.${m.role}`)}</p>
-            </div>
-          </div>
-        ))}
-        {!team.length && (
-          <p className="text-sm text-muted-foreground">{t('detail.teamEmpty')}</p>
-        )}
+      <CardContent>
+        <ul className="divide-y divide-border">
+          {list.map((m) => (
+            <li key={m.userId} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
+              <div>
+                <p className="font-medium">{m.userName}</p>
+                <p className="text-xs text-muted-foreground">{m.role}</p>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {new Date(m.joinedAt).toLocaleDateString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {list.length === 0 ? (
+          <p className="text-sm text-muted-foreground">—</p>
+        ) : null}
       </CardContent>
     </Card>
   );

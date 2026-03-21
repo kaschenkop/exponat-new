@@ -1,7 +1,5 @@
 'use client';
 
-import { useProjectMutations } from '@/features/projects/hooks/useProjectMutations';
-import { Button } from '@/shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,52 +8,39 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog';
-import { useRouter } from '@/i18n/navigation';
+import { Button } from '@/shared/ui/button';
 import { useTranslations } from 'next-intl';
 
 export function ProjectDeleteDialog({
-  projectId,
-  projectName,
   open,
   onOpenChange,
+  onConfirm,
+  pending,
 }: {
-  projectId: string;
-  projectName: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onConfirm: () => void;
+  pending?: boolean;
 }): React.ReactElement {
   const t = useTranslations('projects');
-  const router = useRouter();
-  const { remove } = useProjectMutations();
-
-  const onDelete = async () => {
-    try {
-      await remove.mutateAsync(projectId);
-      onOpenChange(false);
-      router.push('/dashboard/projects');
-    } catch {
-      /* ignore */
-    }
-  };
+  const tc = useTranslations('common');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('delete.title')}</DialogTitle>
-          <DialogDescription>
-            {t('delete.description', { name: projectName })}
-          </DialogDescription>
+          <DialogDescription>{t('delete.description')}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            {t('delete.cancel')}
+            {tc('cancel')}
           </Button>
           <Button
             type="button"
             variant="destructive"
-            disabled={remove.isPending}
-            onClick={() => void onDelete()}
+            disabled={pending}
+            onClick={onConfirm}
           >
             {t('delete.confirm')}
           </Button>

@@ -83,12 +83,12 @@
         },
         "status": {
           "draft": "Черновик",
-          "active": "Активен",
-          "archived": "Архив",
           "planning": "Планирование",
+          "active": "Активен",
           "on_hold": "На паузе",
           "completed": "Завершён",
-          "cancelled": "Отменён"
+          "cancelled": "Отменён",
+          "archived": "Архив"
         }
       },
       "budgetChart": {
@@ -124,43 +124,35 @@
   },
   "projects": {
     "title": "Проекты",
-    "subtitle": "Список, фильтры и управление выставочными проектами.",
-    "new": "Новый проект",
-    "kanbanLink": "Канбан",
-    "loading": "Загрузка…",
-    "error": "Не удалось загрузить проекты",
+    "create": "Создать проект",
+    "search": "Поиск",
+    "searchPlaceholder": "Название или описание…",
+    "sortBy": "Сортировка",
+    "sortOrder": "Порядок",
+    "sort": {
+      "updatedAt": "По обновлению",
+      "name": "По названию",
+      "startDate": "По дате начала",
+      "budget": "По бюджету",
+      "progress": "По прогрессу",
+      "asc": "По возрастанию",
+      "desc": "По убыванию"
+    },
+    "filterStatus": "Статус",
+    "filterType": "Тип",
+    "dateFrom": "Дата с",
+    "dateTo": "Дата по",
+    "all": "Все",
+    "resetFilters": "Сбросить фильтры",
+    "loadError": "Ошибка загрузки",
     "retry": "Повторить",
-    "card": {
-      "progress": "Прогресс"
-    },
-    "list": {
-      "empty": "Нет проектов по выбранным фильтрам"
-    },
-    "filters": {
-      "search": "Поиск",
-      "searchPlaceholder": "Название или описание…",
-      "sortBy": "Сортировка",
-      "sortDir": "Порядок",
-      "sort": {
-        "updatedAt": "По обновлению",
-        "name": "По названию",
-        "budget": "По бюджету",
-        "endDate": "По дате окончания",
-        "startDate": "По дате начала"
-      },
-      "dir": {
-        "asc": "По возрастанию",
-        "desc": "По убыванию"
-      },
-      "status": "Статусы",
-      "type": "Тип",
-      "allTypes": "Все типы",
-      "dateFrom": "Дата от",
-      "dateTo": "Дата до",
-      "budgetMin": "Бюджет от",
-      "budgetMax": "Бюджет до",
-      "reset": "Сбросить фильтры"
-    },
+    "emptyTitle": "Нет проектов",
+    "emptyDescription": "Создайте первый проект для начала работы",
+    "prev": "Назад",
+    "next": "Вперёд",
+    "progress": "Прогресс",
+    "budget": "Бюджет",
+    "manager": "Руководитель",
     "status": {
       "draft": "Черновик",
       "planning": "Планирование",
@@ -172,91 +164,67 @@
     "type": {
       "museum": "Музей",
       "corporate": "Корпоратив",
-      "expo_forum": "Форум / экспо",
-      "other": "Другое"
-    },
-    "phaseStatus": {
-      "pending": "Ожидает",
-      "in_progress": "В работе",
-      "completed": "Готово"
-    },
-    "role": {
-      "manager": "Руководитель",
-      "coordinator": "Координатор",
-      "designer": "Дизайнер",
-      "logistics": "Логистика",
+      "expo_forum": "Форум / выставка",
       "other": "Другое"
     },
     "wizard": {
-      "step1": "Основное",
-      "step2": "Сроки и бюджет",
-      "step3": "Локация и команда",
+      "steps": "Шаги мастера",
+      "step0": "Основное",
+      "step1": "Сроки и бюджет",
+      "step2": "Локация и команда",
       "next": "Далее",
       "back": "Назад"
     },
-    "form": {
+    "fields": {
       "name": "Название",
       "description": "Описание",
       "type": "Тип проекта",
-      "startDate": "Дата начала",
-      "endDate": "Дата окончания",
+      "startDate": "Начало",
+      "endDate": "Окончание",
       "budget": "Бюджет (₽)",
+      "manager": "Руководитель",
       "venue": "Площадка",
       "address": "Адрес",
       "city": "Город",
       "country": "Страна",
-      "manager": "Руководитель проекта",
-      "teamOptional": "Команда (опционально)",
-      "submit": "Создать проект",
-      "status": "Статус"
+      "team": "Команда",
+      "teamHint": "Участники добавляются после создания проекта."
     },
-    "newPage": {
-      "title": "Новый проект",
-      "subtitle": "Мастер создания проекта"
-    },
+    "saving": "Сохранение…",
+    "submit": "Создать",
     "detail": {
-      "eyebrow": "Проект",
-      "back": "К списку",
       "edit": "Редактировать",
-      "kanban": "Канбан",
-      "infoTitle": "Информация",
-      "dates": "Период",
-      "location": "Локация",
-      "metrics": "Метрики",
-      "exhibits": "Экспонаты",
-      "participants": "Участники",
-      "timelineTitle": "Этапы",
-      "timelineEmpty": "Этапы не заданы",
-      "teamTitle": "Команда",
-      "teamEmpty": "Нет участников команды",
+      "delete": "Удалить",
+      "back": "К списку",
+      "tabs": {
+        "overview": "Обзор",
+        "timeline": "Этапы",
+        "team": "Команда",
+        "activity": "История"
+      },
+      "info": "Информация",
+      "timeline": "Этапы",
+      "team": "Команда",
       "budgetTitle": "Бюджет",
-      "budgetTotal": "Всего",
-      "budgetSpent": "Потрачено",
-      "budgetHint": "Использовано {pct}% бюджета",
-      "filesTitle": "Файлы",
-      "filesEmpty": "Нет прикреплённых файлов",
-      "activityTitle": "История",
-      "activityEmpty": "Нет записей"
-    },
-    "edit": {
-      "title": "Редактирование",
-      "autoSave": "Изменения сохраняются автоматически",
-      "reset": "Сбросить"
+      "spent": "Потрачено",
+      "files": "Файлы",
+      "filesPlaceholder": "Файлы и документы будут доступны в следующей версии.",
+      "activity": "История изменений",
+      "gantt": "Диаграмма Ганта",
+      "kanbanLink": "Kanban"
     },
     "delete": {
       "title": "Удалить проект?",
-      "description": "Проект «{name}» будет удалён безвозвратно.",
-      "cancel": "Отмена",
+      "description": "Это действие нельзя отменить.",
       "confirm": "Удалить"
     },
     "kanban": {
-      "title": "Канбан проектов",
-      "subtitle": "Перетаскивайте карточки между колонками статусов",
-      "open": "Открыть"
+      "title": "Kanban — проекты по статусам",
+      "hint": "Перетащите карточку, чтобы изменить статус."
     },
-    "gantt": {
-      "title": "Диаграмма этапов",
-      "empty": "Нет этапов для отображения"
+    "edit": {
+      "title": "Редактирование",
+      "autoSave": "Изменения сохраняются автоматически"
     }
   },
   "landing": {
@@ -280,5 +248,88 @@
   "header": {
     "notifications": "Уведомления",
     "profile": "Профиль"
+  },
+  "tasks": {
+    "title": "Задачи",
+    "addTask": "Добавить задачу",
+    "editTask": "Редактировать задачу",
+    "deleteTask": "Удалить задачу",
+    "tasksLink": "Задачи проекта",
+    "view": {
+      "kanban": "Канбан",
+      "gantt": "Ганта",
+      "list": "Список",
+      "calendar": "Календарь"
+    },
+    "status": {
+      "backlog": "Бэклог",
+      "in_progress": "В работе",
+      "review": "На проверке",
+      "done": "Готово",
+      "cancelled": "Отменено"
+    },
+    "priority": {
+      "high": "Высокий",
+      "medium": "Средний",
+      "low": "Низкий"
+    },
+    "filters": {
+      "allStatus": "Все статусы",
+      "allPriorities": "Все приоритеты",
+      "allTime": "Всё время",
+      "thisWeek": "Эта неделя",
+      "thisMonth": "Этот месяц",
+      "thisQuarter": "Этот квартал",
+      "assignee": "Исполнитель"
+    },
+    "gantt": {
+      "zoom": "Масштаб",
+      "day": "День",
+      "week": "Неделя",
+      "month": "Месяц",
+      "quarter": "Квартал",
+      "criticalPath": "Критический путь",
+      "exportPdf": "Экспорт в PDF",
+      "taskName": "Задача",
+      "assignee": "Исполнитель",
+      "status": "Статус",
+      "today": "Сегодня"
+    },
+    "list": {
+      "columns": {
+        "key": "Код",
+        "title": "Название",
+        "status": "Статус",
+        "priority": "Приоритет",
+        "assignee": "Исполнитель",
+        "dueDate": "Срок",
+        "progress": "Прогресс",
+        "tags": "Метки"
+      }
+    },
+    "calendar": {
+      "today": "Сегодня",
+      "month": "Месяц",
+      "week": "Неделя"
+    },
+    "detail": {
+      "subtasks": "Подзадачи",
+      "comments": "Комментарии",
+      "addComment": "Добавить комментарий",
+      "addSubtask": "Добавить подзадачу",
+      "noComments": "Нет комментариев",
+      "noSubtasks": "Нет подзадач",
+      "send": "Отправить",
+      "group": "Группа",
+      "startDate": "Начало",
+      "dueDate": "Срок",
+      "progress": "Прогресс",
+      "assignee": "Исполнитель",
+      "priority": "Приоритет",
+      "status": "Статус",
+      "description": "Описание"
+    },
+    "empty": "Нет задач",
+    "dragHint": "Перетащите задачи между колонками для смены статуса"
   }
 }

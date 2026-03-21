@@ -1,52 +1,44 @@
 'use client';
 
-import { useProjectCollaborationStore } from '@/features/projects/store/projectCollaborationStore';
-import { API_BASE_URL } from '@/shared/lib/constants';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { projectsWebSocketUrl } from '@/features/projects/api/projectsApi';
+import { useProjectCollaborationStore } from '@/features/projects/store/projectCollaborationStore';
 
-function wsBaseUrl(): string {
-  if (typeof window === 'undefined') return '';
-  const u = new URL(API_BASE_URL);
-  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-  return u.origin;
-}
-
-function devOrgId(): string {
-  return (
-    process.env.NEXT_PUBLIC_DEV_ORGANIZATION_ID ??
-    '11111111-1111-1111-1111-111111111111'
-  );
-}
-
-export function useProjectCollaboration(enabled = true): void {
+export function useProjectCollaboration(projectId: string | undefined) {
   const qc = useQueryClient();
   const setConnected = useProjectCollaborationStore((s) => s.setConnected);
   const pushEvent = useProjectCollaborationStore((s) => s.pushEvent);
-  const ref = useRef<WebSocket | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!enabled || typeof window === 'undefined') return;
-
-    const url = `${wsBaseUrl()}/api/projects/ws?organizationId=${encodeURIComponent(devOrgId())}`;
+    if (!projectId) {
+      return;
+    }
+    const url = projectsWebSocketUrl(projectId);
     const ws = new WebSocket(url);
-    ref.current = ws;
+    wsRef.current = ws;
 
     ws.onopen = () => setConnected(true);
     ws.onclose = () => setConnected(false);
     ws.onerror = () => setConnected(false);
     ws.onmessage = (ev) => {
-      const raw = String(ev.data);
-      pushEvent(raw);
       try {
-        const j = JSON.parse(raw) as { type?: string; projectId?: string };
-        if (j.type?.startsWith('project.')) {
+        const msg = JSON.parse(ev.data as string) as {
+          type: string;
+          data: unknown;
+        };
+        pushEvent(msg.type, msg.data);
+        if (
+          msg.type === 'project.updated' ||
+          msg.type === 'team.member_added' ||
+          msg.type === 'team.member_removed'
+        ) {
+          void qc.invalidateQueries({ queryKey: ['projects', projectId] });
           void qc.invalidateQueries({ queryKey: ['projects'] });
-          if (j.projectId) {
-            void qc.invalidateQueries({
-              queryKey: ['projects', 'detail', j.projectId],
-            });
-          }
+        }
+        if (msg.type === 'project.deleted') {
+          void qc.invalidateQueries({ queryKey: ['projects'] });
         }
       } catch {
         /* ignore */
@@ -55,8 +47,10 @@ export function useProjectCollaboration(enabled = true): void {
 
     return () => {
       ws.close();
-      ref.current = null;
+      wsRef.current = null;
       setConnected(false);
     };
-  }, [enabled, qc, pushEvent, setConnected]);
+  }, [projectId, qc, pushEvent, setConnected]);
+
+  return { socket: wsRef.current };
 }

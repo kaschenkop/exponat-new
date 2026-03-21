@@ -1,41 +1,63 @@
 'use client';
 
-import type { Project } from '@/features/projects/types/project.types';
-import { statusBadgeClass } from '@/features/projects/utils/projectHelpers';
 import { Link } from '@/i18n/navigation';
+import type { Project } from '@/features/projects/types/project.types';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
+import { ArrowLeft, LayoutGrid, ListTodo, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export function ProjectHeader({
   project,
+  onDeleteClick,
 }: {
   project: Project;
+  onDeleteClick: () => void;
 }): React.ReactElement {
   const t = useTranslations('projects');
+  const tt = useTranslations('tasks');
 
   return (
-    <div className="flex flex-col gap-4 border-b pb-6 md:flex-row md:items-start md:justify-between">
+    <div className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">{t('detail.eyebrow')}</p>
+        <Button variant="ghost" size="sm" className="-ml-2 w-fit" asChild>
+          <Link href="/dashboard/projects">
+            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden />
+            {t('detail.back')}
+          </Link>
+        </Button>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-3xl font-bold tracking-tight">{project.name}</h1>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass(project.status)}`}
-          >
-            {t(`status.${project.status}`)}
-          </span>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            {project.name}
+          </h1>
+          <Badge variant="secondary">{t(`status.${project.status}`)}</Badge>
         </div>
-        <p className="max-w-3xl text-muted-foreground">{project.description || '—'}</p>
+        <p className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+          <Link
+            className="inline-flex items-center gap-1 hover:text-foreground"
+            href={`/dashboard/projects/${project.id}/tasks`}
+          >
+            <ListTodo className="h-4 w-4" aria-hidden />
+            {tt('tasksLink')}
+          </Link>
+          <Link
+            className="inline-flex items-center gap-1 hover:text-foreground"
+            href="/dashboard/projects/kanban"
+          >
+            <LayoutGrid className="h-4 w-4" aria-hidden />
+            {t('detail.kanbanLink')}
+          </Link>
+        </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/dashboard/projects">{t('detail.back')}</Link>
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/dashboard/projects/${project.id}/edit`}>
+            <Pencil className="mr-2 h-4 w-4" aria-hidden />
+            {t('detail.edit')}
+          </Link>
         </Button>
-        <Button asChild size="sm">
-          <Link href={`/dashboard/projects/${project.id}/edit`}>{t('detail.edit')}</Link>
-        </Button>
-        <Button asChild variant="secondary" size="sm">
-          <Link href="/dashboard/projects/kanban">{t('detail.kanban')}</Link>
+        <Button variant="destructive" size="sm" type="button" onClick={onDeleteClick}>
+          {t('detail.delete')}
         </Button>
       </div>
     </div>

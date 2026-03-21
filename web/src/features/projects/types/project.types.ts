@@ -6,14 +6,36 @@ export type ProjectStatus =
   | 'completed'
   | 'cancelled';
 
-export type ProjectType = 'museum' | 'corporate' | 'expo_forum' | 'other';
+export type ProjectKind = 'museum' | 'corporate' | 'expo_forum' | 'other';
+
+export interface ProjectLocation {
+  venue: string;
+  address: string;
+  city: string;
+  country: string;
+}
+
+export interface ProjectTeamMember {
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  role:
+    | 'manager'
+    | 'coordinator'
+    | 'designer'
+    | 'logistics'
+    | 'other'
+    | string;
+  permissions: string[];
+  joinedAt: string;
+}
 
 export interface Project {
   id: string;
   organizationId: string;
   name: string;
   description: string;
-  type: ProjectType;
+  type: ProjectKind;
   status: ProjectStatus;
   startDate: string;
   endDate: string;
@@ -22,31 +44,16 @@ export interface Project {
   totalBudget: number;
   spentBudget: number;
   currency: 'RUB';
-  location: {
-    venue: string;
-    address: string;
-    city: string;
-    country: string;
-  };
-  team: ProjectTeamMember[];
+  location: ProjectLocation;
+  /** API may send JSON null when Go slice is nil */
+  team: ProjectTeamMember[] | null;
   managerId: string;
+  managerName?: string;
   progress: number;
   exhibitsCount: number;
   participantsCount: number;
-  tags: string[];
-  customFields: Record<string, unknown>;
-  phases?: ProjectPhase[];
-  files?: ProjectFile[];
-  activity?: ProjectActivityItem[];
-}
-
-export interface ProjectTeamMember {
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  role: 'manager' | 'coordinator' | 'designer' | 'logistics' | 'other';
-  permissions: string[];
-  joinedAt: string;
+  tags: string[] | null;
+  customFields?: Record<string, unknown>;
 }
 
 export interface ProjectPhase {
@@ -56,40 +63,20 @@ export interface ProjectPhase {
   description: string;
   startDate: string;
   endDate: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   progress: number;
   dependencies: string[];
-  sortOrder: number;
-}
-
-export interface ProjectFile {
-  id: string;
-  projectId: string;
-  name: string;
-  url: string;
-  mimeType?: string;
-  sizeBytes?: number;
-  uploadedBy?: string;
-  createdAt: string;
-}
-
-export interface ProjectActivityItem {
-  id: string;
-  action: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  timestamp: string;
+  orderNum: number;
 }
 
 export interface ProjectCreateInput {
   name: string;
   description: string;
-  type: ProjectType;
+  type: ProjectKind;
   startDate: string;
   endDate: string;
   totalBudget: number;
-  location: Project['location'];
+  location: ProjectLocation;
   managerId: string;
   teamMemberIds: string[];
 }
@@ -99,23 +86,36 @@ export interface ProjectUpdateInput extends Partial<ProjectCreateInput> {
   spentBudget?: number;
   progress?: number;
   tags?: string[];
-  customFields?: Record<string, unknown>;
 }
 
 export interface ProjectFilters {
   search?: string;
   status?: ProjectStatus[];
-  type?: ProjectType[];
+  type?: ProjectKind[];
   dateFrom?: string;
   dateTo?: string;
   budgetMin?: number;
   budgetMax?: number;
   managerId?: string;
-  sortBy?: 'createdAt' | 'name' | 'totalBudget' | 'endDate' | 'startDate' | 'updatedAt';
-  sortDir?: 'asc' | 'desc';
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
-export interface ProjectListResponse {
-  items: Project[];
-  total: number;
+export interface ProjectsListResponse {
+  data: Project[];
+  meta: { total: number; page: number; limit: number };
+}
+
+export interface ProjectChange {
+  id: string;
+  projectId: string;
+  userId: string;
+  userName?: string;
+  changeType: string;
+  fieldName?: string;
+  oldValue?: string;
+  newValue?: string;
+  createdAt: string;
 }

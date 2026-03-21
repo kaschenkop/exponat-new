@@ -83,12 +83,12 @@
         },
         "status": {
           "draft": "Draft",
-          "active": "Active",
-          "archived": "Archived",
           "planning": "Planning",
+          "active": "Active",
           "on_hold": "On hold",
           "completed": "Completed",
-          "cancelled": "Cancelled"
+          "cancelled": "Cancelled",
+          "archived": "Archived"
         }
       },
       "budgetChart": {
@@ -124,43 +124,35 @@
   },
   "projects": {
     "title": "Projects",
-    "subtitle": "List, filters, and exhibition project management.",
-    "new": "New project",
-    "kanbanLink": "Kanban",
-    "loading": "Loading…",
-    "error": "Could not load projects",
+    "create": "Create project",
+    "search": "Search",
+    "searchPlaceholder": "Name or description…",
+    "sortBy": "Sort by",
+    "sortOrder": "Order",
+    "sort": {
+      "updatedAt": "Updated",
+      "name": "Name",
+      "startDate": "Start date",
+      "budget": "Budget",
+      "progress": "Progress",
+      "asc": "Ascending",
+      "desc": "Descending"
+    },
+    "filterStatus": "Status",
+    "filterType": "Type",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "all": "All",
+    "resetFilters": "Reset filters",
+    "loadError": "Failed to load",
     "retry": "Retry",
-    "card": {
-      "progress": "Progress"
-    },
-    "list": {
-      "empty": "No projects match the filters"
-    },
-    "filters": {
-      "search": "Search",
-      "searchPlaceholder": "Name or description…",
-      "sortBy": "Sort by",
-      "sortDir": "Order",
-      "sort": {
-        "updatedAt": "Updated",
-        "name": "Name",
-        "budget": "Budget",
-        "endDate": "End date",
-        "startDate": "Start date"
-      },
-      "dir": {
-        "asc": "Ascending",
-        "desc": "Descending"
-      },
-      "status": "Statuses",
-      "type": "Type",
-      "allTypes": "All types",
-      "dateFrom": "From",
-      "dateTo": "To",
-      "budgetMin": "Budget min",
-      "budgetMax": "Budget max",
-      "reset": "Reset filters"
-    },
+    "emptyTitle": "No projects",
+    "emptyDescription": "Create your first project to get started",
+    "prev": "Previous",
+    "next": "Next",
+    "progress": "Progress",
+    "budget": "Budget",
+    "manager": "Manager",
     "status": {
       "draft": "Draft",
       "planning": "Planning",
@@ -175,88 +167,64 @@
       "expo_forum": "Expo / forum",
       "other": "Other"
     },
-    "phaseStatus": {
-      "pending": "Pending",
-      "in_progress": "In progress",
-      "completed": "Done"
-    },
-    "role": {
-      "manager": "Manager",
-      "coordinator": "Coordinator",
-      "designer": "Designer",
-      "logistics": "Logistics",
-      "other": "Other"
-    },
     "wizard": {
-      "step1": "Basics",
-      "step2": "Timeline & budget",
-      "step3": "Location & team",
+      "steps": "Wizard steps",
+      "step0": "Basics",
+      "step1": "Timeline & budget",
+      "step2": "Location & team",
       "next": "Next",
       "back": "Back"
     },
-    "form": {
+    "fields": {
       "name": "Name",
       "description": "Description",
       "type": "Project type",
-      "startDate": "Start date",
-      "endDate": "End date",
+      "startDate": "Start",
+      "endDate": "End",
       "budget": "Budget (RUB)",
+      "manager": "Manager",
       "venue": "Venue",
       "address": "Address",
       "city": "City",
       "country": "Country",
-      "manager": "Project manager",
-      "teamOptional": "Team (optional)",
-      "submit": "Create project",
-      "status": "Status"
+      "team": "Team",
+      "teamHint": "Members can be added after the project is created."
     },
-    "newPage": {
-      "title": "New project",
-      "subtitle": "Project creation wizard"
-    },
+    "saving": "Saving…",
+    "submit": "Create",
     "detail": {
-      "eyebrow": "Project",
-      "back": "Back to list",
       "edit": "Edit",
-      "kanban": "Kanban",
-      "infoTitle": "Information",
-      "dates": "Period",
-      "location": "Location",
-      "metrics": "Metrics",
-      "exhibits": "Exhibits",
-      "participants": "Participants",
-      "timelineTitle": "Phases",
-      "timelineEmpty": "No phases defined",
-      "teamTitle": "Team",
-      "teamEmpty": "No team members",
+      "delete": "Delete",
+      "back": "Back to list",
+      "tabs": {
+        "overview": "Overview",
+        "timeline": "Phases",
+        "team": "Team",
+        "activity": "Activity"
+      },
+      "info": "Details",
+      "timeline": "Phases",
+      "team": "Team",
       "budgetTitle": "Budget",
-      "budgetTotal": "Total",
-      "budgetSpent": "Spent",
-      "budgetHint": "{pct}% of budget used",
-      "filesTitle": "Files",
-      "filesEmpty": "No files attached",
-      "activityTitle": "Activity",
-      "activityEmpty": "No activity yet"
-    },
-    "edit": {
-      "title": "Edit",
-      "autoSave": "Changes save automatically",
-      "reset": "Reset"
+      "spent": "Spent",
+      "files": "Files",
+      "filesPlaceholder": "Files and documents will be available in a future release.",
+      "activity": "Change history",
+      "gantt": "Gantt chart",
+      "kanbanLink": "Kanban"
     },
     "delete": {
       "title": "Delete project?",
-      "description": "Project “{name}” will be permanently removed.",
-      "cancel": "Cancel",
+      "description": "This action cannot be undone.",
       "confirm": "Delete"
     },
     "kanban": {
-      "title": "Project kanban",
-      "subtitle": "Drag cards between status columns",
-      "open": "Open"
+      "title": "Kanban by status",
+      "hint": "Drag a card to change status."
     },
-    "gantt": {
-      "title": "Phase timeline",
-      "empty": "No phases to display"
+    "edit": {
+      "title": "Edit",
+      "autoSave": "Changes save automatically"
     }
   },
   "landing": {
@@ -280,5 +248,88 @@
   "header": {
     "notifications": "Notifications",
     "profile": "Profile"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "addTask": "Add Task",
+    "editTask": "Edit Task",
+    "deleteTask": "Delete Task",
+    "tasksLink": "Project Tasks",
+    "view": {
+      "kanban": "Kanban",
+      "gantt": "Gantt",
+      "list": "List",
+      "calendar": "Calendar"
+    },
+    "status": {
+      "backlog": "Backlog",
+      "in_progress": "In Progress",
+      "review": "Review",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "filters": {
+      "allStatus": "All Status",
+      "allPriorities": "All Priorities",
+      "allTime": "All Time",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "thisQuarter": "This Quarter",
+      "assignee": "Assignee"
+    },
+    "gantt": {
+      "zoom": "Zoom",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "quarter": "Quarter",
+      "criticalPath": "Critical Path",
+      "exportPdf": "Export to PDF",
+      "taskName": "Task",
+      "assignee": "Assignee",
+      "status": "Status",
+      "today": "Today"
+    },
+    "list": {
+      "columns": {
+        "key": "Key",
+        "title": "Title",
+        "status": "Status",
+        "priority": "Priority",
+        "assignee": "Assignee",
+        "dueDate": "Due Date",
+        "progress": "Progress",
+        "tags": "Tags"
+      }
+    },
+    "calendar": {
+      "today": "Today",
+      "month": "Month",
+      "week": "Week"
+    },
+    "detail": {
+      "subtasks": "Subtasks",
+      "comments": "Comments",
+      "addComment": "Add comment",
+      "addSubtask": "Add subtask",
+      "noComments": "No comments",
+      "noSubtasks": "No subtasks",
+      "send": "Send",
+      "group": "Group",
+      "startDate": "Start",
+      "dueDate": "Due Date",
+      "progress": "Progress",
+      "assignee": "Assignee",
+      "priority": "Priority",
+      "status": "Status",
+      "description": "Description"
+    },
+    "empty": "No tasks",
+    "dragHint": "Drag tasks between columns to change status"
   }
 }

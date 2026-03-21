@@ -1,27 +1,28 @@
 import { create } from 'zustand';
-
 import type { ProjectFilters } from '@/features/projects/types/project.types';
 
 type ProjectUIState = {
   filters: ProjectFilters;
-  wizardStep: number;
   setFilters: (f: Partial<ProjectFilters>) => void;
   resetFilters: () => void;
-  setWizardStep: (n: number) => void;
 };
 
 const defaultFilters: ProjectFilters = {
+  page: 1,
+  limit: 12,
   sortBy: 'updatedAt',
-  sortDir: 'desc',
+  sortOrder: 'desc',
 };
 
 export const useProjectStore = create<ProjectUIState>((set) => ({
   filters: defaultFilters,
-  wizardStep: 0,
   setFilters: (f) =>
     set((s) => ({
-      filters: { ...s.filters, ...f },
+      filters: {
+        ...s.filters,
+        ...f,
+        page: f.page !== undefined ? f.page : (s.filters.page ?? 1),
+      },
     })),
   resetFilters: () => set({ filters: defaultFilters }),
-  setWizardStep: (n) => set({ wizardStep: n }),
 }));

@@ -1,133 +1,187 @@
--- Расширение проектов: статусы, типы, фазы, команда, файлы, WebSocket-friendly updated_at
+-- Экспонат: расширение проектов (команда, фазы, аудит, статистика)
+-- Выполняется после 001/002
 
+-- 1) Расширяем projects
 ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_status_check;
 
-UPDATE projects SET status = 'cancelled' WHERE status = 'archived';
+UPDATE projects SET status = 'completed' WHERE status = 'archived';
 
 ALTER TABLE projects
   ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '',
-  ADD COLUMN IF NOT EXISTS project_type VARCHAR(32) NOT NULL DEFAULT 'other',
-  ADD COLUMN IF NOT EXISTS spent_budget NUMERIC(18, 2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'museum',
+  ADD COLUMN IF NOT EXISTS spent_budget NUMERIC(15, 2) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS currency VARCHAR(3) NOT NULL DEFAULT 'RUB',
-  ADD COLUMN IF NOT EXISTS location JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS location JSONB NOT NULL DEFAULT '{"venue":"","address":"","city":"","country":""}'::jsonb,
   ADD COLUMN IF NOT EXISTS manager_id UUID REFERENCES users(id),
-  ADD COLUMN IF NOT EXISTS progress INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS progress INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS exhibits_count INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS participants_count INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS custom_fields JSONB NOT NULL DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS kanban_position INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS custom_fields JSONB,
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
-UPDATE projects SET updated_at = created_at WHERE updated_at IS NULL;
+UPDATE projects SET manager_id = '22222222-2222-2222-2222-222222222222' WHERE manager_id IS NULL;
+
+ALTER TABLE projects ALTER COLUMN manager_id SET NOT NULL;
 
 ALTER TABLE projects ADD CONSTRAINT projects_status_check CHECK (
   status IN ('draft', 'planning', 'active', 'on_hold', 'completed', 'cancelled')
 );
 
 ALTER TABLE projects ADD CONSTRAINT projects_type_check CHECK (
-  project_type IN ('museum', 'corporate', 'expo_forum', 'other')
+  type IN ('museum', 'corporate', 'expo_forum', 'other')
 );
 
 ALTER TABLE projects ADD CONSTRAINT projects_progress_check CHECK (progress >= 0 AND progress <= 100);
 
-CREATE OR REPLACE FUNCTION set_projects_updated_at()
+-- Синхронизация счётчиков с существующими таблицами
+UPDATE projects p SET
+  exhibits_count = (SELECT COUNT(*)::int FROM exhibits e WHERE e.project_id = p.id),
+  participants_count = (SELECT COUNT(*)::int FROM participants pt WHERE pt.project_id = p.id);
+
+-- 2) Команда проекта
+CREATE TABLE IF NOT EXISTS project_team (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    role VARCHAR(50) NOT NULL,
+    permissions JSONB,
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (project_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_project ON project_team(project_id);
+CREATE INDEX IF NOT EXISTS idx_team_user ON project_team(user_id);
+
+-- 3) Фазы
+CREATE TABLE IF NOT EXISTS project_phases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (
+        status IN ('pending', 'in_progress', 'completed', 'cancelled')
+    ),
+    progress INTEGER NOT NULL DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
+    dependencies UUID[] NOT NULL DEFAULT '{}',
+    order_num INTEGER NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_phases_project ON project_phases(project_id);
+CREATE INDEX IF NOT EXISTS idx_phases_status ON project_phases(status);
+CREATE INDEX IF NOT EXISTS idx_phases_order ON project_phases(project_id, order_num);
+
+-- 4) История изменений проекта
+CREATE TABLE IF NOT EXISTS project_changes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    change_type VARCHAR(50) NOT NULL,
+    field_name VARCHAR(100),
+    old_value TEXT,
+    new_value TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_changes_project ON project_changes(project_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_changes_user ON project_changes(user_id);
+
+-- 5) updated_at для projects / phases
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at := NOW();
-  RETURN NEW;
+    NEW.updated_at = NOW();
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS projects_set_updated_at ON projects;
-CREATE TRIGGER projects_set_updated_at
-  BEFORE UPDATE ON projects
-  FOR EACH ROW
-  EXECUTE FUNCTION set_projects_updated_at();
+DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
+CREATE TRIGGER update_projects_updated_at
+    BEFORE UPDATE ON projects
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TABLE IF NOT EXISTS project_phases (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  status VARCHAR(32) NOT NULL CHECK (status IN ('pending', 'in_progress', 'completed')),
-  progress INT NOT NULL DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
-  dependencies UUID[] NOT NULL DEFAULT '{}',
-  sort_order INT NOT NULL DEFAULT 0
-);
+DROP TRIGGER IF EXISTS update_project_phases_updated_at ON project_phases;
+CREATE TRIGGER update_project_phases_updated_at
+    BEFORE UPDATE ON project_phases
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
-CREATE INDEX IF NOT EXISTS idx_project_phases_project ON project_phases(project_id, sort_order);
+-- 6) Аудит project_changes (упрощённый, без обязательного current_setting при отсутствии)
+CREATE OR REPLACE FUNCTION log_project_changes()
+RETURNS TRIGGER AS $$
+DECLARE
+    uid UUID := '00000000-0000-0000-0000-000000000001'::uuid;
+BEGIN
+    BEGIN
+        uid := NULLIF(current_setting('app.current_user_id', true), '')::uuid;
+    EXCEPTION WHEN OTHERS THEN
+        uid := '00000000-0000-0000-0000-000000000001'::uuid;
+    END;
+    IF uid IS NULL THEN
+        uid := '00000000-0000-0000-0000-000000000001'::uuid;
+    END IF;
 
-CREATE TABLE IF NOT EXISTS project_team_members (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  role VARCHAR(32) NOT NULL CHECK (role IN ('manager', 'coordinator', 'designer', 'logistics', 'other')),
-  permissions TEXT[] NOT NULL DEFAULT '{}',
-  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (project_id, user_id)
-);
+    IF TG_OP = 'UPDATE' THEN
+        IF OLD.status IS DISTINCT FROM NEW.status THEN
+            INSERT INTO project_changes (project_id, user_id, change_type, field_name, old_value, new_value)
+            VALUES (NEW.id, uid, 'status_changed', 'status', OLD.status::text, NEW.status::text);
+        END IF;
+    ELSIF TG_OP = 'INSERT' THEN
+        INSERT INTO project_changes (project_id, user_id, change_type)
+        VALUES (NEW.id, uid, 'created');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-CREATE INDEX IF NOT EXISTS idx_project_team_project ON project_team_members(project_id);
+DROP TRIGGER IF EXISTS project_changes_log ON projects;
+CREATE TRIGGER project_changes_log
+    AFTER INSERT OR UPDATE ON projects
+    FOR EACH ROW
+    EXECUTE FUNCTION log_project_changes();
 
-CREATE TABLE IF NOT EXISTS project_files (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  mime_type TEXT,
-  size_bytes BIGINT,
-  uploaded_by UUID REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- 7) Материализованное представление статистики по проектам
+DROP MATERIALIZED VIEW IF EXISTS project_statistics CASCADE;
+CREATE MATERIALIZED VIEW project_statistics AS
+SELECT
+    p.organization_id,
+    p.status::text AS status,
+    COUNT(*)::bigint AS project_count,
+    COALESCE(SUM(p.total_budget), 0)::numeric AS total_budget,
+    COALESCE(SUM(p.spent_budget), 0)::numeric AS spent_budget,
+    COALESCE(AVG(p.progress), 0)::numeric AS avg_progress
+FROM projects p
+GROUP BY p.organization_id, p.status;
 
-CREATE INDEX IF NOT EXISTS idx_project_files_project ON project_files(project_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_project_stats_org_status ON project_statistics(organization_id, status);
 
--- Демо: менеджеры и команда (идемпотентно)
-UPDATE projects SET
-  manager_id = '22222222-2222-2222-2222-222222222222',
-  description = 'Крупная выставка современного искусства.',
-  project_type = 'museum',
-  spent_budget = 1200000,
-  progress = 42,
-  tags = ARRAY['музей', 'премьера'],
-  location = '{"venue":"Главный музей","address":"ул. Примерная, 1","city":"Москва","country":"Россия"}'::jsonb
-WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-
-UPDATE projects SET
-  manager_id = '33333333-3333-3333-3333-333333333333',
-  description = 'Корпоративная экспозиция для партнёров.',
-  project_type = 'corporate',
-  spent_budget = 800000,
-  progress = 65,
-  tags = ARRAY['корпоратив'],
-  location = '{"venue":"Офис-парк","address":"пр. Технологий, 10","city":"Москва","country":"Россия"}'::jsonb
-WHERE id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-
-UPDATE projects SET
-  manager_id = '22222222-2222-2222-2222-222222222222',
-  description = 'Завершённый проект.',
-  project_type = 'other',
-  spent_budget = 1000000,
-  progress = 100,
-  tags = ARRAY['архив'],
-  location = '{"venue":"—","address":"","city":"Москва","country":"Россия"}'::jsonb
-WHERE id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
-
-INSERT INTO project_phases (id, project_id, name, description, start_date, end_date, status, progress, dependencies, sort_order) VALUES
-  ('f1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Концепция', 'Разработка концепции', '2026-04-01', '2026-04-15', 'completed', 100, ARRAY[]::uuid[], 0),
-  ('f2222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Монтаж', 'Монтаж экспозиции', '2026-04-16', '2026-05-20', 'in_progress', 45, ARRAY['f1111111-1111-1111-1111-111111111111']::uuid[], 1),
-  ('f3333333-3333-3333-3333-333333333333', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Открытие', 'Финальные работы', '2026-05-21', '2026-06-30', 'pending', 0, ARRAY['f2222222-2222-2222-2222-222222222222']::uuid[], 2)
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO project_team_members (project_id, user_id, role, permissions, joined_at) VALUES
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'manager', ARRAY['*'], NOW() - INTERVAL '30 days'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333', 'designer', ARRAY['read','write'], NOW() - INTERVAL '25 days'),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '33333333-3333-3333-3333-333333333333', 'manager', ARRAY['*'], NOW() - INTERVAL '20 days')
+-- 8) Демо: команда и фазы (идемпотентно)
+INSERT INTO project_team (project_id, user_id, role, permissions, joined_at) VALUES
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'manager', '["edit","delete","manage_team"]'::jsonb, NOW() - INTERVAL '15 days'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333', 'designer', '["edit"]'::jsonb, NOW() - INTERVAL '12 days'),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', 'manager', '["edit","manage_team"]'::jsonb, NOW() - INTERVAL '8 days')
 ON CONFLICT (project_id, user_id) DO NOTHING;
 
-INSERT INTO project_files (id, project_id, name, url, mime_type, size_bytes, uploaded_by, created_at) VALUES
-  ('d1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Бриф.pdf', 'https://example.com/brief.pdf', 'application/pdf', 240000, '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '10 days')
+UPDATE projects SET team_size = (
+  SELECT COUNT(*)::int FROM project_team t WHERE t.project_id = projects.id
+) WHERE id IN (
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  'cccccccc-cccc-cccc-cccc-cccccccccccc'
+);
+
+INSERT INTO project_phases (id, project_id, name, description, start_date, end_date, status, progress, dependencies, order_num) VALUES
+  ('faaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Подготовка', 'Сбор требований', '2026-04-01', '2026-04-15', 'completed', 100, '{}', 1),
+  ('faaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Монтаж', 'Установка экспонатов', '2026-04-16', '2026-05-20', 'in_progress', 45, ARRAY['faaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa']::uuid[], 2),
+  ('fbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Проектирование', 'Макеты и согласование', '2026-03-15', '2026-04-10', 'completed', 100, '{}', 1)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT refresh_dashboard_stats();
+
+REFRESH MATERIALIZED VIEW project_statistics;

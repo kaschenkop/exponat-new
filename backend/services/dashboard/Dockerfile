@@ -1,8 +1,9 @@
-FROM golang:1.22-alpine AS build
+FROM golang:1.23-alpine AS build
 WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
+COPY services/dashboard/go.mod services/dashboard/go.sum ./services/dashboard/
+RUN cd services/dashboard && go mod download
+COPY services/dashboard ./services/dashboard
+WORKDIR /src/services/dashboard
 RUN CGO_ENABLED=0 go build -o /out/dashboard ./cmd
 
 FROM alpine:3.19

@@ -4,45 +4,37 @@ import type { ProjectPhase } from '@/features/projects/types/project.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { useTranslations } from 'next-intl';
 
-export function ProjectTimeline({ phases }: { phases: ProjectPhase[] }): React.ReactElement {
+export function ProjectTimeline({
+  phases,
+}: {
+  phases: ProjectPhase[] | null | undefined;
+}): React.ReactElement {
   const t = useTranslations('projects');
-
-  if (!phases.length) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('detail.timelineTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">{t('detail.timelineEmpty')}</CardContent>
-      </Card>
-    );
-  }
+  const list = phases ?? [];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('detail.timelineTitle')}</CardTitle>
+        <CardTitle>{t('detail.timeline')}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {phases.map((ph) => (
-          <div
-            key={ph.id}
-            className="relative border-l-2 border-primary/30 pl-4 pb-2 last:pb-0"
-          >
-            <div className="absolute -left-[5px] top-1 h-2 w-2 rounded-full bg-primary" />
-            <p className="font-medium">{ph.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {ph.startDate} — {ph.endDate} · {t(`phaseStatus.${ph.status}`)}
-            </p>
-            <p className="text-sm">{ph.description}</p>
-            <div className="mt-2 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${ph.progress}%` }}
-              />
-            </div>
-          </div>
-        ))}
+      <CardContent>
+        <ol className="relative space-y-4 border-l border-border pl-6">
+          {list.map((ph) => (
+            <li key={ph.id} className="relative">
+              <span className="absolute -left-[25px] mt-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background" />
+              <span className="text-sm font-medium">{ph.name}</span>
+              <p className="text-xs text-muted-foreground">
+                {ph.startDate} — {ph.endDate} · {ph.status} · {ph.progress}%
+              </p>
+              {ph.description ? (
+                <p className="mt-1 text-sm text-muted-foreground">{ph.description}</p>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+        {list.length === 0 ? (
+          <p className="text-sm text-muted-foreground">—</p>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -1,64 +1,136 @@
 'use client';
 
+import {
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { projectsApi } from '@/features/projects/api/projectsApi';
+import { useToast } from '@/shared/hooks/use-toast';
 import type {
   Project,
   ProjectCreateInput,
   ProjectUpdateInput,
 } from '@/features/projects/types/project.types';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export function useProjectMutations(): {
-  create: ReturnType<typeof useMutation<Project, Error, ProjectCreateInput>>;
-  update: ReturnType<
-    typeof useMutation<Project, Error, { id: string; body: ProjectUpdateInput }>
-  >;
-  remove: ReturnType<typeof useMutation<void, Error, string>>;
-  patchStatus: ReturnType<
-    typeof useMutation<
-      Project,
-      Error,
-      { id: string; status: string; kanbanPosition?: number }
-    >
-  >;
-} {
+async function optimisticSet(
+  qc: QueryClient,
+  id: string,
+  updater: (p: Project) => Project,
+) {
+  await qc.cancelQueries({ queryKey: ['projects', id] });
+  const prev = qc.getQueryData<Project>(['projects', id]);
+  if (prev) {
+    qc.setQueryData<Project>(['projects', id], updater(prev));
+  }
+  return prev;
+}
+
+export function useProjectMutations() {
   const qc = useQueryClient();
+  const { toast } = useToast();
 
-  const create = useMutation({
-    mutationFn: (body: ProjectCreateInput) => projectsApi.create(body),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ['projects'] });
+  const createProject = useMutation({
+    mutationFn: (input: ProjectCreateInput) => projectsApi.create(input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      toast({ title: 'Проект создан' });
+    },
+    onError: (e: Error) => {
+      toast({
+        title: 'Ошибка',
+        description: e.message,
+        variant: 'destructive',
+      });
     },
   });
 
-  const update = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: ProjectUpdateInput }) =>
-      projectsApi.update(id, body),
-    onSuccess: async (_data, vars) => {
-      await qc.invalidateQueries({ queryKey: ['projects'] });
-      await qc.invalidateQueries({ queryKey: ['projects', 'detail', vars.id] });
+  const updateProject = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: ProjectUpdateInput }) =>
+      projectsApi.update(id, input),
+    onMutate: async ({ id, input }) => {
+      const prev = await optimisticSet(qc, id, (p) => ({
+        ...p,
+        ...input,
+        location: input.location ?? p.location,
+      }));
+      return { prev };
+    },
+    onError: (e: Error, { id }, ctx) => {
+      if (ctx?.prev) {
+        qc.setQueryData(['projects', id], ctx.prev);
+      }
+      toast({
+        title: 'Ошибка',
+        description: e.message,
+        variant: 'destructive',
+      });
+    },
+    onSuccess: (_, { id }) => {
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['projects', id] });
+      toast({ title: 'Сохранено' });
     },
   });
 
-  const remove = useMutation({
+  const deleteProject = useMutation({
     mutationFn: (id: string) => projectsApi.remove(id),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ['projects'] });
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      toast({ title: 'Проект удалён' });
+    },
+    onError: (e: Error) => {
+      toast({
+        title: 'Ошибка',
+        description: e.message,
+        variant: 'destructive',
+      });
     },
   });
 
-  const patchStatus = useMutation<
-    Project,
-    Error,
-    { id: string; status: string; kanbanPosition?: number }
-  >({
-    mutationFn: (vars: { id: string; status: string; kanbanPosition?: number }) =>
-      projectsApi.patchStatus(vars.id, vars.status, vars.kanbanPosition),
-    onSuccess: async (_data, vars) => {
-      await qc.invalidateQueries({ queryKey: ['projects'] });
-      await qc.invalidateQueries({ queryKey: ['projects', 'detail', vars.id] });
+  const updatePhase = useMutation({
+    mutationFn: ({
+      projectId,
+      phaseId,
+      patch,
+    }: {
+      projectId: string;
+      phaseId: string;
+      patch: Parameters<typeof projectsApi.updatePhase>[2];
+    }) => projectsApi.updatePhase(projectId, phaseId, patch),
+    onSuccess: (_, { projectId }) => {
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'phases'] });
     },
   });
 
-  return { create, update, remove, patchStatus };
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: Project['status'] }) =>
+      projectsApi.update(id, { status }),
+    onMutate: async ({ id, status }) => {
+      const prev = await optimisticSet(qc, id, (p) => ({ ...p, status }));
+      return { prev };
+    },
+    onError: (e: Error, { id }, ctx) => {
+      if (ctx?.prev) {
+        qc.setQueryData(['projects', id], ctx.prev);
+      }
+      toast({
+        title: 'Ошибка',
+        description: e.message,
+        variant: 'destructive',
+      });
+    },
+    onSuccess: (_, { id }) => {
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['projects', id] });
+    },
+  });
+
+  return {
+    createProject,
+    updateProject,
+    deleteProject,
+    updatePhase,
+    updateStatus,
+  };
 }

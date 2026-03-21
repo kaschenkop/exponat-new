@@ -2,90 +2,70 @@
 
 import type { ProjectPhase } from '@/features/projects/types/project.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 
-function barStyle(
-  projectStart: string,
-  projectEnd: string,
-  phaseStart: string,
-  phaseEnd: string,
-): { left: string; width: string } {
-  const ps = parseISO(projectStart);
-  const pe = parseISO(projectEnd);
-  const a = parseISO(phaseStart);
-  const b = parseISO(phaseEnd);
-  const total = Math.max(1, differenceInCalendarDays(pe, ps));
-  const startOff = Math.max(0, differenceInCalendarDays(a, ps));
-  const len = Math.max(1, differenceInCalendarDays(b, a));
-  const left = (startOff / total) * 100;
-  const width = Math.min(100 - left, (len / total) * 100);
-  return { left: `${left}%`, width: `${width}%` };
+function parse(d: string): number {
+  return new Date(d).getTime();
 }
 
-export function ProjectGantt({
-  phases,
-  projectStart,
-  projectEnd,
-}: {
-  phases: ProjectPhase[];
-  projectStart: string;
-  projectEnd: string;
-}): React.ReactElement {
+export function ProjectGantt({ phases }: { phases: ProjectPhase[] | null | undefined }): React.ReactElement {
   const t = useTranslations('projects');
+  const list = phases ?? [];
 
-  if (!phases.length) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('gantt.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">{t('gantt.empty')}</CardContent>
-      </Card>
-    );
-  }
+  const range = useMemo(() => {
+    if (!list.length) {
+      return { min: 0, max: 1 };
+    }
+    const first = list[0];
+    if (!first) {
+      return { min: 0, max: 1 };
+    }
+    let min = parse(first.startDate);
+    let max = parse(first.endDate);
+    for (const p of list) {
+      min = Math.min(min, parse(p.startDate));
+      max = Math.max(max, parse(p.endDate));
+    }
+    return { min, max: Math.max(max, min + 86400000) };
+  }, [list]);
+
+  const span = range.max - range.min || 1;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('gantt.title')}</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {projectStart} — {projectEnd}
-        </p>
+        <CardTitle>{t('detail.gantt')}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="relative h-8 w-full rounded-md bg-muted">
-          {phases.map((ph) => {
-            const { left, width } = barStyle(projectStart, projectEnd, ph.startDate, ph.endDate);
-            return (
-              <div
-                key={ph.id}
-                className="absolute top-1 h-6 rounded bg-primary/80"
-                style={{ left, width }}
-                title={ph.name}
-              />
-            );
-          })}
-        </div>
-        <div className="space-y-2">
-          {phases.map((ph) => (
-            <div key={ph.id} className="flex items-center gap-3 text-sm">
-              <div className="min-w-[140px] font-medium">{ph.name}</div>
-              <div className="relative h-6 flex-1 rounded bg-muted">
+      <CardContent className="space-y-3">
+        {list.map((ph) => {
+          const left = ((parse(ph.startDate) - range.min) / span) * 100;
+          const width =
+            ((parse(ph.endDate) - parse(ph.startDate)) / span) * 100 || 2;
+          return (
+            <div key={ph.id} className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{ph.name}</span>
+                <span>
+                  {ph.startDate} — {ph.endDate}
+                </span>
+              </div>
+              <div className="relative h-6 w-full rounded-md bg-muted">
                 <div
-                  className="absolute top-0 h-6 rounded bg-primary/70"
+                  className="absolute top-1 h-4 rounded bg-primary/80"
                   style={{
-                    ...barStyle(projectStart, projectEnd, ph.startDate, ph.endDate),
-                    position: 'absolute',
+                    left: `${left}%`,
+                    width: `${Math.max(width, 1)}%`,
                   }}
+                  title={ph.name}
                 />
               </div>
-              <div className="w-24 shrink-0 text-right text-xs text-muted-foreground">
-                {ph.startDate} — {ph.endDate}
-              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
+        {list.length === 0 ? (
+          <p className="text-sm text-muted-foreground">—</p>
+        ) : null}
       </CardContent>
     </Card>
   );

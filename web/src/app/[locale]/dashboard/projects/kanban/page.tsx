@@ -1,28 +1,19 @@
-'use client';
-
-import { ProjectKanban } from '@/features/projects/components/ProjectKanban';
+import { initPageLocale } from '@/i18n/server';
 import { ProjectsShell } from '@/features/projects/components/ProjectsShell';
-import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/ui/button';
-import { useTranslations } from 'next-intl';
+import { ProjectKanban } from '@/features/projects/components/ProjectKanban';
+import { getTranslations } from 'next-intl/server';
 
-export default function ProjectsKanbanPage(): React.ReactElement {
-  const t = useTranslations('projects');
+export default async function ProjectsKanbanPage({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<React.ReactElement> {
+  initPageLocale(params.locale);
+  const t = await getTranslations('projects');
 
   return (
-    <ProjectsShell>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight">{t('kanban.title')}</h1>
-            <p className="mt-1 text-muted-foreground">{t('kanban.subtitle')}</p>
-          </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/projects">{t('detail.back')}</Link>
-          </Button>
-        </div>
-        <ProjectKanban />
-      </div>
+    <ProjectsShell title={t('kanban.title')} showCreate>
+      <ProjectKanban />
     </ProjectsShell>
   );
 }
