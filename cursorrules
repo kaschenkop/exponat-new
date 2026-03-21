@@ -1,0 +1,979 @@
+# Экспонат (Exponat) - Cursor AI Rules
+
+## 🎯 О ПРОЕКТЕ
+
+**Название:** Экспонат / Exponat
+**Тип:** SaaS-платформа для управления выставками (музейными, корпоративными, экспофорумами)
+**Язык интерфейса:** Русский (основной), English (дополнительный)
+**Рынок:** Россия и СНГ
+**Архитектура:** Microservices (Backend) + Monolithic Frontend (Next.js)
+
+---
+
+## 🏗️ TECH STACK
+
+### Frontend
+- **Framework:** Next.js 14 (App Router) + React 18
+- **Language:** TypeScript 5.4+ (strict mode)
+- **Styling:** Tailwind CSS 3.4+ (utility-first, NO CSS modules, NO styled-components)
+- **State Management:**
+  - Global: Zustand
+  - Server State: TanStack Query (React Query)
+  - Forms: React Hook Form + Zod
+  - URL State: Next.js useSearchParams
+- **UI Library:** shadcn/ui (Radix UI primitives + Tailwind)
+- **Icons:** Lucide Icons
+- **Animations:** Framer Motion
+- **i18n:** next-intl (ru/en)
+- **Visualization:**
+  - Charts: Recharts
+  - 3D: React Three Fiber + Three.js + @react-three/drei
+- **Real-time:** Socket.io-client, Y.js (CRDT for collaboration)
+
+### Backend
+- **Languages:**
+  - Go (Gin/Echo) - для высоконагруженных сервисов (API Gateway, Projects, Budget, Construction, Space Planning, Participants, Notifications, File Storage, Search)
+  - Python (FastAPI) - для AI/ML сервисов (AI Document Gen, AI Analytics, AI Assistant, Logistics, Reporting, Integration)
+- **Authentication:** Keycloak (готовое решение, Java)
+- **Message Broker:** Apache Kafka (события), RabbitMQ (задачи)
+- **Cache:** Redis
+- **Storage:** MinIO / Yandex Object Storage
+
+### Databases
+- **PostgreSQL 16** - основная БД (Projects, Budget, Construction, Users)
+- **MongoDB** - для Logistics (гибкая схема экспонатов)
+- **Redis** - кэш и сессии
+- **Elasticsearch** - полнотекстовый поиск
+- **ClickHouse** - аналитика (OLAP)
+- **Vector DB** (Pinecone/Qdrant) - для AI RAG
+
+---
+
+## 📁 АРХИТЕКТУРА КОДА
+
+### Feature-Sliced Design (строго обязательно!)
+
+```
+exponat/
+├── web/                              # Frontend monolith
+│   ├── src/
+│   │   ├── app/                      # Next.js App Router
+│   │   │   └── [locale]/             # Internationalization
+│   │   │       ├── (auth)/           # Auth routes group
+│   │   │       ├── (dashboard)/      # Dashboard routes group
+│   │   │       ├── layout.tsx
+│   │   │       └── page.tsx
+│   │   ├── features/                 # Feature modules
+│   │   │   ├── dashboard/
+│   │   │   ├── projects/
+│   │   │   ├── budget/
+│   │   │   ├── logistics/
+│   │   │   ├── construction/
+│   │   │   ├── space-planning/
+│   │   │   ├── participants/
+│   │   │   ├── ai-assistant/
+│   │   │   ├── analytics/
+│   │   │   └── auth/
+│   │   ├── shared/                   # Shared code
+│   │   │   ├── ui/                   # UI components
+│   │   │   ├── lib/                  # Utils, helpers
+│   │   │   ├── hooks/                # Common hooks
+│   │   │   ├── types/                # Global types
+│   │   │   └── config/               # Configuration
+│   │   ├── widgets/                  # Composite components
+│   │   │   ├── sidebar/
+│   │   │   ├── header/
+│   │   │   └── stats-cards/
+│   │   └── i18n/                     # Internationalization
+│   │       ├── locales/
+│   │       │   ├── ru.json
+│   │       │   └── en.json
+│   │       └── config.ts
+│   ├── public/
+│   ├── .cursorrules                  # This file
+│   └── package.json
+├── backend/                          # Backend microservices
+│   ├── services/
+│   │   ├── api-gateway/              # Go
+│   │   ├── projects/                 # Go
+│   │   ├── budget/                   # Go
+│   │   ├── ai-document-gen/          # Python
+│   │   └── ...
+│   └── shared/                       # Shared libraries
+└── docs/                             # Documentation
+```
+
+### Feature Module Structure (СТРОГО соблюдать)
+
+```
+features/[domain]/
+├── components/           # UI components этого домена
+│   ├── [Name]Card.tsx
+│   ├── [Name]Form.tsx
+│   ├── [Name]List.tsx
+│   └── [Name]Filters.tsx
+├── hooks/               # Custom hooks
+│   ├── use[Name].ts
+│   ├── use[Name]s.ts
+│   └── use[Name]Mutations.ts
+├── api/                 # API layer
+│   └── [name]Api.ts
+├── store/               # Zustand stores (UI state only)
+│   └── [name]Store.ts
+├── types/               # TypeScript types
+│   └── [name].types.ts
+└── utils/               # Domain utilities
+    ├── [name]Helpers.ts
+    └── [name]Validation.ts
+```
+
+---
+
+## 💻 CODE STYLE
+
+### TypeScript
+
+**Обязательные правила:**
+- ✅ **Strict mode ВСЕГДА** - `"strict": true` в tsconfig.json
+- ✅ **NO `any` type** - используй `unknown` или конкретные типы
+- ✅ **Explicit return types** для всех функций (кроме очевидных)
+- ✅ **Type suffix** для типов: `ProjectType`, `UserType` (НЕ `IProject`, `TUser`)
+- ✅ **Interfaces для объектов**, types для unions/primitives
+- ✅ **Type inference** где возможно, но будь явным где важно
+
+**Path Aliases (обязательно использовать):**
+```typescript
+import { Button } from '@/shared/ui/button'
+import { useProjects } from '@/features/projects/hooks/useProjects'
+import { ProjectCard } from '@/features/projects/components/ProjectCard'
+import { ProjectType } from '@/features/projects/types/project.types'
+```
+
+**Конфиг tsconfig.json paths:**
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/widgets/*": ["./src/widgets/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/i18n/*": ["./src/i18n/*"]
+    }
+  }
+}
+```
+
+**Примеры хорошего кода:**
+```typescript
+// ✅ GOOD
+interface ProjectType {
+  id: string
+  name: string
+  status: ProjectStatus
+  budget: BudgetType
+}
+
+type ProjectStatus = 'draft' | 'active' | 'completed'
+
+async function getProject(id: string): Promise<ProjectType> {
+  const response = await api.get(`/projects/${id}`)
+  return response.data
+}
+
+// ❌ BAD
+interface IProject {  // Don't use I prefix
+  id: any  // Never use any
+  name: string
+  status: string  // Should be union type
+}
+
+function getProject(id) {  // Missing types
+  return api.get(`/projects/${id}`)  // Missing return type
+}
+```
+
+### React & Next.js
+
+**Компоненты:**
+- ✅ **ТОЛЬКО функциональные компоненты** (NO class components)
+- ✅ **Server Components по умолчанию** (Next.js 14 App Router)
+- ✅ **`'use client'` только где реально нужно** (useState, useEffect, onClick, etc.)
+- ✅ **Async/await для Server Components**
+- ✅ **Props destructuring** в сигнатуре компонента
+- ✅ **Named exports** для компонентов (НЕ default export)
+- ✅ **Props interface** с именем `ComponentNameProps`
+
+**Примеры:**
+```typescript
+// ✅ GOOD - Server Component
+import { ProjectCard } from './ProjectCard'
+
+interface ProjectListProps {
+  projectId: string
+}
+
+export async function ProjectList({ projectId }: ProjectListProps) {
+  const projects = await getProjects(projectId)  // Async в Server Component
+  
+  return (
+    <div className="grid gap-4">
+      {projects.map(project => (
+        <ProjectCard key={project.id} project={project} />
+      ))}
+    </div>
+  )
+}
+
+// ✅ GOOD - Client Component (нужна интерактивность)
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/shared/ui/button'
+
+interface ProjectFormProps {
+  onSubmit: (data: ProjectCreateInput) => void
+}
+
+export function ProjectForm({ onSubmit }: ProjectFormProps) {
+  const [name, setName] = useState('')
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={name} onChange={e => setName(e.target.value)} />
+      <Button type="submit">Создать</Button>
+    </form>
+  )
+}
+
+// ❌ BAD
+export default function Component() { ... }  // Don't use default export
+const Component: React.FC<Props> = (props) => { ... }  // Don't use React.FC
+class Component extends React.Component { ... }  // NO class components
+```
+
+**Hooks правила:**
+- ✅ Используй `useMemo` для дорогих вычислений
+- ✅ Используй `useCallback` для функций в deps
+- ✅ Используй `React.memo` для компонентов с частым re-render
+- ⚠️ НЕ злоупотребляй мемоизацией (только где нужно)
+
+### Styling (Tailwind CSS)
+
+**КРИТИЧЕСКИ ВАЖНО:**
+- ✅ **ТОЛЬКО Tailwind CSS** для всех стилей
+- ❌ **NO CSS Modules** (`*.module.css` запрещены)
+- ❌ **NO styled-components** или любые CSS-in-JS
+- ❌ **NO inline styles** (`style={{ ... }}` запрещены, кроме динамических значений от API)
+- ✅ **Используй `cn()` utility** для условных классов
+- ✅ **Mobile-first подход** (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`)
+
+**cn() utility (обязательно создать в shared/lib):**
+```typescript
+// shared/lib/utils.ts
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+```
+
+**Примеры:**
+```typescript
+// ✅ GOOD
+import { cn } from '@/shared/lib/utils'
+
+<Button 
+  className={cn(
+    "px-4 py-2 rounded-lg font-medium transition-colors",
+    isActive && "bg-primary text-white",
+    isDisabled && "opacity-50 cursor-not-allowed"
+  )}
+>
+  Click me
+</Button>
+
+// Responsive
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {items.map(item => <Card key={item.id} {...item} />)}
+</div>
+
+// ❌ BAD
+<Button style={{ padding: '16px', color: 'blue' }}>Click</Button>  // NO inline styles
+<Button className={`px-4 ${active ? 'bg-blue' : ''}`}>Click</Button>  // Use cn() instead
+import styles from './Button.module.css'  // NO CSS modules
+const StyledButton = styled.button`...`  // NO styled-components
+```
+
+**Tailwind Config (Exponat Design System):**
+```typescript
+// tailwind.config.ts
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  darkMode: ['class'],
+  content: ['./src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        // Exponat Brand Colors
+        primary: {
+          DEFAULT: '#6366F1',  // Indigo
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          // ... оттенки
+          900: '#312E81',
+        },
+        secondary: {
+          DEFAULT: '#8B5CF6',  // Purple
+          // ... оттенки
+        },
+        // Semantic colors
+        success: '#10B981',
+        warning: '#F59E0B',
+        error: '#EF4444',
+      },
+      fontFamily: {
+        display: ['Cal Sans', 'sans-serif'],      // Заголовки
+        body: ['Onest', 'Geist', 'sans-serif'],   // Текст (отличная кириллица!)
+        mono: ['JetBrains Mono', 'monospace'],    // Код
+      },
+      spacing: {
+        // Exponat spacing scale
+        '18': '4.5rem',  // 72px
+        '22': '5.5rem',  // 88px
+      },
+      borderRadius: {
+        sm: '4px',
+        md: '8px',
+        lg: '12px',
+        xl: '16px',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')],
+}
+
+export default config
+```
+
+### State Management
+
+**Правило разделения состояний:**
+
+| Тип состояния | Инструмент | Примеры |
+|---------------|-----------|---------|
+| **Server State** | TanStack Query | Проекты, бюджет, экспонаты, участники (любые данные с backend) |
+| **Global Client State** | Zustand | Текущий пользователь, UI состояние (sidebar открыт/закрыт, theme) |
+| **Form State** | React Hook Form + Zod | Формы создания/редактирования |
+| **Local Component State** | useState, useReducer | Модальные окна, аккордеоны, табы |
+| **URL State** | useSearchParams | Фильтры, пагинация, сортировка |
+
+**TanStack Query (обязательные правила):**
+```typescript
+// ✅ GOOD
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+
+export function useProjects(filters: ProjectFilters) {
+  return useQuery({
+    queryKey: ['projects', filters],  // ВСЕГДА массив с зависимостями
+    queryFn: () => projectsApi.list(filters),
+    staleTime: 30000,  // 30 секунд
+    gcTime: 5 * 60 * 1000,  // 5 минут (ранее cacheTime)
+  })
+}
+
+export function useProjectMutations() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (data: ProjectCreateInput) => projectsApi.create(data),
+    onSuccess: () => {
+      // Invalidate queries для обновления данных
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+// ❌ BAD
+useQuery('projects', getProjects)  // Используй объект config, не legacy API
+```
+
+**Zustand (только для UI state):**
+```typescript
+// ✅ GOOD
+import { create } from 'zustand'
+
+interface ProjectStore {
+  selectedProjectId: string | null
+  sidebarOpen: boolean
+  setSelectedProject: (id: string | null) => void
+  toggleSidebar: () => void
+}
+
+export const useProjectStore = create<ProjectStore>((set) => ({
+  selectedProjectId: null,
+  sidebarOpen: true,
+  setSelectedProject: (id) => set({ selectedProjectId: id }),
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+}))
+```
+
+**React Hook Form + Zod:**
+```typescript
+// ✅ GOOD
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const projectSchema = z.object({
+  name: z.string().min(3, 'Минимум 3 символа').max(255),
+  description: z.string().optional(),
+  startDate: z.string().datetime(),
+  budget: z.number().min(0, 'Бюджет не может быть отрицательным'),
+})
+
+type ProjectFormData = z.infer<typeof projectSchema>
+
+export function ProjectForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<ProjectFormData>({
+    resolver: zodResolver(projectSchema),
+  })
+  
+  const onSubmit = (data: ProjectFormData) => {
+    // data уже провалидирована и типизирована
+  }
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('name')} />
+      {errors.name && <span>{errors.name.message}</span>}
+    </form>
+  )
+}
+```
+
+### Internationalization (i18n)
+
+**КРИТИЧЕСКИ ВАЖНО:**
+- ✅ **ВСЕ тексты ТОЛЬКО через next-intl** (NO хардкода!)
+- ✅ **Русский язык по умолчанию** (`locale: 'ru'`)
+- ✅ **Ключи в camelCase**: `nav.dashboard`, `projects.createNew`
+- ✅ **Группировка по модулям** в JSON файлах
+
+**Структура переводов:**
+```json
+// i18n/locales/ru.json
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно"
+  },
+  "nav": {
+    "dashboard": "Дашборд",
+    "projects": "Проекты",
+    "budget": "Бюджет",
+    "logistics": "Логистика",
+    "construction": "Строительство",
+    "spacePlanning": "Планирование пространства",
+    "participants": "Участники",
+    "aiAssistant": "AI-ассистент",
+    "analytics": "Аналитика",
+    "settings": "Настройки"
+  },
+  "projects": {
+    "title": "Проекты",
+    "createNew": "Создать проект",
+    "editProject": "Редактировать проект",
+    "deleteProject": "Удалить проект",
+    "status": {
+      "draft": "Черновик",
+      "planning": "Планирование",
+      "active": "Активный",
+      "on_hold": "Приостановлен",
+      "completed": "Завершён",
+      "cancelled": "Отменён"
+    }
+  }
+}
+```
+
+**Использование:**
+```typescript
+// ✅ GOOD
+'use client'
+import { useTranslations } from 'next-intl'
+
+export function ProjectCard() {
+  const t = useTranslations('projects')
+  
+  return (
+    <div>
+      <h2>{t('title')}</h2>
+      <button>{t('createNew')}</button>
+      <span>{t('status.active')}</span>
+    </div>
+  )
+}
+
+// Server Component
+import { getTranslations } from 'next-intl/server'
+
+export async function ProjectList() {
+  const t = await getTranslations('projects')
+  
+  return <h1>{t('title')}</h1>
+}
+
+// ❌ BAD
+<button>Создать проект</button>  // NO hardcoded text!
+<h1>Projects</h1>  // ВСЕГДА через t()
+```
+
+---
+
+## 🎨 DESIGN SYSTEM (Exponat Brand)
+
+### Цвета
+- **Primary:** Indigo (#6366F1) - основной бренд Экспонат
+- **Secondary:** Purple (#8B5CF6) - акценты
+- **Success:** Green (#10B981)
+- **Warning:** Amber (#F59E0B)
+- **Error:** Red (#EF4444)
+- **Neutrals:** Slate оттенки
+
+### Типографика
+- **Display (заголовки):** Cal Sans - выразительный, современный
+- **Body (текст):** Onest / Geist - **отличная кириллица**, читабельный
+- **Mono (код):** JetBrains Mono
+
+### Spacing Scale
+4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px, 96px
+
+### Border Radius
+- sm: 4px
+- md: 8px
+- lg: 12px
+- xl: 16px
+
+### Breakpoints (Mobile-first)
+- **sm:** 640px - mobile landscape
+- **md:** 768px - tablets
+- **lg:** 1024px - desktops
+- **xl:** 1280px - large screens
+- **2xl:** 1536px - extra large
+
+---
+
+## 📝 NAMING CONVENTIONS
+
+### Files
+- **Components:** PascalCase - `ProjectCard.tsx`, `BudgetForm.tsx`
+- **Hooks:** camelCase с `use` prefix - `useProjects.ts`, `useAuth.ts`
+- **Utils:** camelCase - `projectHelpers.ts`, `formatters.ts`
+- **Types:** camelCase с `.types` suffix - `project.types.ts`, `budget.types.ts`
+- **API:** camelCase с `Api` suffix - `projectsApi.ts`, `budgetApi.ts`
+- **Stores:** camelCase с `Store` suffix - `projectStore.ts`, `uiStore.ts`
+
+### Code
+- **Components:** PascalCase - `ProjectCard`, `BudgetChart`
+- **Functions:** camelCase - `getProject`, `calculateBudget`
+- **Variables:** camelCase - `projectId`, `userName`
+- **Constants:** UPPER_SNAKE_CASE - `API_BASE_URL`, `MAX_FILE_SIZE`
+- **Types/Interfaces:** PascalCase с `Type` suffix - `ProjectType`, `UserType`
+- **Enums:** PascalCase - `ProjectStatus`, `UserRole`
+
+### i18n Keys
+- **camelCase:** `nav.dashboard`, `projects.createNew`, `common.save`
+- **Группировка:** модуль.ключ.подключ
+
+---
+
+## ✨ BEST PRACTICES
+
+### Performance
+
+**Обязательно:**
+- ✅ `next/image` для ВСЕХ изображений (автооптимизация)
+- ✅ `React.lazy()` + `Suspense` для тяжелых компонентов
+- ✅ `useMemo` для дорогих вычислений (но не злоупотребляй)
+- ✅ `useCallback` для функций в dependencies
+- ✅ `React.memo` для компонентов с частым re-render
+- ✅ Debounce для search/filter inputs
+- ✅ Virtual scrolling (`react-window`) для длинных списков (>100 items)
+- ✅ Code splitting по роутам (автоматически в Next.js)
+
+**Примеры:**
+```typescript
+// ✅ GOOD - Lazy loading
+import { lazy, Suspense } from 'react'
+import { Skeleton } from '@/shared/ui/skeleton'
+
+const ProjectGantt = lazy(() => import('./ProjectGantt'))
+
+export function ProjectTimeline() {
+  return (
+    <Suspense fallback={<Skeleton className="h-96" />}>
+      <ProjectGantt />
+    </Suspense>
+  )
+}
+
+// ✅ GOOD - Memoization
+import { useMemo } from 'react'
+
+export function BudgetChart({ expenses }: Props) {
+  const chartData = useMemo(() => {
+    // Дорогое вычисление
+    return expenses.map(e => ({
+      month: format(e.date, 'MMM'),
+      amount: e.amount
+    }))
+  }, [expenses])  // Пересчитываем только при изменении expenses
+  
+  return <Chart data={chartData} />
+}
+
+// ✅ GOOD - Debounce
+import { useDebounce } from '@/shared/hooks/useDebounce'
+
+export function ProjectSearch() {
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)  // 300ms задержка
+  
+  const { data } = useProjects({ search: debouncedSearch })
+  
+  return <input value={search} onChange={e => setSearch(e.target.value)} />
+}
+```
+
+### Accessibility (A11y)
+
+**Обязательные требования WCAG 2.1 Level AA:**
+- ✅ **Semantic HTML:** используй правильные теги (`<button>`, `<nav>`, `<main>`, `<article>`)
+- ✅ **ARIA attributes:** `aria-label`, `aria-describedby`, `aria-expanded`
+- ✅ **Keyboard navigation:** все интерактивные элементы доступны с клавиатуры
+- ✅ **Focus visible states:** видимый focus outline (не удаляй!)
+- ✅ **Color contrast:** минимум 4.5:1 для текста
+- ✅ **Alt text** для всех изображений
+
+**Примеры:**
+```typescript
+// ✅ GOOD
+<button 
+  aria-label="Удалить проект"
+  onClick={handleDelete}
+>
+  <TrashIcon />
+</button>
+
+<nav aria-label="Основная навигация">
+  <ul>
+    <li><Link href="/dashboard">Дашборд</Link></li>
+  </ul>
+</nav>
+
+<img src="/logo.png" alt="Логотип Экспонат" />
+
+// ❌ BAD
+<div onClick={handleClick}>Click</div>  // Должен быть <button>
+<button className="focus:outline-none">...</button>  // НЕ удаляй outline!
+<img src="/logo.png" />  // Нужен alt
+```
+
+### Error Handling
+
+**Frontend:**
+```typescript
+// ✅ GOOD - Error Boundary
+'use client'
+import { Component, ReactNode } from 'react'
+
+interface Props {
+  children: ReactNode
+}
+
+interface State {
+  hasError: boolean
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo)
+    // Отправить в Sentry
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center">
+          <h2>Что-то пошло не так</h2>
+          <button onClick={() => this.setState({ hasError: false })}>
+            Попробовать снова
+          </button>
+        </div>
+      )
+    }
+    
+    return this.props.children
+  }
+}
+
+// ✅ GOOD - API Error handling
+import { toast } from '@/shared/ui/toast'
+
+export function useProjectMutations() {
+  return useMutation({
+    mutationFn: createProject,
+    onError: (error) => {
+      const message = error.response?.data?.message || 'Произошла ошибка'
+      toast({
+        title: 'Ошибка',
+        description: message,
+        variant: 'destructive',
+      })
+    },
+  })
+}
+```
+
+### Testing
+
+**Минимальное покрытие:**
+- Unit tests: >70% для utils, helpers
+- Component tests: >60% для критичных компонентов
+- E2E tests: happy paths основных сценариев
+
+**Инструменты:**
+- Unit/Component: Vitest + Testing Library
+- E2E: Playwright
+- Visual: Chromatic (опционально)
+
+```typescript
+// Пример unit test
+import { describe, it, expect } from 'vitest'
+import { calculateBudgetRemaining } from './budgetHelpers'
+
+describe('calculateBudgetRemaining', () => {
+  it('should calculate remaining budget correctly', () => {
+    const result = calculateBudgetRemaining(1000, 300)
+    expect(result).toBe(700)
+  })
+})
+
+// Пример component test
+import { render, screen } from '@testing-library/react'
+import { ProjectCard } from './ProjectCard'
+
+it('renders project name', () => {
+  render(<ProjectCard project={mockProject} />)
+  expect(screen.getByText('Test Project')).toBeInTheDocument()
+})
+```
+
+---
+
+## 🚫 ЗАПРЕТЫ (НИКОГДА НЕ ДЕЛАЙ)
+
+### Frontend
+- ❌ **CSS Modules** (`*.module.css`) - используй только Tailwind
+- ❌ **styled-components** или любые CSS-in-JS библиотеки
+- ❌ **inline styles** (`style={{ ... }}`) кроме динамических значений
+- ❌ **Class components** - только функциональные
+- ❌ **`any` type** в TypeScript - используй `unknown` или конкретный тип
+- ❌ **default export** для компонентов - только named exports
+- ❌ **Хардкод текстов** - всегда через `t()` из next-intl
+- ❌ **React.FC** - не используй этот тип
+- ❌ **Игнорирование TypeScript ошибок** - исправляй, не подавляй
+- ❌ **Прямые API вызовы** в компонентах - используй TanStack Query hooks
+
+### Backend (для справки, фронтенд не пишет backend)
+- ❌ **НЕ используй Node.js/NestJS** для core сервисов - только Go
+- ❌ **НЕ используй Java** кроме Keycloak - только Go/Python
+- ❌ **НЕ создавай монолит** - только микросервисы
+
+### General
+- ❌ **НЕ смешивай feature модули** - strict separation
+- ❌ **НЕ дублируй код** - выноси в shared
+- ❌ **НЕ игнорируй accessibility** - это обязательно
+- ❌ **НЕ используй устаревшие API** - только актуальные версии
+
+---
+
+## 🔗 FIGMA INTEGRATION
+
+**Прототип:** https://www.figma.com/make/L1VGQ0EGt8zhTaVzinZpJU/SaaS-Dashboard-Design
+
+**Правила работы с дизайном:**
+- ✅ **Точно следуй spacing** из Figma (используй Inspect mode)
+- ✅ **Используй цвета из Design System** (не хардкодь hex)
+- ✅ **Проверяй typography** (font-family, size, weight, line-height)
+- ✅ **Responsive breakpoints** должны соответствовать дизайну
+- ✅ **Экспортируй assets** в правильных форматах (SVG для иконок, WebP для фото)
+- ✅ **Обсуждай неясности** в комментариях Figma с дизайнером
+
+---
+
+## 📦 PRODUCTION CHECKLIST
+
+Перед деплоем проверь:
+
+### Performance
+- [ ] Lighthouse Score >90 (Performance, Accessibility, Best Practices, SEO)
+- [ ] Core Web Vitals: LCP <2.5s, FID <100ms, CLS <0.1
+- [ ] Images оптимизированы (next/image, WebP/AVIF)
+- [ ] Bundle size <200KB (initial)
+- [ ] Code splitting работает
+- [ ] React DevTools Profiler - нет лишних re-renders
+
+### Accessibility
+- [ ] Проверка с screen reader (VoiceOver/NVDA)
+- [ ] Keyboard navigation работает везде
+- [ ] Color contrast >4.5:1
+- [ ] Focus states видимы
+- [ ] ARIA attributes где нужно
+
+### Security
+- [ ] Нет XSS уязвимостей
+- [ ] CSRF protection
+- [ ] Secure headers настроены
+- [ ] Environment variables не в коде
+- [ ] API keys в .env
+
+### i18n
+- [ ] Все тексты через next-intl
+- [ ] Переводы полные (ru + en)
+- [ ] Форматирование дат/чисел локализовано
+- [ ] RTL support (если нужен арабский)
+
+### Testing
+- [ ] Unit tests проходят
+- [ ] E2E tests для критичных путей
+- [ ] TypeScript компилируется без ошибок
+- [ ] ESLint без warnings
+
+---
+
+## 🎯 WORKFLOW
+
+### Git Workflow
+```bash
+# Feature branch
+git checkout -b feature/projects-list
+
+# Commits (Conventional Commits)
+git commit -m "feat: add projects list component"
+git commit -m "fix: resolve filter bug"
+git commit -m "docs: update README"
+
+# Push и PR
+git push origin feature/projects-list
+```
+
+**Commit Types:**
+- `feat:` - новая функция
+- `fix:` - исправление бага
+- `docs:` - документация
+- `style:` - форматирование кода
+- `refactor:` - рефакторинг
+- `test:` - тесты
+- `chore:` - обновление зависимостей
+
+### Development
+```bash
+# Запустить dev сервер
+npm run dev
+
+# Проверить типы
+npm run type-check
+
+# Линтинг
+npm run lint
+
+# Форматирование
+npm run format
+
+# Тесты
+npm run test
+```
+
+---
+
+## 💡 CURSOR AI USAGE TIPS
+
+### При создании компонентов
+```
+Создай компонент ProjectCard для модуля projects:
+
+@Figma https://www.figma.com/make/L1VGQ0EGt8zhTaVzinZpJU/SaaS-Dashboard-Design
+(найди экран Projects List)
+
+Требования:
+- TypeScript + Zod props validation
+- Tailwind CSS (NO CSS modules)
+- Responsive (выглядит хорошо на mobile/tablet/desktop)
+- Accessibility (semantic HTML, ARIA)
+- Framer Motion анимации при hover
+- i18n для всех текстов (русский)
+- следуй Feature-Sliced Design структуре
+```
+
+### При создании фичи
+```
+@Codebase
+@Figma https://www.figma.com/make/L1VGQ0EGt8zhTaVzinZpJU/SaaS-Dashboard-Design
+
+Создай полный feature модуль "budget":
+
+Структура:
+- features/budget/components/ (BudgetOverview, CategoryList, ExpenseForm)
+- features/budget/hooks/ (useBudget, useExpenses, useMutations)
+- features/budget/api/ (budgetApi.ts)
+- features/budget/types/ (budget.types.ts)
+
+Требования:
+- Следуй .cursorrules строго
+- TanStack Query для data fetching
+- React Hook Form + Zod для форм
+- next-intl для всех текстов (русский)
+```
+
+---
+
+## 📚 ПОЛЕЗНЫЕ ССЫЛКИ
+
+- **Figma:** https://www.figma.com/make/L1VGQ0EGt8zhTaVzinZpJU/SaaS-Dashboard-Design
+- **Next.js Docs:** https://nextjs.org/docs
+- **Tailwind CSS:** https://tailwindcss.com/docs
+- **shadcn/ui:** https://ui.shadcn.com
+- **TanStack Query:** https://tanstack.com/query
+- **next-intl:** https://next-intl-docs.vercel.app
+
+---
+
+**Версия:** 1.0
+**Обновлено:** Март 2026
+**Проект:** Экспонат (Exponat) - SaaS платформа управления выставками
+
+---
+
+**ВАЖНО:** Этот файл - ЗАКОН проекта. Все отклонения должны быть явно согласованы с командой.
