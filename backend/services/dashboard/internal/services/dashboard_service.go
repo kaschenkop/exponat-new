@@ -27,9 +27,11 @@ func (s *DashboardService) GetStats(ctx context.Context, _, orgID string) (*mode
 	}
 	cacheKey := "dashboard:stats:" + orgID
 	var cached models.DashboardStats
-	if err := s.cache.Get(ctx, cacheKey, &cached); err == nil {
+	err := s.cache.Get(ctx, cacheKey, &cached)
+	if err == nil {
 		return &cached, nil
-	} else if err != nil && !errors.Is(err, cache.ErrCacheMiss) {
+	}
+	if !errors.Is(err, cache.ErrCacheMiss) {
 		return nil, err
 	}
 
