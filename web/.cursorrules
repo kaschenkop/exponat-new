@@ -1,0 +1,25 @@
+# Exponat / Экспонат — правила фронтенда
+
+## Стек
+- Next.js 14 App Router, React 18, TypeScript strict, Tailwind 3, next-intl (ru по умолчанию, en).
+- UI: shadcn-паттерн в `src/shared/ui`, Radix, Lucide, Framer Motion только там, где нужна анимация.
+- Состояние: Zustand (локальное UI), TanStack Query (серверное), RHF + Zod для форм.
+
+## Архитектура (FSD)
+- `src/features/*` — доменные модули, изолированные.
+- `src/shared/*` — переиспользуемые UI, lib, hooks, types.
+- `src/widgets/*` — композиция (sidebar, header, карточки).
+- `src/app/*` — маршруты и layouts.
+- `src/i18n/*` — локали и конфиг next-intl.
+
+## Правила кода
+- Только функциональные компоненты; Server Components по умолчанию; `'use client'` только при интерактивности.
+- Запрещены `any`, inline-стили, CSS modules, styled-components; стили только через Tailwind и `cn()`.
+- Все пользовательские тексты через `next-intl` (`useTranslations` / `getTranslations`); маршруты с префиксом локали `/ru/...`, `/en/...`.
+- На страницах с `getTranslations` вызывать `initPageLocale(params.locale)` из `@/i18n/server` для статической генерации.
+- Не передавать из Server Components в Client Components несериализуемые пропсы (например, компоненты иконок — использовать ключи или рендер внутри клиента).
+- Именование: компоненты PascalCase, файлы хуков kebab-case (`use-project.ts`), константы `UPPER_SNAKE_CASE`.
+
+## Дизайн
+- Токены из `globals.css` / Tailwind theme (primary indigo, secondary purple, slate neutrals).
+- Mobile-first; сетки 1 → 2 → 3 колонки где уместно.

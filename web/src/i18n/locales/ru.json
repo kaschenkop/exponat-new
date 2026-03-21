@@ -1,0 +1,143 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "search": "Поиск",
+    "loading": "Загрузка…",
+    "openMenu": "Открыть меню",
+    "notFoundTitle": "Страница не найдена",
+    "backToDashboard": "На дашборд"
+  },
+  "nav": {
+    "dashboard": "Дашборд",
+    "projects": "Проекты",
+    "budget": "Бюджет",
+    "logistics": "Логистика",
+    "construction": "Строительство",
+    "spacePlanning": "Планирование пространства",
+    "participants": "Участники",
+    "aiAssistant": "AI-ассистент",
+    "analytics": "Аналитика",
+    "settings": "Настройки"
+  },
+  "dashboard": {
+    "title": "Дашборд",
+    "welcome": "Добро пожаловать в Экспонат",
+    "subtitle": "Обзор ключевых метрик и активности по выставке.",
+    "metrics": {
+      "activeProjects": "Активные проекты",
+      "budgetUtilization": "Использование бюджета",
+      "logisticsTasks": "Задачи логистики",
+      "participants": "Участники",
+      "hintActiveProjects": "+2 за месяц",
+      "hintBudget": "в пределах плана",
+      "hintLogistics": "5 в работе",
+      "hintParticipants": "подтверждено"
+    },
+    "chart": {
+      "title": "Динамика посещений",
+      "subtitle": "Условные данные для демонстрации графика",
+      "mon": "Пн",
+      "tue": "Вт",
+      "wed": "Ср",
+      "thu": "Чт",
+      "fri": "Пт",
+      "sat": "Сб",
+      "sun": "Вс"
+    },
+    "home": {
+      "eyebrow": "Дашборд",
+      "welcome": "Добро пожаловать в Экспонат",
+      "subtitle": "Обзор ключевых метрик, бюджета и активности по выставке.",
+      "loadErrorTitle": "Ошибка загрузки",
+      "boundaryTitle": "Что-то пошло не так",
+      "boundaryRetry": "Повторить",
+      "projectDetail": {
+        "eyebrow": "Проект",
+        "title": "Проект {id}",
+        "description": "Подробная карточка проекта будет здесь.",
+        "back": "К списку проектов"
+      },
+      "stats": {
+        "activeProjects": "Активные проекты",
+        "totalBudget": "Общий бюджет",
+        "exhibits": "Экспонаты",
+        "participants": "Участники",
+        "error": "Не удалось загрузить статистику",
+        "retry": "Повторить"
+      },
+      "projects": {
+        "title": "Последние проекты",
+        "empty": "Нет проектов",
+        "error": "Не удалось загрузить проекты",
+        "retry": "Повторить",
+        "columns": {
+          "name": "Название",
+          "status": "Статус",
+          "dates": "Даты",
+          "budget": "Бюджет",
+          "team": "Команда"
+        },
+        "status": {
+          "draft": "Черновик",
+          "active": "Активен",
+          "archived": "Архив"
+        }
+      },
+      "budgetChart": {
+        "title": "Бюджет: план и факт",
+        "subtitle": "Расходы по месяцам",
+        "planned": "План",
+        "actual": "Факт",
+        "empty": "Нет данных для графика",
+        "error": "Не удалось загрузить график",
+        "retry": "Повторить"
+      },
+      "events": {
+        "title": "Предстоящие события",
+        "empty": "Нет предстоящих событий",
+        "error": "Не удалось загрузить события",
+        "retry": "Повторить",
+        "types": {
+          "installation": "Монтаж",
+          "opening": "Открытие",
+          "closing": "Закрытие",
+          "dismantling": "Демонтаж"
+        }
+      },
+      "activity": {
+        "title": "Лента активности",
+        "empty": "Нет недавних действий",
+        "error": "Не удалось загрузить активность",
+        "retry": "Повторить",
+        "today": "Сегодня",
+        "yesterday": "Вчера"
+      }
+    }
+  },
+  "landing": {
+    "title": "Экспонат",
+    "description": "SaaS-платформа для управления выставками с функциями искусственного интеллекта.",
+    "ctaDashboard": "Перейти в дашборд",
+    "ctaLogin": "Войти"
+  },
+  "auth": {
+    "login": "Вход",
+    "register": "Регистрация",
+    "formPlaceholder": "Форма будет добавлена позже."
+  },
+  "sidebar": {
+    "brand": "Экспонат",
+    "collapse": "Свернуть боковую панель"
+  },
+  "projectsFeature": {
+    "nameLabel": "Название проекта"
+  },
+  "header": {
+    "notifications": "Уведомления",
+    "profile": "Профиль"
+  }
+}

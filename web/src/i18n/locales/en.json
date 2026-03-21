@@ -1,0 +1,143 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading…",
+    "openMenu": "Open menu",
+    "notFoundTitle": "Page not found",
+    "backToDashboard": "Back to dashboard"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "budget": "Budget",
+    "logistics": "Logistics",
+    "construction": "Construction",
+    "spacePlanning": "Space planning",
+    "participants": "Participants",
+    "aiAssistant": "AI assistant",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to Exponat",
+    "subtitle": "Key metrics and activity overview for your exhibition.",
+    "metrics": {
+      "activeProjects": "Active projects",
+      "budgetUtilization": "Budget utilization",
+      "logisticsTasks": "Logistics tasks",
+      "participants": "Participants",
+      "hintActiveProjects": "+2 this month",
+      "hintBudget": "within plan",
+      "hintLogistics": "5 in progress",
+      "hintParticipants": "confirmed"
+    },
+    "chart": {
+      "title": "Visit trend",
+      "subtitle": "Sample data for chart demonstration",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "home": {
+      "eyebrow": "Dashboard",
+      "welcome": "Welcome to Exponat",
+      "subtitle": "Overview of key metrics, budget, and exhibition activity.",
+      "loadErrorTitle": "Load error",
+      "boundaryTitle": "Something went wrong",
+      "boundaryRetry": "Try again",
+      "projectDetail": {
+        "eyebrow": "Project",
+        "title": "Project {id}",
+        "description": "Full project details will appear here.",
+        "back": "Back to projects"
+      },
+      "stats": {
+        "activeProjects": "Active projects",
+        "totalBudget": "Total budget",
+        "exhibits": "Exhibits",
+        "participants": "Participants",
+        "error": "Could not load statistics",
+        "retry": "Retry"
+      },
+      "projects": {
+        "title": "Recent projects",
+        "empty": "No projects",
+        "error": "Could not load projects",
+        "retry": "Retry",
+        "columns": {
+          "name": "Name",
+          "status": "Status",
+          "dates": "Dates",
+          "budget": "Budget",
+          "team": "Team"
+        },
+        "status": {
+          "draft": "Draft",
+          "active": "Active",
+          "archived": "Archived"
+        }
+      },
+      "budgetChart": {
+        "title": "Budget: planned vs actual",
+        "subtitle": "Monthly spend",
+        "planned": "Planned",
+        "actual": "Actual",
+        "empty": "No chart data",
+        "error": "Could not load chart",
+        "retry": "Retry"
+      },
+      "events": {
+        "title": "Upcoming events",
+        "empty": "No upcoming events",
+        "error": "Could not load events",
+        "retry": "Retry",
+        "types": {
+          "installation": "Installation",
+          "opening": "Opening",
+          "closing": "Closing",
+          "dismantling": "Dismantling"
+        }
+      },
+      "activity": {
+        "title": "Activity feed",
+        "empty": "No recent activity",
+        "error": "Could not load activity",
+        "retry": "Retry",
+        "today": "Today",
+        "yesterday": "Yesterday"
+      }
+    }
+  },
+  "landing": {
+    "title": "Exponat",
+    "description": "SaaS platform for exhibition management with AI features.",
+    "ctaDashboard": "Go to dashboard",
+    "ctaLogin": "Sign in"
+  },
+  "auth": {
+    "login": "Sign in",
+    "register": "Register",
+    "formPlaceholder": "The form will be added later."
+  },
+  "sidebar": {
+    "brand": "Exponat",
+    "collapse": "Collapse sidebar"
+  },
+  "projectsFeature": {
+    "nameLabel": "Project name"
+  },
+  "header": {
+    "notifications": "Notifications",
+    "profile": "Profile"
+  }
+}
