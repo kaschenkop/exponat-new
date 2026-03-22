@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+data:
+  PORT: "8080"
+  PROJECTS_SERVICE_URL: "http://projects:80"
+  BUDGET_SERVICE_URL: "http://budget:80"
+  DASHBOARD_SERVICE_URL: "http://dashboard:80"
+  AI_DOCUMENT_GEN_URL: "http://ai-document-gen:80"

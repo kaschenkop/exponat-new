@@ -1,0 +1,105 @@
+name: Backend Go CI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/services/**/*.go'
+      - 'backend/services/**/go.mod'
+      - '.github/workflows/backend-go-ci.yml'
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'backend/services/**/*.go'
+
+jobs:
+  lint:
+    name: Lint Go Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          working-directory: backend/services
+
+  test:
+    name: Test Go Services
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: exponat_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run tests
+        working-directory: backend/services
+        run: |
+          for dir in */; do
+            if [ -f "$dir/go.mod" ]; then
+              echo "Testing $dir..."
+              cd "$dir"
+              go test -v -race -coverprofile=coverage.out ./...
+              cd ..
+            fi
+          done
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/exponat_test
+          REDIS_URL: redis://localhost:6379
+
+  build:
+    name: Build Go Services
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    strategy:
+      matrix:
+        service: [api-gateway, projects, budget, dashboard]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build ${{ matrix.service }}
+        working-directory: backend/services/${{ matrix.service }}
+        run: go build -v -o bin/app ./cmd
+
+      - name: Docker build
+        working-directory: backend/services/${{ matrix.service }}
+        run: docker build -t exponat/${{ matrix.service }}:${{ github.sha }} .

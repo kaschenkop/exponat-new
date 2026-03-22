@@ -1,0 +1,55 @@
+replicaCount: 1
+
+image:
+  registry: ghcr.io
+  tag: latest
+  pullPolicy: IfNotPresent
+
+services:
+  apiGateway:
+    enabled: true
+    port: 8080
+    replicas: 2
+  projects:
+    enabled: true
+    port: 8081
+    replicas: 1
+  budget:
+    enabled: true
+    port: 8082
+    replicas: 1
+  dashboard:
+    enabled: true
+    port: 8083
+    replicas: 1
+  aiDocumentGen:
+    enabled: true
+    port: 8090
+    replicas: 1
+
+postgresql:
+  enabled: true
+  auth:
+    database: exponat
+    username: exponat
+
+redis:
+  enabled: true
+  architecture: standalone
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.exponat.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
