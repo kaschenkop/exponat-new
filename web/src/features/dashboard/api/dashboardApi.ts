@@ -14,13 +14,15 @@ function dashboardHeaders(): HeadersInit {
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-    const devOrg =
-      process.env.NEXT_PUBLIC_DEV_ORGANIZATION_ID ??
-      (process.env.NODE_ENV !== 'production'
-        ? '11111111-1111-1111-1111-111111111111'
-        : undefined);
-    if (devOrg) {
-      headers['X-Organization-Id'] = devOrg;
+    if (!token) {
+      const devOrg =
+        process.env.NEXT_PUBLIC_DEV_ORGANIZATION_ID ??
+        (process.env.NODE_ENV !== 'production'
+          ? '11111111-1111-1111-1111-111111111111'
+          : undefined);
+      if (devOrg) {
+        headers['X-Organization-Id'] = devOrg;
+      }
     }
   }
   return headers;

@@ -236,7 +236,25 @@
   "auth": {
     "login": "Sign in",
     "register": "Register",
-    "formPlaceholder": "The form will be added later."
+    "formPlaceholder": "Sign-up is handled in Keycloak (see docs).",
+    "welcome": "Exponat",
+    "signInToContinue": "Sign in to continue",
+    "signIn": "Sign in with Keycloak",
+    "signOut": "Sign out",
+    "orContinueWith": "or",
+    "socialLoginAvailable": "Social login and MFA are configured in Keycloak.",
+    "errorTitle": "Sign-in error",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "sessionExpired": "Session expired. Please sign in again.",
+      "oauthError": "Could not start sign-in with the provider.",
+      "callbackError": "Error after returning from Keycloak.",
+      "refreshTokenError": "Could not refresh the token. Please sign in again.",
+      "unknown": "Unknown error.",
+      "generic": "Code: {code}"
+    },
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedBody": "You do not have permission to view this page."
   },
   "sidebar": {
     "brand": "Exponat",

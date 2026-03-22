@@ -39,10 +39,16 @@ npm run dev
 
 Подробности: [docs/kong-setup.md](docs/kong-setup.md).
 
+### Keycloak и вход (OIDC)
+
+Локально Keycloak поднимается отдельно (порт **8090**): `docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d`.  
+Инструкции: [docs/keycloak-setup.md](docs/keycloak-setup.md).
+
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md)
 - [GitOps Rules](docs/GITOPS_RULES.md)
 - [Kong setup](docs/kong-setup.md)
+- [Keycloak setup](docs/keycloak-setup.md)
 - [Code Style](cursorrules)
 
 ## Contributing

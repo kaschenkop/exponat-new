@@ -1,6 +1,8 @@
 'use client';
 
+import { AccessTokenSync } from '@/shared/components/auth/AccessTokenSync';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SessionProvider } from 'next-auth/react';
 import * as React from 'react';
 
 export function AppProviders({
@@ -21,6 +23,9 @@ export function AppProviders({
   );
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <SessionProvider>
+      <AccessTokenSync />
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </SessionProvider>
   );
 }

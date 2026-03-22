@@ -236,7 +236,25 @@
   "auth": {
     "login": "Вход",
     "register": "Регистрация",
-    "formPlaceholder": "Форма будет добавлена позже."
+    "formPlaceholder": "Регистрация выполняется через Keycloak (см. документацию).",
+    "welcome": "Экспонат",
+    "signInToContinue": "Войдите, чтобы продолжить",
+    "signIn": "Войти через Keycloak",
+    "signOut": "Выйти",
+    "orContinueWith": "или",
+    "socialLoginAvailable": "Соцсети и MFA настраиваются в Keycloak.",
+    "errorTitle": "Ошибка входа",
+    "backToLogin": "К странице входа",
+    "errors": {
+      "sessionExpired": "Сессия истекла. Войдите снова.",
+      "oauthError": "Не удалось начать вход через провайдера.",
+      "callbackError": "Ошибка после возврата с Keycloak.",
+      "refreshTokenError": "Не удалось обновить токен. Войдите снова.",
+      "unknown": "Неизвестная ошибка.",
+      "generic": "Код: {code}"
+    },
+    "accessDeniedTitle": "Доступ запрещён",
+    "accessDeniedBody": "Недостаточно прав для просмотра этой страницы."
   },
   "sidebar": {
     "brand": "Экспонат",

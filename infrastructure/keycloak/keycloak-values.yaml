@@ -1,0 +1,67 @@
+# Шаблон values для Helm (например codecentric/keycloak или bitnami/keycloak).
+# Подставьте реальные секреты и ingress; версии образов обновляйте по политике безопасности.
+
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: '23.0'
+  pullPolicy: IfNotPresent
+
+replicas: 2
+
+command:
+  - /opt/keycloak/bin/kc.sh
+
+args:
+  - start
+  - --hostname=auth.exponat.ru
+  - --proxy=edge
+  - --http-enabled=true
+  - --health-enabled=true
+  - --metrics-enabled=true
+
+extraEnv: |
+  - name: KEYCLOAK_ADMIN
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-admin
+        key: username
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-admin
+        key: password
+  - name: KC_DB
+    value: postgres
+  - name: KC_DB_URL
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-db
+        key: url
+  - name: KC_DB_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-db
+        key: username
+  - name: KC_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-db
+        key: password
+  - name: KC_LOG_LEVEL
+    value: INFO
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: '2'
+    memory: 2Gi
+
+ingress:
+  enabled: true
+  rules:
+    - host: auth.exponat.ru
+      paths:
+        - path: /
+          pathType: Prefix
