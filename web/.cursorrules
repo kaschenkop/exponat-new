@@ -23,3 +23,9 @@
 ## Дизайн
 - Токены из `globals.css` / Tailwind theme (primary indigo, secondary purple, slate neutrals).
 - Mobile-first; сетки 1 → 2 → 3 колонки где уместно.
+
+## Тесты и CI (Vitest)
+- Для `vitest --coverage` в CI нужен dev-пакет **`@vitest/coverage-v8`** той же мажорной версии, что и **`vitest`** (например оба 1.x).
+- При `environment: 'jsdom'` в `vitest.config` обязателен пакет **`jsdom`**.
+- Должен существовать хотя бы один `*.test.ts` / `*.spec.ts`, иначе CI упадёт с «no tests found».
+- Полный чеклист по монорепо (Go, Python, Helm) — в корневом `cursorrules`, раздел «CI/CD, линтеры».
