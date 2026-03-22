@@ -17,6 +17,9 @@ jobs:
   lint:
     name: Lint Go Code
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, projects, budget, dashboard]
     steps:
       - uses: actions/checkout@v4
 
@@ -29,7 +32,7 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
           version: latest
-          working-directory: backend/services
+          working-directory: backend/services/${{ matrix.service }}
 
   test:
     name: Test Go Services
@@ -58,6 +61,9 @@ jobs:
         ports:
           - 6379:6379
 
+    strategy:
+      matrix:
+        service: [api-gateway, projects, budget, dashboard]
     steps:
       - uses: actions/checkout@v4
 
@@ -67,16 +73,8 @@ jobs:
           go-version: '1.22'
 
       - name: Run tests
-        working-directory: backend/services
-        run: |
-          for dir in */; do
-            if [ -f "$dir/go.mod" ]; then
-              echo "Testing $dir..."
-              cd "$dir"
-              go test -v -race -coverprofile=coverage.out ./...
-              cd ..
-            fi
-          done
+        working-directory: backend/services/${{ matrix.service }}
+        run: go test -v -race -coverprofile=coverage.out ./...
         env:
           DATABASE_URL: postgres://postgres:test@localhost:5432/exponat_test
           REDIS_URL: redis://localhost:6379
