@@ -7,7 +7,7 @@ image:
 
 services:
   apiGateway:
-    enabled: true
+    enabled: false
     port: 8080
     replicas: 2
   projects:

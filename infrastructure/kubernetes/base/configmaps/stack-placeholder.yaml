@@ -1,0 +1,10 @@
+# Заменяет удалённые манифесты api-gateway в kustomize overlays.
+# Kong Gateway деплоится через Helm (см. infrastructure/kong/README.md).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stack-gitops-placeholder
+data:
+  README: |
+    Kong Gateway is deployed separately (Helm).
+    See infrastructure/kong/README.md and docs/kong-setup.md.

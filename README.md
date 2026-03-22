@@ -21,21 +21,34 @@ cd exponat
 cp .env.example .env.local
 
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Frontend
 cd web
 npm install
 npm run dev
-
-# Backend
-cd backend/services/api-gateway
-go run cmd/main.go
 ```
+
+### API Gateway (Kong)
+
+Используется **Kong Gateway** (Open Source), декларативная конфигурация в `infrastructure/kong/kong.yml`.
+
+Локально (после `docker compose up` в корне):
+
+```bash
+cd infrastructure/kong
+docker compose -f docker-compose.kong.yml up -d
+```
+
+- Proxy: http://localhost:8000  
+- Admin API: http://localhost:8001  
+
+Подробности: [docs/kong-setup.md](docs/kong-setup.md).
 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md)
 - [GitOps Rules](docs/GITOPS_RULES.md)
+- [Kong setup](docs/kong-setup.md)
 - [Code Style](cursorrules)
 
 ## Contributing

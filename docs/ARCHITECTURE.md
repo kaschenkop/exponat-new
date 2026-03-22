@@ -176,16 +176,15 @@ API как основа взаимодействия:
 | **Go-pg** | latest | PostgreSQL driver |
 | **Go-Redis** | latest | Redis client |
 
-**Go сервисы (9):**
-1. API Gateway - точка входа, роутинг
-2. Project Management - управление проектами
-3. Budget Management - бюджетирование
-4. Construction Management - строительство/монтаж
-5. Space Planning - планирование пространства
-6. Participant Management - CRM участников
-7. Notification Service - уведомления
-8. File Storage Service - файлы (S3/MinIO)
-9. Search Service - поиск (Elasticsearch proxy)
+**Go сервисы (8):**
+1. Project Management - управление проектами
+2. Budget Management - бюджетирование
+3. Construction Management - строительство/монтаж
+4. Space Planning - планирование пространства
+5. Participant Management - CRM участников
+6. Notification Service - уведомления
+7. File Storage Service - файлы (S3/MinIO)
+8. Search Service - поиск (Elasticsearch proxy)
 
 ### Backend - Python Services
 
@@ -407,8 +406,9 @@ colors: {
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        API Gateway (Go)                      │
-│                   Load Balancing, Routing                    │
+│                   Kong API Gateway                           │
+│        (Standard Solution - Production Ready)                │
+│  Plugins: JWT, Rate Limiting, CORS, Logging, Metrics        │
 └─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -416,11 +416,12 @@ colors: {
         ▼                     ▼                     ▼
 ┌───────────────┐    ┌────────────────┐    ┌────────────────┐
 │   Go Services │    │Python Services │    │  Keycloak IAM  │
-│               │    │                │    │     (Java)     │
-│ • Projects    │    │ • AI Doc Gen   │    │                │
-│ • Budget      │    │ • AI Analytics │    │ • OAuth 2.0    │
-│ • Construction│    │ • AI Assistant │    │ • SSO          │
-│ • Space Plan  │    │ • Logistics    │    │ • User Mgmt    │
+│      (8)      │    │      (6)       │    │     (Java)     │
+│               │    │                │    │                │
+│ • Projects    │    │ • AI Doc Gen   │    │ • OAuth 2.0    │
+│ • Budget      │    │ • AI Analytics │    │ • SSO          │
+│ • Construction│    │ • AI Assistant │    │ • User Mgmt    │
+│ • Space Plan  │    │ • Logistics    │    │ • MFA          │
 │ • Participants│    │ • Reporting    │    │                │
 │ • Notifications│   │ • Integration  │    │                │
 │ • File Storage│    │                │    │                │
@@ -440,17 +441,37 @@ colors: {
 
 ### Service Responsibilities
 
-#### Go Services (High Performance)
+#### API Gateway (Kong - Standard Solution)
 
-**API Gateway:**
-- **Tech:** Go (Gin), Redis
-- **Responsibilities:**
-  - Роутинг запросов к сервисам
-  - Rate limiting
-  - Authentication proxy
-  - Request/Response transformation
-  - Circuit breaker
-- **Database:** Redis (кэш, rate limit)
+**Tech:** Kong Gateway 3.5+ (nginx + Lua)
+**Database:** DB-less mode (декларативная конфигурация в Git)
+
+**Responsibilities:**
+- Роутинг запросов к микросервисам
+- Authentication (JWT validation, OAuth 2.0 proxy)
+- Rate limiting (per user, per endpoint)
+- CORS handling
+- Request/Response transformation
+- Circuit breaker
+- Logging (structured JSON)
+- Metrics (Prometheus)
+- API documentation (OpenAPI)
+
+**Конфигурация:** Декларативная (YAML в Git) → GitOps
+**Deployment:** Kubernetes (3 replicas для HA)
+**Мониторинг:** Prometheus + Grafana
+
+**Почему Kong, а не custom Go:**
+- ✅ Production-ready из коробки
+- ✅ Богатая экосистема плагинов
+- ✅ Не нужно разрабатывать и поддерживать
+- ✅ High performance (nginx-based)
+- ✅ Декларативная конфигурация
+- ✅ Large community
+
+См. подробнее в разделе "API Gateway Solution" выше.
+
+#### Go Services (High Performance)
 
 **Project Management:**
 - **Tech:** Go (Echo), PostgreSQL, Redis, WebSocket
@@ -591,6 +612,291 @@ colors: {
   - MFA (Multi-Factor Authentication)
   - LDAP/AD integration
 - **Database:** PostgreSQL
+
+### API Gateway Solution
+
+**Рекомендуется:** Kong Gateway (Open Source) или Yandex API Gateway
+
+#### Сравнение решений:
+
+| Решение | Плюсы | Минусы | Рекомендация |
+|---------|-------|--------|--------------|
+| **Kong (Open Source)** | • Production-ready<br>• Богатая экосистема плагинов<br>• Высокая производительность<br>• Декларативная конфигурация<br>• OpenAPI support | • Требует PostgreSQL/Cassandra<br>• Дополнительная сложность | ✅ **Рекомендуется** для self-hosted |
+| **Yandex API Gateway** | • Managed service<br>• Serverless (нет инфраструктуры)<br>• Интеграция с Yandex Cloud<br>• Pay-per-request | • Vendor lock-in<br>• Меньше гибкости | ✅ **Рекомендуется** для Yandex Cloud |
+| **Nginx + Lua** | • Легковесный<br>• Хорошо знаком командам<br>• Гибкость | • Больше ручной работы<br>• Меньше готовых фич | ⚠️ Для простых случаев |
+| **Traefik** | • Cloud-native<br>• Auto-discovery<br>• Let's Encrypt интеграция | • Меньше enterprise фич<br>• Сложнее мониторинг | ⚠️ Для K8s-native setup |
+| **Custom Go Gateway** | • Полный контроль<br>• Специфичная логика | • Нужно разрабатывать<br>• Поддержка и багфиксы<br>• Reinventing the wheel | ❌ Не рекомендуется |
+
+#### Выбор: Kong Gateway (Open Source)
+
+**Почему Kong:**
+1. **Production-ready** из коробки
+2. **Богатая экосистема плагинов:**
+   - Rate limiting
+   - Authentication (JWT, OAuth 2.0, LDAP)
+   - CORS
+   - Request/Response transformation
+   - Caching
+   - Logging
+   - Analytics
+3. **Высокая производительность** (nginx + Lua)
+4. **Декларативная конфигурация** (GitOps-friendly)
+5. **OpenAPI/Swagger интеграция**
+6. **Observability** (Prometheus, DataDog, etc.)
+7. **Large community** и enterprise support опция
+
+**Архитектура с Kong:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Load Balancer                          │
+│              (Yandex Cloud / NGINX)                      │
+│                  SSL termination                         │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Kong Gateway                          │
+│                                                          │
+│  Plugins:                                                │
+│  • JWT Authentication                                    │
+│  • Rate Limiting (100 req/s per user)                   │
+│  • CORS                                                  │
+│  • Request/Response Transformation                      │
+│  • Logging (structured JSON)                            │
+│  • Prometheus metrics                                    │
+│  • Circuit Breaker                                       │
+└─────────────────────────────────────────────────────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+┌───────────────┐ ┌────────────────┐ ┌──────────────┐
+│  Go Services  │ │Python Services │ │  Keycloak    │
+│               │ │                │ │    (IAM)     │
+│ • Projects    │ │ • AI Doc Gen   │ │              │
+│ • Budget      │ │ • AI Analytics │ │ • OAuth 2.0  │
+│ • ...         │ │ • ...          │ │ • Users      │
+└───────────────┘ └────────────────┘ └──────────────┘
+```
+
+**Kong Configuration (декларативная):**
+
+```yaml
+# kong.yml
+_format_version: "3.0"
+
+services:
+  - name: project-service
+    url: http://project-service:8080
+    routes:
+      - name: projects-route
+        paths:
+          - /api/v1/projects
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          claims_to_verify:
+            - exp
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+      - name: prometheus
+      
+  - name: budget-service
+    url: http://budget-service:8080
+    routes:
+      - name: budgets-route
+        paths:
+          - /api/v1/budgets
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 100
+
+  - name: ai-assistant-service
+    url: http://ai-assistant:8000
+    routes:
+      - name: ai-route
+        paths:
+          - /api/v1/ai
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 20  # меньше для AI (дороже)
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10  # 10 MB
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - https://exponat.ru
+        - https://*.exponat.ru
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+      headers:
+        - Authorization
+        - Content-Type
+      exposed_headers:
+        - X-Auth-Token
+      credentials: true
+      max_age: 3600
+```
+
+**Deployment (Kubernetes):**
+
+```yaml
+# helm values для Kong
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-config
+data:
+  kong.yml: |
+    # конфигурация выше
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+spec:
+  replicas: 3  # HA
+  selector:
+    matchLabels:
+      app: kong
+  template:
+    metadata:
+      labels:
+        app: kong
+    spec:
+      containers:
+      - name: kong
+        image: kong:3.5
+        env:
+        - name: KONG_DATABASE
+          value: "off"  # DB-less mode (декларативная конфиг)
+        - name: KONG_DECLARATIVE_CONFIG
+          value: /kong/kong.yml
+        - name: KONG_PROXY_ACCESS_LOG
+          value: /dev/stdout
+        - name: KONG_ADMIN_ACCESS_LOG
+          value: /dev/stdout
+        - name: KONG_PROXY_ERROR_LOG
+          value: /dev/stderr
+        - name: KONG_ADMIN_ERROR_LOG
+          value: /dev/stderr
+        ports:
+        - name: proxy
+          containerPort: 8000
+        - name: admin
+          containerPort: 8001
+        volumeMounts:
+        - name: config
+          mountPath: /kong
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+      volumes:
+      - name: config
+        configMap:
+          name: kong-config
+```
+
+#### Альтернатива: Yandex API Gateway (для полностью managed решения)
+
+**Если используется Yandex Cloud и нужен serverless подход:**
+
+```yaml
+# serverless.yml (Yandex API Gateway)
+openapi: 3.0.0
+info:
+  title: Exponat API
+  version: 1.0.0
+
+paths:
+  /api/v1/projects:
+    get:
+      summary: List projects
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4e...  # Cloud Function ID
+        service_account_id: aje...
+      security:
+        - jwt: []
+      
+  /api/v1/projects/{id}:
+    get:
+      summary: Get project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: http
+        url: http://project-service.default.svc.cluster.local:8080/projects/{id}
+        method: GET
+        timeouts:
+          read: 30s
+      security:
+        - jwt: []
+
+components:
+  securitySchemes:
+    jwt:
+      type: apiKey
+      in: header
+      name: Authorization
+```
+
+**Плюсы Yandex API Gateway:**
+- Полностью managed (нет инфраструктуры)
+- Автоматическое масштабирование
+- Pay-per-request
+- Интеграция с Yandex Cloud Functions
+- Встроенный мониторинг
+
+**Минусы:**
+- Vendor lock-in
+- Меньше контроля
+- Меньше кастомизации
+
+### Итоговая рекомендация
+
+**Для Production: Kong Gateway (Open Source)**
+
+Причины:
+1. ✅ Не нужно разрабатывать с нуля
+2. ✅ Production-ready из коробки
+3. ✅ Богатая функциональность (auth, rate limiting, logging)
+4. ✅ Высокая производительность
+5. ✅ GitOps-friendly (декларативная конфигурация)
+6. ✅ Vendor-agnostic (можно мигрировать между облаками)
+7. ✅ Large community и поддержка
+8. ✅ Observability из коробки
+
+**Кастомный Go Gateway имеет смысл только если:**
+- ❌ Очень специфичная бизнес-логика в gateway (редко нужно)
+- ❌ Уникальные требования, которые Kong не покрывает (маловероятно)
+- ❌ Есть большая команда для поддержки (дорого)
+
+**Вывод:** Используем проверенное решение (Kong), экономим время на разработку, фокусируемся на бизнес-логике в сервисах.
 
 ### Communication Patterns
 

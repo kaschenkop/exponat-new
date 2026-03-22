@@ -94,8 +94,7 @@ exponat/
 │   └── package.json
 ├── backend/                          # Backend microservices
 │   ├── services/
-│   │   ├── api-gateway/              # Go
-│   │   ├── projects/                 # Go
+│   │   ├── projects/                 # Go (edge: Kong — infrastructure/kong/)
 │   │   ├── budget/                   # Go
 │   │   ├── ai-document-gen/          # Python
 │   │   └── ...
@@ -824,7 +823,7 @@ it('renders project name', () => {
 ### Docker (`docker build` и контекст)
 
 - В репозитории **два стиля** Dockerfile для Go:
-  - **Плоский контекст** (`api-gateway`, `budget`): внутри `COPY go.mod ./` — собирать из каталога сервиса:  
+  - **Плоский контекст** (`budget` и др.): внутри `COPY go.mod ./` — собирать из каталога сервиса:  
     `docker build -f services/<name>/Dockerfile services/<name>` (из `backend/`) **или** `cd services/<name> && docker build .`
   - **Контекст `backend/`** (`projects`, `dashboard`): в Dockerfile пути вида `COPY services/<name>/...` — собирать **только** так:  
     `cd backend && docker build -f services/<name>/Dockerfile .`  
