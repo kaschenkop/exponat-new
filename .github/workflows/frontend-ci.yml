@@ -95,6 +95,7 @@ jobs:
           BUNDLE_SIZE=$(du -sh .next | cut -f1)
           echo "Bundle size: $BUNDLE_SIZE"
 
+  # Нужны deps + production build и запущенный next start; иначе LHCI бьётся о пустой localhost (Chrome interstitial).
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest
@@ -102,10 +103,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./web
+        run: npm ci
+
+      - name: Build Next.js
+        working-directory: ./web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Start Next.js and wait for ready
+        working-directory: ./web
+        run: |
+          nohup npm run start -- -p 3000 > /tmp/next-start.log 2>&1 &
+          echo $! > /tmp/next.pid
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null 2>&1; then
+              echo "Next.js is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "--- next start log ---"
+          cat /tmp/next-start.log || true
+          exit 1
+
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            http://localhost:3000
+            http://127.0.0.1:3000/
           uploadArtifacts: true
           temporaryPublicStorage: true
+
+      - name: Stop Next.js
+        if: always()
+        run: |
+          if [ -f /tmp/next.pid ]; then kill "$(cat /tmp/next.pid)" 2>/dev/null || true; fi

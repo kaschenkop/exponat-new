@@ -98,6 +98,13 @@ jobs:
         working-directory: backend/services/${{ matrix.service }}
         run: go build -v -o bin/app ./cmd
 
+      # projects/dashboard: Dockerfile ожидает context = backend/ (COPY services/<name>/...).
+      # api-gateway/budget: Dockerfile с плоским COPY go.mod — context = backend/services/<name>.
       - name: Docker build
-        working-directory: backend/services/${{ matrix.service }}
-        run: docker build -t exponat/${{ matrix.service }}:${{ github.sha }} .
+        working-directory: backend
+        run: |
+          if [ "${{ matrix.service }}" = "projects" ] || [ "${{ matrix.service }}" = "dashboard" ]; then
+            docker build -t exponat/${{ matrix.service }}:${{ github.sha }} -f services/${{ matrix.service }}/Dockerfile .
+          else
+            docker build -t exponat/${{ matrix.service }}:${{ github.sha }} -f services/${{ matrix.service }}/Dockerfile services/${{ matrix.service }}
+          fi
