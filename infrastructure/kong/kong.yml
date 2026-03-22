@@ -18,8 +18,9 @@ plugins:
   - name: cors
     config:
       origins:
-        - https://exponat.ru
-        - https://staging.exponat.ru
+        # Продакшен: exponat.site (DNS)
+        - https://exponat.site
+        - https://staging.exponat.site
         - http://localhost:3000
         - http://127.0.0.1:3000
       methods:

@@ -36,7 +36,14 @@ http://localhost:8090/realms/exponat-development
 cd web && npm run dev
 ```
 
-Вход: http://localhost:3000/ru/login → «Войти через Keycloak». Тестовый пользователь из импорта: `admin@exponat.ru` / `admin123`.
+Вход: http://localhost:3000/ru/login → «Войти через Keycloak». Тестовый пользователь из импорта: `admin@exponat.site` / `admin123`.
+
+### Продакшен (DNS: **exponat.site**)
+
+- Фронт: `https://exponat.site` → `NEXTAUTH_URL=https://exponat.site`
+- Keycloak: `https://auth.exponat.site` → `KEYCLOAK_ISSUER=https://auth.exponat.site/realms/<realm>`
+- API (Kong): `https://api.exponat.site` (см. Helm `values-production.yaml`)
+- Staging: `https://staging.exponat.site`, API `https://api.staging.exponat.site`
 
 ## Сервис `projects` (Go)
 
@@ -53,4 +60,4 @@ JWT для Keycloak подписан **RS256**; ротация ключей че
 
 ## Kubernetes
 
-Шаблон Helm values: `infrastructure/keycloak/keycloak-values.yaml` (подставьте секреты, ingress, образ). Рекомендуется отдельный namespace `auth` и TLS для `auth.exponat.ru`.
+Шаблон Helm values: `infrastructure/keycloak/keycloak-values.yaml` (подставьте секреты, ingress, образ). Рекомендуется отдельный namespace `auth` и TLS для `auth.exponat.site`.

@@ -20,11 +20,11 @@ docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d
 | `exponat-web` | Next.js (публичный, PKCE)           |
 | `exponat-api` | Resource server (bearer-only); роли в токене как client roles |
 
-Тестовый пользователь (из импорта): `admin@exponat.ru` / `admin123`, атрибут `organization_id=org-demo`.
+Тестовый пользователь (из импорта): `admin@exponat.site` / `admin123`, атрибут `organization_id=org-demo`.
 
 ## Kubernetes
 
-Шаблон values для Helm (например, chart `codecentric/keycloak`) — `keycloak-values.yaml`. Подставьте секреты, хост `auth.exponat.ru`, образ `quay.io/keycloak/keycloak:23.0` или новее по политике безопасности.
+Шаблон values для Helm (например, chart `codecentric/keycloak`) — `keycloak-values.yaml`. Подставьте секреты, хост `auth.exponat.site` (продакшен DNS), образ `quay.io/keycloak/keycloak:23.0` или новее по политике безопасности.
 
 ## См. также
 

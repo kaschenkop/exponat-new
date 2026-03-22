@@ -40,8 +40,8 @@
   "requiredCredentials": ["password"],
   "users": [
     {
-      "username": "admin@exponat.ru",
-      "email": "admin@exponat.ru",
+      "username": "admin@exponat.site",
+      "email": "admin@exponat.site",
       "emailVerified": true,
       "firstName": "Admin",
       "lastName": "User",
@@ -73,14 +73,14 @@
       "redirectUris": [
         "http://localhost:3000/*",
         "http://127.0.0.1:3000/*",
-        "https://exponat.ru/*",
-        "https://*.exponat.ru/*"
+        "https://exponat.site/*",
+        "https://*.exponat.site/*"
       ],
       "webOrigins": [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://exponat.ru",
-        "https://staging.exponat.ru"
+        "https://exponat.site",
+        "https://staging.exponat.site"
       ],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,

@@ -42,7 +42,7 @@ npm run dev
 ### Keycloak и вход (OIDC)
 
 Локально Keycloak поднимается отдельно (порт **8090**): `docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d`.  
-Инструкции: [docs/keycloak-setup.md](docs/keycloak-setup.md).
+Инструкции: [docs/keycloak-setup.md](docs/keycloak-setup.md). В продакшене публичный DNS — **exponat.site** (например `https://exponat.site`, API `https://api.exponat.site`, IdP `https://auth.exponat.site`).
 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md)

@@ -67,9 +67,9 @@ plugins:
   - name: cors
     config:
       origins:
-        - https://exponat.ru
-        - https://staging.exponat.ru
-        - https://*.exponat.ru
+        - https://exponat.site
+        - https://staging.exponat.site
+        - https://*.exponat.site
         - http://localhost:3000  # для разработки
       methods:
         - GET
@@ -800,7 +800,7 @@ kubectl get svc kong-proxy -n kong
 ### 4. Настроить DNS
 
 \`\`\`
-api.exponat.ru → <EXTERNAL-IP>
+api.exponat.site → <EXTERNAL-IP>
 \`\`\`
 
 ## Мониторинг
@@ -910,7 +910,7 @@ apiClient.interceptors.response.use(
 ```bash
 # Kong Gateway URL
 NEXT_PUBLIC_API_URL=http://localhost:8000  # dev
-# NEXT_PUBLIC_API_URL=https://api.exponat.ru  # production
+# NEXT_PUBLIC_API_URL=https://api.exponat.site  # production
 ```
 
 ## 4. Обновить CI/CD
@@ -1066,12 +1066,12 @@ kubectl logs -f deployment/kong -n kong
 
 ```bash
 # Получить JWT token
-TOKEN=$(curl -X POST https://auth.exponat.ru/token \
+TOKEN=$(curl -X POST https://auth.exponat.site/token \
   -d "username=test&password=test" | jq -r .access_token)
 
 # Запрос через Kong
 curl -H "Authorization: Bearer $TOKEN" \
-  https://api.exponat.ru/api/v1/projects
+  https://api.exponat.site/api/v1/projects
 
 # Должен работать!
 ```

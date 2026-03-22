@@ -13,7 +13,7 @@ command:
 
 args:
   - start
-  - --hostname=auth.exponat.ru
+  - --hostname=auth.exponat.site
   - --proxy=edge
   - --http-enabled=true
   - --health-enabled=true
@@ -61,7 +61,7 @@ resources:
 ingress:
   enabled: true
   rules:
-    - host: auth.exponat.ru
+    - host: auth.exponat.site
       paths:
         - path: /
           pathType: Prefix
