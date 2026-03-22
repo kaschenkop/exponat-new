@@ -4,15 +4,4 @@ kind: Kustomization
 namespace: production
 
 resources:
-  - ../../base/deployments/api-gateway.yaml
-  - ../../base/services/api-gateway.yaml
-  - ../../base/configmaps/api-gateway-config.yaml
-
-patches:
-  - target:
-      kind: Deployment
-      name: api-gateway
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 3
+  - ../../base

@@ -1,5 +1,6 @@
 services:
   apiGateway:
+    enabled: false
     replicas: 2
   projects:
     replicas: 2

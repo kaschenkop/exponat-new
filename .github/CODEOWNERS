@@ -2,7 +2,7 @@
 /web/ @frontend-team
 
 # Backend Go services
-/backend/services/api-gateway/ @backend-team
+/infrastructure/kong/ @backend-team
 /backend/services/projects/ @backend-team
 /backend/services/budget/ @backend-team
 /backend/services/dashboard/ @backend-team

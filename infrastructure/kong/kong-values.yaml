@@ -1,0 +1,59 @@
+# Официальный chart: https://github.com/Kong/charts/tree/main/charts/kong
+#
+# ConfigMap с декларативной конфигурацией (ключ обязан называться kong.yml):
+#   kubectl create configmap kong-dbless-config \
+#     --from-file=kong.yml=./infrastructure/kong/kong.yml -n kong --dry-run=client -o yaml | kubectl apply -f -
+#
+# Установка:
+#   helm repo add kong https://charts.konghq.com && helm repo update
+#   helm upgrade --install kong kong/kong -f infrastructure/kong/kong-values.yaml -n kong --create-namespace
+
+ingressController:
+  enabled: false
+
+image:
+  repository: kong
+  tag: "3.5"
+
+replicaCount: 3
+
+env:
+  database: "off"
+  nginx_worker_processes: "4"
+  nginx_worker_connections: "10000"
+  KONG_ENV: production
+
+dblessConfig:
+  configMap: kong-dbless-config
+
+proxy:
+  type: LoadBalancer
+  annotations:
+    # Подставьте subnet ID для Yandex Cloud или удалите при другом облаке
+    yandex.cloud/load-balancer-type: external
+    yandex.cloud/subnet-id: "REPLACE_WITH_SUBNET_ID"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - kong
+          topologyKey: kubernetes.io/hostname
+
+serviceMonitor:
+  # Включите, если в кластере установлен Prometheus Operator
+  enabled: false
