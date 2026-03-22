@@ -8,6 +8,11 @@ INSERT INTO users (id, name, avatar) VALUES
   ('33333333-3333-3333-3333-333333333333', 'Иван Смирнов', NULL)
 ON CONFLICT (id) DO NOTHING;
 
+-- Совпадает с fallback в log_project_activity / log_project_changes (FK activity_log.user_id → users)
+INSERT INTO users (id, name, avatar) VALUES
+  ('00000000-0000-0000-0000-000000000001', 'Система', NULL)
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO projects (id, organization_id, name, status, start_date, end_date, total_budget, team_size, created_at) VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111',
    'Выставка «Искусство будущего»', 'active', '2026-04-01', '2026-06-30', 5000000, 8, NOW() - INTERVAL '20 days'),
@@ -24,10 +29,10 @@ INSERT INTO exhibits (id, project_id, created_at) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO participants (id, project_id, created_at) VALUES
-  ('p1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', NOW() - INTERVAL '8 days'),
-  ('p2222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', NOW() - INTERVAL '7 days'),
-  ('p3333333-3333-3333-3333-333333333333', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NOW() - INTERVAL '6 days'),
-  ('p4444444-4444-4444-4444-444444444444', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NOW() - INTERVAL '5 days')
+  ('d1111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', NOW() - INTERVAL '8 days'),
+  ('d2222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', NOW() - INTERVAL '7 days'),
+  ('d3333333-3333-3333-3333-333333333333', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NOW() - INTERVAL '6 days'),
+  ('d4444444-4444-4444-4444-444444444444', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NOW() - INTERVAL '5 days')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO budget_monthly (organization_id, month, planned_amount, actual_amount) VALUES

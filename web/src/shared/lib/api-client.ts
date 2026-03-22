@@ -17,7 +17,11 @@ export async function apiFetchJson<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const url =
+    path.startsWith('http://') || path.startsWith('https://')
+      ? path
+      : `${API_BASE_URL}${path}`;
+  const res = await fetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -26,6 +30,9 @@ export async function apiFetchJson<T>(
   });
 
   const text = await res.text();
+  if (res.status === 204) {
+    return undefined as T;
+  }
   const data = text ? (JSON.parse(text) as unknown) : null;
 
   if (!res.ok) {

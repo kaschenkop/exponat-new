@@ -56,7 +56,7 @@ export interface DashboardActivity {
   timestamp: string;
 }
 
-export type DashboardProjectStatus = 'draft' | 'active' | 'archived';
+export type DashboardProjectStatus = string;
 
 export interface DashboardProject {
   id: string;

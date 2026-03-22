@@ -24,9 +24,14 @@ function statusBadgeClass(status: DashboardProjectStatus): string {
     case 'active':
       return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400';
     case 'draft':
+    case 'planning':
       return 'bg-amber-500/15 text-amber-800 dark:text-amber-400';
+    case 'completed':
+    case 'cancelled':
     case 'archived':
       return 'bg-muted text-muted-foreground';
+    case 'on_hold':
+      return 'bg-orange-500/15 text-orange-800 dark:text-orange-400';
     default:
       return 'bg-muted text-muted-foreground';
   }

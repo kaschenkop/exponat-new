@@ -1,4 +1,6 @@
 import { initPageLocale } from '@/i18n/server';
+import { ProjectsShell } from '@/features/projects/components/ProjectsShell';
+import { ProjectList } from '@/features/projects/components/ProjectList';
 import { getTranslations } from 'next-intl/server';
 
 export default async function ProjectsPage({
@@ -7,11 +9,11 @@ export default async function ProjectsPage({
   params: { locale: string };
 }): Promise<React.ReactElement> {
   initPageLocale(params.locale);
-  const t = await getTranslations('nav');
+  const t = await getTranslations('projects');
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-semibold">{t('projects')}</h1>
-    </div>
+    <ProjectsShell title={t('title')} showCreate>
+      <ProjectList />
+    </ProjectsShell>
   );
 }
