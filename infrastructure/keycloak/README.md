@@ -4,8 +4,16 @@
 
 ## Быстрый старт
 
+Keycloak входит в **корневой** `docker-compose.yml` (сервисы `postgres-keycloak`, `keycloak`). Достаточно из корня репозитория:
+
 ```bash
-docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d
+docker compose up -d
+```
+
+Отдельно только Keycloak (без приложения):
+
+```bash
+cd infrastructure/keycloak && docker compose -f docker-compose.keycloak.yml up -d
 ```
 
 - Админ-консоль: http://localhost:8090 (логин `admin` / `admin_password_change_me`).

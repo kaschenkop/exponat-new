@@ -8,9 +8,18 @@
 
 Порт **8090** на хосте (чтобы не конфликтовать с `dashboard` на **8080** в корневом `docker-compose`).
 
+Keycloak описан в **корневом** `docker-compose.yml` (`postgres-keycloak`, `keycloak`). Поднимается вместе со стеком:
+
+```bash
+docker compose up -d
+```
+
+Только Keycloak без остальных сервисов:
+
 ```bash
 docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d
 ```
+(удобно запускать из каталога `infrastructure/keycloak`.)
 
 - Админ-консоль: http://localhost:8090  
 - Логин: `admin` / `admin_password_change_me` (смените в проде)

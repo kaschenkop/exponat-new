@@ -1,5 +1,5 @@
-# Локальный Keycloak (отдельно от корневого docker-compose: нет конфликта порта с dashboard :8080).
-# Запуск: docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d
+# Только Keycloak (без остального стека). В типичном сценарии Keycloak уже в корневом docker-compose.yml.
+# Запуск из этой папки: cd infrastructure/keycloak && docker compose -f docker-compose.keycloak.yml up -d
 services:
   postgres-keycloak:
     image: postgres:16-alpine
