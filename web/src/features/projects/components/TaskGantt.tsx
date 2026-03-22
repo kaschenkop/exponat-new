@@ -291,6 +291,11 @@ export function TaskGantt({ tasks, milestones, onTaskClick }: TaskGanttProps): R
               const color = GANTT_COLORS[task.status] ?? '#9E9E9E';
               const isUpcoming = task.status === 'backlog';
 
+              const progressPct = task.progress;
+              const isDone = task.status === 'done';
+              const barBg = isDone ? color : `${color}88`;
+              const barFill = color;
+
               return (
                 <div
                   key={task.id}
@@ -298,28 +303,40 @@ export function TaskGantt({ tasks, milestones, onTaskClick }: TaskGanttProps): R
                   style={{ height: ROW_H, borderColor: '#E0E0E0' }}
                 >
                   <div
-                    className="group absolute h-6 cursor-pointer rounded transition-all hover:shadow-md"
+                    className="group absolute h-6 cursor-pointer overflow-hidden rounded transition-all hover:shadow-md"
                     style={{
                       left: `${left}px`,
                       width: `${width}px`,
                       top: (ROW_H - 24) / 2,
-                      backgroundColor: color,
-                      opacity: isUpcoming ? 0.5 : 1,
+                      backgroundColor: barBg,
+                      opacity: isUpcoming ? 0.6 : 1,
                     }}
                     onClick={() => onTaskClick(task.id)}
                   >
-                    {task.progress > 0 && task.status !== 'done' && (
+                    {!isDone && progressPct > 0 && (
                       <div
-                        className="absolute inset-0 rounded"
+                        className="absolute left-0 top-0 h-full rounded-l"
                         style={{
-                          width: `${task.progress}%`,
-                          backgroundColor: task.status === 'in_progress' ? '#0D47A1' : color,
+                          width: `${progressPct}%`,
+                          backgroundColor: barFill,
                         }}
                       />
                     )}
+                    {/* Progress label inside bar */}
+                    {progressPct > 0 && progressPct < 100 && width > 40 && (
+                      <span
+                        className="relative z-10 flex h-full items-center justify-end pr-1.5 text-[10px] font-semibold text-white"
+                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                      >
+                        {progressPct}%
+                      </span>
+                    )}
+                    {/* Tooltip on hover */}
                     <div className="pointer-events-none absolute bottom-full left-0 mb-2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      {task.title}
+                      <br />
                       {task.startDate} — {task.dueDate}
-                      {task.progress > 0 && ` (${task.progress}%)`}
+                      {progressPct > 0 && ` · ${progressPct}%`}
                     </div>
                   </div>
                 </div>
