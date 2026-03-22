@@ -1,6 +1,47 @@
-# Go build artifacts
-backend/services/dashboard/bin/
+# Dependencies
+node_modules/
+*.pyc
+__pycache__/
+vendor/
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+coverage/
+*.log
+backend/services/*/bin/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Go
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
 # TypeScript incremental
 **/tsconfig.tsbuildinfo
+
+# Misc
+*.pem
+.vercel

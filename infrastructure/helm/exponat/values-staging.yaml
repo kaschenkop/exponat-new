@@ -1,0 +1,26 @@
+services:
+  apiGateway:
+    replicas: 2
+  projects:
+    replicas: 2
+  budget:
+    replicas: 1
+  dashboard:
+    replicas: 1
+  aiDocumentGen:
+    replicas: 1
+
+ingress:
+  hosts:
+    - host: api.staging.exponat.ru
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "1000m"

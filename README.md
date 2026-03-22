@@ -1,25 +1,48 @@
 # Экспонат (Exponat)
 
-SaaS-платформа для управления выставками с AI. В этом репозитории — фронтенд (Next.js) в каталоге `web/`.
+SaaS-платформа для управления выставками
 
-## Быстрый старт
+## Quick Start
+
+### Prerequisites
+- Node.js 20+
+- Go 1.22+
+- Python 3.11+
+- Docker & Docker Compose
+
+### Development
 
 ```bash
+# Clone
+git clone https://github.com/your-org/exponat.git
+cd exponat
+
+# Setup environment
+cp .env.example .env.local
+
+# Start services
+docker-compose up -d
+
+# Frontend
 cd web
 npm install
 npm run dev
+
+# Backend
+cd backend/services/api-gateway
+go run cmd/main.go
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000) — произойдёт редирект на локализованный маршрут (`/ru` по умолчанию).
+## Documentation
+- [Architecture](docs/ARCHITECTURE.md)
+- [GitOps Rules](docs/GITOPS_RULES.md)
+- [Code Style](cursorrules)
 
-## Скрипты (web/)
+## Contributing
+1. Read [GITOPS_RULES.md](docs/GITOPS_RULES.md)
+2. Create feature branch: `git checkout -b feature/my-feature`
+3. Commit: `git commit -m "feat(scope): description"`
+4. Push & create PR
 
-- `npm run dev` — разработка
-- `npm run build` — production-сборка
-- `npm run lint` — ESLint
-- `npm run format` — Prettier
-- `npm run type-check` — проверка TypeScript
-
-## Документация
-
-Подробности по стеку и структуре — в `web/README.md`.
+## License
+Proprietary

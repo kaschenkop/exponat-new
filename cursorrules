@@ -792,6 +792,53 @@ it('renders project name', () => {
 
 ---
 
+## 🤖 CI/CD, ЛИНТЕРЫ И ТИПИЧНЫЕ ОШИБКИ (НЕ ПОВТОРЯТЬ)
+
+Этот раздел основан на реальных сбоях GitHub Actions и локальных линтеров. Соблюдай его при любом изменении backend, frontend, Helm и workflow.
+
+### Go (`golangci-lint`, линтер `errcheck`)
+
+- **Модули:** у каждого микросервиса свой `go.mod` в `backend/services/<имя>/`. В CI **нельзя** запускать `golangci-lint` с `working-directory: backend/services` (там нет корневого модуля). Указывай каталог конкретного сервиса или matrix по сервисам.
+- **Всегда обрабатывай возвращаемые `error`:**
+  - `json.NewEncoder(w).Encode(...)` — нельзя игнорировать; используй helper вроде `writeJSON(w, status, v)` с проверкой `Encode`, или `if err := json.NewEncoder(w).Encode(v); err != nil { ... }`.
+  - WebSocket / `net.Conn`: `SetReadDeadline`, `SetWriteDeadline`, `Close` и аналоги — проверяй ошибку или явно пробрасывай её (например `return conn.SetReadDeadline(...)` в колбэке с сигнатурой `error`).
+- **Зависимости:** после правок `go.mod` выполняй `go mod tidy` и коммить обновлённый `go.sum`.
+- **Локально:** из каталога сервиса: `go build ./...`, при наличии — `golangci-lint run`.
+
+### Python (pytest, CI)
+
+- Если в CI вызывается `pytest` с coverage, в проекте должен быть **хотя бы один** собираемый тест (например `tests/test_*.py`), иначе pytest завершится с кодом **5** (no tests collected).
+- Для FastAPI удобно использовать `TestClient` из `starlette.testclient` / `fastapi.testclient`.
+
+### Frontend (`web/`, Vitest)
+
+- Команда `vitest --coverage` требует dev-зависимость **`@vitest/coverage-v8` той же мажорной линии, что и `vitest`** (например vitest 1.x → `@vitest/coverage-v8@^1`).
+- Если в `vitest.config` указано `environment: 'jsdom'`, в `package.json` должен быть пакет **`jsdom`**.
+- Раз в CI запускаются тесты — в репозитории должен быть минимум один файл `*.test.ts` / `*.spec.ts` (хотя бы для `shared/lib` и т.п.), иначе пайплайн падает на «no tests found».
+- **Lighthouse / LHCI в CI:** нельзя дергать URL приложения без поднятого production-сервера Next.js после `npm run build` (см. также «Docker» ниже).
+
+### Helm и шаблоны Kubernetes
+
+- Файлы в `**/helm/**/templates/**/*.yaml` — это **Go-шаблоны Helm**, до `helm template` это не валидный YAML. Обычный YAML language server в IDE выдаёт ложные ошибки («flow map», «block in flow»). Решение: ассоциация файлов с режимом **Helm** / `helm-template` в настройках редактора (см. `.vscode/settings.json` в репозитории), а не «исправление» под синтаксис чистого YAML.
+
+### Docker (`docker build` и контекст)
+
+- В репозитории **два стиля** Dockerfile для Go:
+  - **Плоский контекст** (`api-gateway`, `budget`): внутри `COPY go.mod ./` — собирать из каталога сервиса:  
+    `docker build -f services/<name>/Dockerfile services/<name>` (из `backend/`) **или** `cd services/<name> && docker build .`
+  - **Контекст `backend/`** (`projects`, `dashboard`): в Dockerfile пути вида `COPY services/<name>/...` — собирать **только** так:  
+    `cd backend && docker build -f services/<name>/Dockerfile .`  
+  Запуск `docker build` из `backend/services/<name>` с таким Dockerfile даст **not found** для `services/dashboard/...`.
+- **Lighthouse CI / LHCI:** шаг с `urls: http://localhost:3000` **без** предварительного `npm run build` и **запущенного** `next start` даёт пустую страницу / Chrome interstitial. Сначала build, затем фоновый `npm run start`, ожидание `curl` до 200 на `http://127.0.0.1:3000/`, потом сбор метрик.
+- **treosh/lighthouse-ci-action:** не использовать **v10** в CI — старый `@actions/artifact`, ошибки вида *Create Artifact Container failed / artifact name is not valid* на новом API артефактов GitHub. Использовать **`@v12`** (или новее); при желании задать `artifactName` без спорных символов (например `exponat_web_lighthouse`).
+
+### Прочее
+
+- Предупреждения **Cache service 400** в Actions — сбой кэша раннера, не ошибка кода.
+- После добавления новых Go/Python/npm зависимостей прогоняй те же команды, что в `.github/workflows/*`, локально или в PR.
+
+---
+
 ## 🚫 ЗАПРЕТЫ (НИКОГДА НЕ ДЕЛАЙ)
 
 ### Frontend
@@ -805,11 +852,13 @@ it('renders project name', () => {
 - ❌ **React.FC** - не используй этот тип
 - ❌ **Игнорирование TypeScript ошибок** - исправляй, не подавляй
 - ❌ **Прямые API вызовы** в компонентах - используй TanStack Query hooks
+- ❌ **`npm run test -- --coverage` без `@vitest/coverage-v8`** (версия как у vitest) и без `jsdom` при `environment: 'jsdom'` — см. раздел «CI/CD, линтеры»
 
 ### Backend (для справки, фронтенд не пишет backend)
 - ❌ **НЕ используй Node.js/NestJS** для core сервисов - только Go
 - ❌ **НЕ используй Java** кроме Keycloak - только Go/Python
 - ❌ **НЕ создавай монолит** - только микросервисы
+- ❌ **НЕ игнорируй ошибки** от `json.Encode`, `SetReadDeadline`/`SetWriteDeadline` и других API с `error` — см. раздел «CI/CD, линтеры»
 
 ### General
 - ❌ **НЕ смешивай feature модули** - strict separation
@@ -970,7 +1019,7 @@ npm run test
 
 ---
 
-**Версия:** 1.0
+**Версия:** 1.1
 **Обновлено:** Март 2026
 **Проект:** Экспонат (Exponat) - SaaS платформа управления выставками
 

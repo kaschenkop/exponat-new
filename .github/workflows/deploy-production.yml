@@ -1,0 +1,55 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: Deploy Frontend
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./web
+
+      - name: Deploy Backend
+        run: |
+          helm upgrade --install exponat ./infrastructure/helm/exponat \
+            -f ./infrastructure/helm/exponat/values-production.yaml \
+            --namespace production \
+            --set image.tag=${{ steps.version.outputs.version }} \
+            --wait \
+            --timeout 10m
+
+      - name: Health check
+        run: |
+          curl -f https://api.exponat.ru/health || exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          helm rollback exponat -n production
