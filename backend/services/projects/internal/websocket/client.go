@@ -40,10 +40,13 @@ func ServeWS(hub *Hub, c *gin.Context) {
 		slog.Error("ws upgrade", "err", err)
 		return
 	}
-	conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err := conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		slog.Error("ws set read deadline", "err", err)
+		_ = conn.Close()
+		return
+	}
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
+		return conn.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
 	client := &Client{
