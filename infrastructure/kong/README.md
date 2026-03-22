@@ -15,7 +15,7 @@ docker run --rm -e KONG_DATABASE=off -v "$PWD/kong.yml:/kong/kong.yml:ro" kong:3
 
 ## Имена хостов
 
-Файл `kong.yml` по умолчанию ориентирован на **Docker Compose** (короткие имена: `projects`, `dashboard`, `redis`, …).  
+Файл `kong.yml` по умолчанию ориентирован на **Docker Compose** (короткие имена: `projects`, `dashboard`, `budget`, `redis`, …). Сервисы, которых нет в `docker-compose.yml`, дадут ошибки DNS в логах Kong при health check / проксировании.  
 Для Kubernetes замените цели upstream и `redis_host` на DNS вида `servicename.namespace.svc.cluster.local` (или используйте отдельный overlay / `deck`).
 
 ## JWT

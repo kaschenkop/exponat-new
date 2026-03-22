@@ -60,6 +60,21 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Budget API (Kong: /api/v1/budgets → budget:8082)
+  budget:
+    build:
+      context: ./backend/services/budget
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/exponat_dev?sslmode=disable
+      PORT: "8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   # Единая точка входа API (см. infrastructure/kong/kong.yml)
   kong:
     image: kong:3.5
@@ -84,6 +99,8 @@ services:
       dashboard:
         condition: service_started
       projects:
+        condition: service_started
+      budget:
         condition: service_started
     restart: unless-stopped
 
