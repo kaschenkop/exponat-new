@@ -830,6 +830,7 @@ it('renders project name', () => {
     `cd backend && docker build -f services/<name>/Dockerfile .`  
   Запуск `docker build` из `backend/services/<name>` с таким Dockerfile даст **not found** для `services/dashboard/...`.
 - **Lighthouse CI / LHCI:** шаг с `urls: http://localhost:3000` **без** предварительного `npm run build` и **запущенного** `next start` даёт пустую страницу / Chrome interstitial. Сначала build, затем фоновый `npm run start`, ожидание `curl` до 200 на `http://127.0.0.1:3000/`, потом сбор метрик.
+- **treosh/lighthouse-ci-action:** не использовать **v10** в CI — старый `@actions/artifact`, ошибки вида *Create Artifact Container failed / artifact name is not valid* на новом API артефактов GitHub. Использовать **`@v12`** (или новее); при желании задать `artifactName` без спорных символов (например `exponat_web_lighthouse`).
 
 ### Прочее
 
