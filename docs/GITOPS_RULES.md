@@ -849,7 +849,7 @@ jobs:
       
       - name: Health check
         run: |
-          curl -f https://api.exponat.ru/health || exit 1
+          curl -f https://api.exponat.site/health || exit 1
       
       - name: Rollback on failure
         if: failure()

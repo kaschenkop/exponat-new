@@ -39,10 +39,16 @@ npm run dev
 
 Подробности: [docs/kong-setup.md](docs/kong-setup.md).
 
+### Keycloak и вход (OIDC)
+
+В корневом `docker compose up -d` поднимается и **Keycloak** (порт **8090**, логин админки `admin` / см. `docker-compose.yml`). Отдельный compose-файл — только если нужен один Keycloak без стека.  
+Инструкции: [docs/keycloak-setup.md](docs/keycloak-setup.md). В продакшене публичный DNS — **exponat.site** (например `https://exponat.site`, API `https://api.exponat.site`, IdP `https://auth.exponat.site`).
+
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md)
 - [GitOps Rules](docs/GITOPS_RULES.md)
 - [Kong setup](docs/kong-setup.md)
+- [Keycloak setup](docs/keycloak-setup.md)
 - [Code Style](cursorrules)
 
 ## Contributing

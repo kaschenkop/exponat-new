@@ -13,7 +13,7 @@ services:
 
 ingress:
   hosts:
-    - host: api.staging.exponat.ru
+    - host: api.staging.exponat.site
       paths:
         - path: /
           pathType: Prefix

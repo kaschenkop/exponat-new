@@ -6,6 +6,10 @@ _transform: true
 #
 # Rate limiting: policy: local — для одного инстанса Kong (docker compose). В кластере с
 # несколькими репликами Kong замените на policy: redis и redis_* (см. README).
+#
+# JWT (Keycloak): access tokens — RS256; JWKS у realm: .../realms/<realm>/protocol/openid-connect/certs.
+# В Kong OSS проверка Keycloak JWT обычно делегируется upstream (Go/Python) или отдельным плагином;
+# не подставляйте сюда плагин jwt с фиксированным secret вместо JWKS.
 
 # -----------------------------------------------------------------------------
 # Global plugins
@@ -14,8 +18,9 @@ plugins:
   - name: cors
     config:
       origins:
-        - https://exponat.ru
-        - https://staging.exponat.ru
+        # Продакшен: exponat.site (DNS)
+        - https://exponat.site
+        - https://staging.exponat.site
         - http://localhost:3000
         - http://127.0.0.1:3000
       methods:

@@ -1,0 +1,147 @@
+{
+  "realm": "exponat-development",
+  "displayName": "Экспонат Development",
+  "loginTheme": "exponat",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["ru"],
+  "defaultLocale": "ru",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 86400,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "refreshTokenMaxReuse": 0,
+  "revokeRefreshToken": true,
+  "passwordPolicy": "length(8) and notUsername",
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "Administrator" },
+      { "name": "manager", "description": "Manager" },
+      { "name": "coordinator", "description": "Coordinator" },
+      { "name": "designer", "description": "Designer" },
+      { "name": "logistics", "description": "Logistics" },
+      { "name": "viewer", "description": "Viewer" }
+    ],
+    "client": {
+      "exponat-api": [
+        {
+          "name": "projects:read",
+          "description": "Read projects",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "projects:write",
+          "description": "Create/update projects",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "projects:delete",
+          "description": "Delete projects",
+          "composite": false,
+          "clientRole": true
+        }
+      ]
+    }
+  },
+  "requiredCredentials": ["password"],
+  "users": [
+    {
+      "username": "admin@exponat.site",
+      "email": "admin@exponat.site",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "attributes": {
+        "organization_id": ["org-demo"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"],
+      "clientRoles": {
+        "exponat-api": ["projects:read", "projects:write", "projects:delete"]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "exponat-web",
+      "name": "Exponat Web Application",
+      "description": "Next.js SPA (PKCE)",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*",
+        "https://exponat.site/*",
+        "https://*.exponat.site/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://exponat.site",
+        "https://staging.exponat.site"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "organization-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "organization_id",
+            "claim.name": "organization_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "exponat-api",
+      "name": "Exponat Backend API",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    }
+  ]
+}

@@ -736,8 +736,8 @@ plugins:
   - name: cors
     config:
       origins:
-        - https://exponat.ru
-        - https://*.exponat.ru
+        - https://exponat.site
+        - https://*.exponat.site
       methods:
         - GET
         - POST
@@ -1943,7 +1943,7 @@ go test -cover ./...      # Coverage
 - **DevOps:** [Name]
 - **Security:** [Name]
 - **Slack:** #exponat-dev
-- **Email:** dev@exponat.ru
+- **Email:** dev@exponat.site
 
 ---
 
