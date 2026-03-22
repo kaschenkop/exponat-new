@@ -35,7 +35,29 @@
       { "name": "designer", "description": "Designer" },
       { "name": "logistics", "description": "Logistics" },
       { "name": "viewer", "description": "Viewer" }
-    ]
+    ],
+    "client": {
+      "exponat-api": [
+        {
+          "name": "projects:read",
+          "description": "Read projects",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "projects:write",
+          "description": "Create/update projects",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "projects:delete",
+          "description": "Delete projects",
+          "composite": false,
+          "clientRole": true
+        }
+      ]
+    }
   },
   "requiredCredentials": ["password"],
   "users": [
@@ -115,12 +137,7 @@
       "bearerOnly": true,
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      "roles": [
-        { "name": "projects:read", "description": "Read projects" },
-        { "name": "projects:write", "description": "Create/update projects" },
-        { "name": "projects:delete", "description": "Delete projects" }
-      ]
+      "serviceAccountsEnabled": false
     }
   ]
 }
