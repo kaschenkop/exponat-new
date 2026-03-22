@@ -31,17 +31,11 @@ npm run dev
 
 ### API Gateway (Kong)
 
-Используется **Kong Gateway** (Open Source), декларативная конфигурация в `infrastructure/kong/kong.yml`.
-
-Локально (после `docker compose up` в корне):
-
-```bash
-cd infrastructure/kong
-docker compose -f docker-compose.kong.yml up -d
-```
+**Kong** поднимается вместе со стеком из корневого `docker compose up -d` (конфиг: `infrastructure/kong/kong.yml`). Фронтенд в Docker собирается с `NEXT_PUBLIC_*` на `http://localhost:8000`.
 
 - Proxy: http://localhost:8000  
 - Admin API: http://localhost:8001  
+- Прямой доступ к сервисам (без Kong): dashboard `8080`, projects `8081`  
 
 Подробности: [docs/kong-setup.md](docs/kong-setup.md).
 

@@ -1,10 +1,10 @@
-# Запуск Kong рядом с основным стеком: сначала `docker compose up -d` в корне репозитория
-# (нужен сервис redis и приложения projects/dashboard).
-# Сеть по умолчанию Compose: exponat_default.
+# Устарело: Kong поднимается вместе со стеком из корня репозитория:
+#   docker compose up -d
+# Файл оставлен для обратной совместимости (можно удалить после миграции скриптов).
+
 services:
   kong:
     image: kong:3.5
-    container_name: kong
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/kong.yml
@@ -20,11 +20,4 @@ services:
       - "8444:8444"
     volumes:
       - ./kong.yml:/kong/kong.yml:ro
-    networks:
-      - exponat-network
     restart: unless-stopped
-
-networks:
-  exponat-network:
-    external: true
-    name: exponat_default
