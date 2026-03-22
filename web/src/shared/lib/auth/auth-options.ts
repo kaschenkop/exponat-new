@@ -1,5 +1,6 @@
 import type { JWT } from 'next-auth/jwt';
 import type { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import KeycloakProvider from 'next-auth/providers/keycloak';
 import {
   decodeJwtPayload,
@@ -11,8 +12,39 @@ import {
 const clientId = process.env.KEYCLOAK_CLIENT_ID ?? 'exponat-web';
 const keycloakApiClientId = process.env.KEYCLOAK_API_CLIENT_ID ?? 'exponat-api';
 
+/**
+ * Без секрета NextAuth отдаёт 500 на /api/auth/session (CLIENT_FETCH_ERROR).
+ * Всегда задаём строку; для реального production обязательно выставьте NEXTAUTH_SECRET в окружении.
+ */
+function resolveNextAuthSecret(): string {
+  if (process.env.NEXTAUTH_SECRET) {
+    return process.env.NEXTAUTH_SECRET;
+  }
+  if (process.env.NODE_ENV === 'development') {
+    return 'dev-only-nextauth-secret-min-32-characters-long!!';
+  }
+  if (process.env.NODE_ENV === 'production') {
+    console.warn(
+      '[next-auth] NEXTAUTH_SECRET is missing; using insecure built-in placeholder. Set NEXTAUTH_SECRET in production.',
+    );
+  }
+  return 'insecure-placeholder-set-NEXTAUTH_SECRET-in-env-min-32chars!!';
+}
+
+const nextAuthSecret = resolveNextAuthSecret();
+
+/**
+ * Issuer Keycloak (well-known OpenID). В development — локальный Keycloak (см. docs/keycloak-setup.md).
+ * В production без этого значения подключается заглушка, чтобы не было 500 (вход не сработает, пока не зададите KEYCLOAK_ISSUER).
+ */
+const keycloakIssuerUrl =
+  process.env.KEYCLOAK_ISSUER ??
+  (process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8090/realms/exponat-development'
+    : undefined);
+
 async function refreshAccessToken(token: JWT): Promise<JWT> {
-  const issuer = process.env.KEYCLOAK_ISSUER;
+  const issuer = keycloakIssuerUrl;
   if (!issuer || !token.refreshToken) {
     return { ...token, error: 'RefreshAccessTokenError' };
   }
@@ -59,18 +91,33 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
   }
 }
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    KeycloakProvider({
+const keycloakProvider = keycloakIssuerUrl
+  ? KeycloakProvider({
       clientId,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET ?? '',
-      issuer: process.env.KEYCLOAK_ISSUER,
+      issuer: keycloakIssuerUrl,
       authorization: {
         params: {
           scope: 'openid email profile',
         },
       },
-    }),
+    })
+  : null;
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    ...(keycloakProvider
+      ? [keycloakProvider]
+      : [
+          CredentialsProvider({
+            id: 'keycloak',
+            name: 'Keycloak',
+            credentials: {},
+            async authorize() {
+              return null;
+            },
+          }),
+        ]),
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
@@ -114,7 +161,7 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signOut(message) {
       const idToken = message.token?.idToken as string | undefined;
-      const issuer = process.env.KEYCLOAK_ISSUER;
+      const issuer = keycloakIssuerUrl;
       const baseUrl = process.env.NEXTAUTH_URL;
       if (idToken && issuer && baseUrl) {
         const params = new URLSearchParams({
@@ -137,6 +184,6 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 7 * 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: nextAuthSecret,
   debug: process.env.NODE_ENV === 'development',
 };

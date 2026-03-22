@@ -124,6 +124,15 @@ services:
         NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
         NEXT_PUBLIC_PROJECTS_API_URL: http://localhost:8000
         NEXT_PUBLIC_DEV_ORGANIZATION_ID: 11111111-1111-1111-1111-111111111111
+    environment:
+      # NextAuth: без NEXTAUTH_SECRET был бы 500 на /api/auth/session
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-only-nextauth-secret-min-32-characters-long!!}
+      # Keycloak на хосте (отдельный compose :8090). Из контейнера web — host.docker.internal (на Linux см. extra_hosts)
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://host.docker.internal:8090/realms/exponat-development}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-exponat-web}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     ports:
       - '3000:3000'
     depends_on:

@@ -26,8 +26,8 @@ http://localhost:8090/realms/exponat-development
 ## Веб-приложение (`web/`)
 
 1. Скопируйте `web/.env.local.example` → `.env.local`.
-2. Задайте `NEXTAUTH_SECRET` (например: `openssl rand -base64 32`).
-3. Укажите `KEYCLOAK_ISSUER` как выше.
+2. Задайте **`NEXTAUTH_SECRET`** (например: `openssl rand -base64 32`). Без него NextAuth отдаёт **500** на `/api/auth/session` и в консоли браузера `CLIENT_FETCH_ERROR`. В режиме `development` используется небезопасный встроенный fallback в коде — для продакшена секрет обязателен.
+3. Укажите `KEYCLOAK_ISSUER` как выше (локально: `http://localhost:8090/realms/exponat-development`).
 4. Для публичного клиента `exponat-web` поле **Client secret** в Keycloak может быть пустым; если создали confidential client — вставьте `KEYCLOAK_CLIENT_SECRET`.
 
 Запуск:
