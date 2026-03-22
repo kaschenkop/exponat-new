@@ -1,9 +1,10 @@
+# Staging: по одной реплике на сервис, чтобы снизить стоимость кластера.
 services:
   apiGateway:
     enabled: false
-    replicas: 2
+    replicas: 1
   projects:
-    replicas: 2
+    replicas: 1
   budget:
     replicas: 1
   dashboard:
