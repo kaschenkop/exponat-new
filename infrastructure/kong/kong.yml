@@ -310,14 +310,6 @@ services:
           policy: redis
           redis_host: redis
           redis_port: 6379
-      - name: proxy-cache
-        config:
-          strategy: memory
-          cache_ttl: 300
-          content_type:
-            - application/json
-          memory:
-            dictionary_name: kong_cache
 
   - name: ai-document-gen
     url: http://ai-document-gen:8000
@@ -380,12 +372,6 @@ services:
           policy: redis
           redis_host: redis
           redis_port: 6379
-      - name: proxy-cache
-        config:
-          strategy: memory
-          cache_ttl: 60
-          memory:
-            dictionary_name: kong_cache_analytics
 
   - name: notification-service
     url: http://notifications:8080
