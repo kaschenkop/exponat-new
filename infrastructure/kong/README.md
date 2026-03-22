@@ -18,6 +18,10 @@ docker run --rm -e KONG_DATABASE=off -v "$PWD/kong.yml:/kong/kong.yml:ro" kong:3
 Файл `kong.yml` по умолчанию ориентирован на **Docker Compose** (короткие имена: `projects`, `dashboard`, `budget`, `redis`, …). Сервисы, которых нет в `docker-compose.yml`, дадут ошибки DNS в логах Kong при health check / проксировании.  
 Для Kubernetes замените цели upstream и `redis_host` на DNS вида `servicename.namespace.svc.cluster.local` (или используйте отдельный overlay / `deck`).
 
+## Rate limiting
+
+В `kong.yml` для локальной разработки используется **`policy: local`** (счётчики в памяти процесса, без Redis на каждом запросе — иначе возможны многосекундные задержки при сбоях/особенностях сети к Redis). Для **нескольких реплик Kong** в Kubernetes задайте **`policy: redis`** и параметры `redis_host` / `redis_port` и т.д.
+
 ## JWT
 
 Плагин JWT настроен с потребителем `exponat-anonymous`: запросы **без** заголовка `Authorization` обрабатываются как анонимные (удобно для dev с `SKIP_AUTH` на бэкенде). Для строгого режима отключите `anonymous` в конфигурации плагина.

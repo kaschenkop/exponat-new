@@ -3,6 +3,9 @@ _transform: true
 
 # Для Kubernetes замените хосты вида service:port на
 # service.namespace.svc.cluster.local:port (см. infrastructure/kong/README.md).
+#
+# Rate limiting: policy: local — для одного инстанса Kong (docker compose). В кластере с
+# несколькими репликами Kong замените на policy: redis и redis_* (см. README).
 
 # -----------------------------------------------------------------------------
 # Global plugins
@@ -137,13 +140,7 @@ services:
           minute: 100
           hour: 5000
           day: 50000
-          policy: redis
-          fault_tolerant: true
-          hide_client_headers: false
-          redis_host: redis
-          redis_port: 6379
-          redis_database: 0
-          redis_timeout: 2000
+          policy: local
       - name: request-size-limiting
         config:
           allowed_payload_size: 10
@@ -173,12 +170,7 @@ services:
         config:
           minute: 100
           hour: 5000
-          policy: redis
-          fault_tolerant: true
-          redis_host: redis
-          redis_port: 6379
-          redis_database: 0
-          redis_timeout: 2000
+          policy: local
       - name: request-size-limiting
         config:
           allowed_payload_size: 5
@@ -204,12 +196,7 @@ services:
         config:
           minute: 100
           hour: 5000
-          policy: redis
-          fault_tolerant: true
-          redis_host: redis
-          redis_port: 6379
-          redis_database: 0
-          redis_timeout: 2000
+          policy: local
       - name: request-size-limiting
         config:
           allowed_payload_size: 10
@@ -228,9 +215,7 @@ services:
       - name: rate-limiting
         config:
           minute: 100
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: space-planning-service
     url: http://space-planning:8080
@@ -246,9 +231,7 @@ services:
       - name: rate-limiting
         config:
           minute: 100
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
       - name: request-size-limiting
         config:
           allowed_payload_size: 50
@@ -268,9 +251,7 @@ services:
       - name: rate-limiting
         config:
           minute: 200
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: file-storage-service
     url: http://file-storage:8080
@@ -286,9 +267,7 @@ services:
       - name: rate-limiting
         config:
           minute: 50
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
       - name: request-size-limiting
         config:
           allowed_payload_size: 100
@@ -307,9 +286,7 @@ services:
       - name: rate-limiting
         config:
           minute: 200
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: ai-document-gen
     url: http://ai-document-gen:8000
@@ -329,9 +306,7 @@ services:
         config:
           minute: 10
           hour: 50
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
       - name: request-size-limiting
         config:
           allowed_payload_size: 5
@@ -351,9 +326,7 @@ services:
         config:
           minute: 20
           hour: 100
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: analytics-service
     url: http://analytics:8000
@@ -369,9 +342,7 @@ services:
       - name: rate-limiting
         config:
           minute: 50
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: notification-service
     url: http://notifications:8080
@@ -387,9 +358,7 @@ services:
       - name: rate-limiting
         config:
           minute: 100
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: logistics-service
     url: http://logistics:8000
@@ -406,9 +375,7 @@ services:
       - name: rate-limiting
         config:
           minute: 100
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: reporting-service
     url: http://reporting:8000
@@ -427,9 +394,7 @@ services:
       - name: rate-limiting
         config:
           minute: 30
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
   - name: integration-service
     url: http://integration:8000
@@ -445,9 +410,7 @@ services:
       - name: rate-limiting
         config:
           minute: 50
-          policy: redis
-          redis_host: redis
-          redis_port: 6379
+          policy: local
 
 # -----------------------------------------------------------------------------
 # Consumers (JWT). Секрет замените через CI/секреты, не коммитьте прод-значения.

@@ -25,6 +25,11 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   dashboard:
     build:
@@ -73,6 +78,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8082/health']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   # Единая точка входа API (см. infrastructure/kong/kong.yml)
@@ -95,13 +106,13 @@ services:
       - ./infrastructure/kong/kong.yml:/kong/kong.yml:ro
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
       dashboard:
         condition: service_started
       projects:
         condition: service_started
       budget:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   web:
