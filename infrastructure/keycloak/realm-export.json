@@ -1,6 +1,10 @@
 {
   "realm": "exponat-development",
   "displayName": "Экспонат Development",
+  "loginTheme": "exponat",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["ru"],
+  "defaultLocale": "ru",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": true,

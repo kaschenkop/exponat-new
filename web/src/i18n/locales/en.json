@@ -239,10 +239,11 @@
     "formPlaceholder": "Sign-up is handled in Keycloak (see docs).",
     "welcome": "Exponat",
     "signInToContinue": "Sign in to continue",
-    "signIn": "Sign in with Keycloak",
+    "signIn": "Sign in with username",
     "signOut": "Sign out",
     "orContinueWith": "or",
-    "socialLoginAvailable": "Social login and MFA are configured in Keycloak.",
+    "signInWithYandex": "Yandex",
+    "signInWithVk": "VK",
     "errorTitle": "Sign-in error",
     "backToLogin": "Back to sign in",
     "errors": {

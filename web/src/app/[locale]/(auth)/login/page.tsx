@@ -3,6 +3,9 @@ import { initPageLocale } from '@/i18n/server';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Suspense } from 'react';
 
+/** Не кэшировать страницу со снимком старых messages (иначе подписи из JSON не обновляются). */
+export const dynamic = 'force-dynamic';
+
 export default async function LoginPage({
   params,
 }: {

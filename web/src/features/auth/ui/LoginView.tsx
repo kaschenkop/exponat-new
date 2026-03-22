@@ -10,6 +10,18 @@ type LoginViewProps = {
   locale: string;
 };
 
+/** В коде, а не только в JSON — иначе после смены перевода часто «залипает» старая подпись из .next / кэша. */
+function signInButtonLabel(locale: string): string {
+  switch (locale) {
+    case 'ru':
+      return 'Войти по логину';
+    case 'en':
+      return 'Sign in with username';
+    default:
+      return 'Sign in';
+  }
+}
+
 export function LoginView({ locale }: LoginViewProps): React.ReactElement {
   const t = useTranslations('auth');
   const searchParams = useSearchParams();
@@ -18,8 +30,13 @@ export function LoginView({ locale }: LoginViewProps): React.ReactElement {
     rawCallback && rawCallback.startsWith('/') ? rawCallback : `/${locale}/dashboard`;
   const error = searchParams.get('error');
 
-  const handleLogin = (): void => {
+  const handleSignIn = (): void => {
     void signIn('keycloak', { callbackUrl });
+  };
+
+  /** Редирект на Keycloak сразу на брокер IdP (алиас в Keycloak должен совпадать: yandex, vk). */
+  const handleIdpSignIn = (idpAlias: string): void => {
+    void signIn('keycloak', { callbackUrl }, { kc_idp_hint: idpAlias });
   };
 
   return (
@@ -45,8 +62,8 @@ export function LoginView({ locale }: LoginViewProps): React.ReactElement {
             </div>
           ) : null}
 
-          <Button className="w-full" size="lg" type="button" onClick={handleLogin}>
-            {t('signIn')}
+          <Button className="w-full" size="lg" type="button" onClick={handleSignIn}>
+            {signInButtonLabel(locale)}
           </Button>
 
           <div className="relative">
@@ -58,7 +75,26 @@ export function LoginView({ locale }: LoginViewProps): React.ReactElement {
             </div>
           </div>
 
-          <p className="text-center text-sm text-muted-foreground">{t('socialLoginAvailable')}</p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              className="flex-1"
+              size="lg"
+              type="button"
+              variant="outline"
+              onClick={() => handleIdpSignIn('yandex')}
+            >
+              {t('signInWithYandex')}
+            </Button>
+            <Button
+              className="flex-1"
+              size="lg"
+              type="button"
+              variant="outline"
+              onClick={() => handleIdpSignIn('vk')}
+            >
+              {t('signInWithVk')}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -26,6 +26,9 @@ services:
       - start-dev
       - --import-realm
       - --http-relative-path=/
+      - "--spi-theme--static-max-age=-1"
+      - "--spi-theme--cache-themes=false"
+      - "--spi-theme--cache-templates=false"
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
@@ -45,6 +48,7 @@ services:
       - '8090:8080'
     volumes:
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./themes/exponat:/opt/keycloak/themes/exponat:ro
     depends_on:
       postgres-keycloak:
         condition: service_healthy

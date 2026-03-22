@@ -2,7 +2,17 @@
 
 ## Зачем
 
-Централизованная аутентификация (OIDC/OAuth2), SSO, MFA и роли — через **Keycloak**. Фронтенд использует **NextAuth.js** с провайдером Keycloak; бэкенд (например, `projects`) валидирует **access token** по **JWKS** (`OIDC_ISSUER` или `JWT_JWKS_URL`).
+Централизованная аутентификация (OIDC/OAuth2), SSO, MFA и роли — через **Keycloak**. Фронтенд использует **NextAuth.js** с провайдером Keycloak (**authorization code + PKCE**, как задано в провайдере NextAuth v4); бэкенд (например, `projects`) валидирует **access token** по **JWKS** (`OIDC_ISSUER` или `JWT_JWKS_URL`).
+
+**Тема входа:** кастомная тема `exponat` лежит в `infrastructure/keycloak/themes/exponat` и монтируется в контейнер Keycloak как `/opt/keycloak/themes/exponat`. В realm задано `loginTheme: exponat` (см. `realm-export.json`).
+
+**Если страница входа Keycloak не меняется:**
+
+1. **Импорт realm не обновляет уже существующий realm** — поле Login theme в БД могло остаться прежним. Зайдите в админ-консоль: **Realm settings → Themes → Login theme → `exponat` → Save** (realm `exponat-development`).
+2. Перезапустите контейнер Keycloak после правок темы (`docker compose restart keycloak`). В `docker-compose` для dev включено отключение кэша тем (`--spi-theme--cache-themes=false` и т.д.).
+3. Убедитесь, что в контейнере есть каталог: `/opt/keycloak/themes/exponat/login/theme.properties` (`docker compose exec keycloak ls -la /opt/keycloak/themes/exponat/login/`).
+
+Заголовок формы регистрации **«Register»** на русской локали: в базовом `messages_ru` Keycloak не хватает ключа `registerTitle`, поэтому в теме `exponat` добавлен файл `login/messages/messages_ru.properties` с `registerTitle=Регистрация`. После обновления файлов перезапустите Keycloak.
 
 ## Локальный запуск Keycloak
 
@@ -23,6 +33,8 @@ docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d
 
 - Админ-консоль: http://localhost:8090  
 - Логин: `admin` / `admin_password_change_me` (смените в проде)
+
+Страницы входа и регистрации для realm `exponat-development` на **русском**: в экспорте включены `internationalizationEnabled`, `defaultLocale: ru`, `supportedLocales: [ru]`. Если realm уже создан раньше — в консоли: **Realm settings → Localization → Internationalization ON**, язык по умолчанию **Russian**, в списке поддерживаемых оставьте **ru** (или выполните partial import / пересоздайте realm).
 
 Realm `exponat-development` подхватывается из `infrastructure/keycloak/realm-export.json` при первом импорте (пустой том БД). Если realm уже есть — при необходимости сделайте **Partial import** в консоли или удалите том `keycloak_postgres_data`.
 
@@ -45,7 +57,21 @@ http://localhost:8090/realms/exponat-development
 cd web && npm run dev
 ```
 
-Вход: http://localhost:3000/ru/login → «Войти через Keycloak». Тестовый пользователь из импорта: `admin@exponat.site` / `admin123`.
+Вход: http://localhost:3000/ru/login → «Войти по логину» (форма Keycloak), либо кнопки **Яндекс** / **ВКонтакте** (см. ниже). Тестовый пользователь из импорта: `admin@exponat.site` / `admin123`.
+
+### Яндекс и ВКонтакте (брокеры в Keycloak)
+
+Кнопки на странице входа приложения передают в Keycloak параметр **`kc_idp_hint`** — в Keycloak должны быть заведены провайдеры с **алиасами ровно `yandex` и `vk`** (регистр как в UI).
+
+1. Админ консоль Keycloak → realm `exponat-development` → **Identity providers** → **Add provider**.
+2. Для Яндекса: тип **OpenID Connect** (или OAuth2 по [документации Яндекса](https://yandex.ru/dev/id/doc/ru/)). Поле **Alias**: `yandex`. Client ID и Secret — из приложения OAuth в [Яндекс OAuth](https://oauth.yandex.ru/client/new). **Redirect URI** в кабинете Яндекса задайте как  
+   `http://localhost:8090/realms/exponat-development/broker/yandex/endpoint`  
+   (для продакшена замените хост Keycloak на `https://auth.<ваш-домен>`).
+3. Для VK: в Keycloak часто используют тип **VK** (если есть) или **OAuth 2.0** по [документации VK](https://dev.vk.com/ru/api/access-token/authcode-flow-user). **Alias**: `vk`. Redirect URI в настройках приложения VK:  
+   `http://localhost:8090/realms/exponat-development/broker/vk/endpoint`.
+4. В настройках провайдера включите **Trust email** (по желанию), чтобы не требовать подтверждение email при первом входе.
+
+Пока провайдеры не созданы или алиасы другие, кнопки на фронте приведут к ошибке на стороне Keycloak.
 
 ### Продакшен (DNS: **exponat.site**)
 
@@ -69,4 +95,4 @@ JWT для Keycloak подписан **RS256**; ротация ключей че
 
 ## Kubernetes
 
-Шаблон Helm values: `infrastructure/keycloak/keycloak-values.yaml` (подставьте секреты, ingress, образ). Рекомендуется отдельный namespace `auth` и TLS для `auth.exponat.site`.
+Шаблон Helm values: `infrastructure/keycloak/keycloak-values.yaml` (подставьте секреты, ingress, образ). Рекомендуется отдельный namespace `auth` и TLS для `auth.exponat.site`. Тему `exponat` нужно смонтировать в образ аналогично Docker (`/opt/keycloak/themes/exponat`), например через `extraVolumes`/`extraVolumeMounts` в чарте или init-контейнер.

@@ -239,10 +239,11 @@
     "formPlaceholder": "Регистрация выполняется через Keycloak (см. документацию).",
     "welcome": "Экспонат",
     "signInToContinue": "Войдите, чтобы продолжить",
-    "signIn": "Войти через Keycloak",
+    "signIn": "Войти по логину",
     "signOut": "Выйти",
     "orContinueWith": "или",
-    "socialLoginAvailable": "Соцсети и MFA настраиваются в Keycloak.",
+    "signInWithYandex": "Яндекс",
+    "signInWithVk": "ВКонтакте",
     "errorTitle": "Ошибка входа",
     "backToLogin": "К странице входа",
     "errors": {

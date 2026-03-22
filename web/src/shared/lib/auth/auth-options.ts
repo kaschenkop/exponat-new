@@ -91,6 +91,10 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
   }
 }
 
+/**
+ * Провайдер Keycloak в NextAuth v4 уже задаёт `checks: ["pkce", "state"]` (authorization code + PKCE).
+ * Публичный клиент `exponat-web` в Keycloak без client secret.
+ */
 const keycloakProvider = keycloakIssuerUrl
   ? KeycloakProvider({
       clientId,
@@ -104,21 +108,17 @@ const keycloakProvider = keycloakIssuerUrl
     })
   : null;
 
+const stubKeycloakProvider = CredentialsProvider({
+  id: 'keycloak',
+  name: 'Keycloak',
+  credentials: {},
+  async authorize() {
+    return null;
+  },
+});
+
 export const authOptions: NextAuthOptions = {
-  providers: [
-    ...(keycloakProvider
-      ? [keycloakProvider]
-      : [
-          CredentialsProvider({
-            id: 'keycloak',
-            name: 'Keycloak',
-            credentials: {},
-            async authorize() {
-              return null;
-            },
-          }),
-        ]),
-  ],
+  providers: [...(keycloakProvider ? [keycloakProvider] : [stubKeycloakProvider])],
   callbacks: {
     async jwt({ token, account, profile }) {
       if (account?.access_token) {
@@ -137,6 +137,9 @@ export const authOptions: NextAuthOptions = {
         } else if (profile && typeof profile.sub === 'string') {
           token.sub = profile.sub;
         }
+        if (typeof claims.email === 'string') {
+          token.email = claims.email;
+        }
         return token;
       }
 
@@ -154,6 +157,9 @@ export const authOptions: NextAuthOptions = {
         session.user.organizationId = token.organizationId as string | undefined;
         session.user.roles = (token.roles as string[]) ?? [];
         session.user.permissions = (token.permissions as string[]) ?? [];
+        if (token.email) {
+          session.user.email = token.email as string;
+        }
       }
       return session;
     },

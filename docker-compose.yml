@@ -118,6 +118,10 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Веб: в образ копируется результат `npm run build` (см. web/Dockerfile). Том с ./web НЕ монтируется —
+  # правки на диске не видны в контейнере, пока не пересоберёте образ:
+  #   docker compose build web --no-cache && docker compose up -d web
+  # или: docker compose up -d --build web
   web:
     build:
       context: ./web
@@ -183,6 +187,10 @@ services:
       - start-dev
       - --import-realm
       - --http-relative-path=/
+      # Иначе тема из volume часто не видна без рестарта / сброса кэша
+      - "--spi-theme--static-max-age=-1"
+      - "--spi-theme--cache-themes=false"
+      - "--spi-theme--cache-templates=false"
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
@@ -202,6 +210,7 @@ services:
       - '8090:8080'
     volumes:
       - ./infrastructure/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./infrastructure/keycloak/themes/exponat:/opt/keycloak/themes/exponat:ro
     depends_on:
       postgres-keycloak:
         condition: service_healthy
