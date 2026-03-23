@@ -10,6 +10,11 @@ on:
       - develop
   workflow_dispatch:
 
+# Reusable workflow publish-backend-ghcr.yml пушит в GHCR — нужен packages: write у вызывающего workflow.
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
   group: staging-deploy-${{ github.ref }}
   cancel-in-progress: false
