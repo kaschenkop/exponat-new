@@ -1,0 +1,69 @@
+# GCP staging: PostgreSQL + Redis в кластере (Bitnami).
+# Пароли НЕ хранятся в Git — только имена Secret (см. docs/deployment/staging-gcp-k8s-db.md § «Секреты»).
+#
+# imagePullSecrets:
+# - ghcr.io: при 403 на анонимный pull (приватный пакет) создайте PAT (read:packages) и Secret:
+#     kubectl create secret docker-registry ghcr-credentials -n staging \
+#       --docker-server=ghcr.io --docker-username=GITHUB_USER --docker-password=ghp_xxx
+#   затем:
+# global:
+#   imagePullSecrets:
+#     - name: ghcr-credentials
+# - docker.io (Bitnami): при лимите Hub — Secret для Docker Hub, имя напр. regcred:
+# global:
+#   imagePullSecrets:
+#     - name: regcred
+
+global:
+  # После: kubectl create secret docker-registry ghcr-credentials -n staging ...
+  imagePullSecrets:
+    - name: ghcr-credentials
+
+# Образы Bitnami по умолчанию с docker.io — на GKE часто ImagePullBackOff из‑за лимита Hub.
+# AWS Public ECR — зеркало Bitnami без логина (теги совпадают с чартом 14.3.3 / 18.19.4).
+postgresql:
+  enabled: true
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/postgresql
+  auth:
+    database: exponat_staging
+    username: exponat
+    existingSecret: exponat-postgres-auth
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+
+redis:
+  enabled: true
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/redis
+  architecture: standalone
+  auth:
+    enabled: true
+    existingSecret: exponat-redis-auth
+    existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m

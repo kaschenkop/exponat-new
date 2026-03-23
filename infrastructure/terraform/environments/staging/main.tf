@@ -16,15 +16,17 @@ terraform {
   }
 }
 
+# Staging: минимальная стоимость (одна зона, мало нод, меньше vCPU/RAM).
 module "kubernetes" {
   source = "../../modules/kubernetes"
 
   environment = "staging"
-  node_count  = 3
-  node_cpu    = 4
-  node_memory = 8
+  node_count  = 1
+  node_cpu    = 2
+  node_memory = 4
 }
 
+# Одна managed PostgreSQL на среду: приложение и Keycloak — разные БД внутри одного инстанса (не два кластера Postgres).
 module "database" {
   source = "../../modules/database"
 

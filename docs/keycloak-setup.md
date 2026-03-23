@@ -18,7 +18,7 @@
 
 Порт **8090** на хосте (чтобы не конфликтовать с `dashboard` на **8080** в корневом `docker-compose`).
 
-Keycloak описан в **корневом** `docker-compose.yml` (`postgres-keycloak`, `keycloak`). Поднимается вместе со стеком:
+Keycloak описан в **корневом** `docker-compose.yml` (сервис `keycloak`; БД `keycloak` в том же Postgres, что и приложение — см. `migrations/000_keycloak_database.sql`). Поднимается вместе со стеком:
 
 ```bash
 docker compose up -d
@@ -36,7 +36,7 @@ docker compose -f infrastructure/keycloak/docker-compose.keycloak.yml up -d
 
 Страницы входа и регистрации для realm `exponat-development` на **русском**: в экспорте включены `internationalizationEnabled`, `defaultLocale: ru`, `supportedLocales: [ru]`. Если realm уже создан раньше — в консоли: **Realm settings → Localization → Internationalization ON**, язык по умолчанию **Russian**, в списке поддерживаемых оставьте **ru** (или выполните partial import / пересоздайте realm).
 
-Realm `exponat-development` подхватывается из `infrastructure/keycloak/realm-export.json` при первом импорте (пустой том БД). Если realm уже есть — при необходимости сделайте **Partial import** в консоли или удалите том `keycloak_postgres_data`.
+Realm `exponat-development` подхватывается из `infrastructure/keycloak/realm-export.json` при первом импорте (пустой том БД Keycloak). Если realm уже есть — при необходимости сделайте **Partial import** в консоли или удалите том `exponat_pgdata` / пересоздайте БД `keycloak` (для отдельного compose — том `keycloak_postgres_data`).
 
 **Issuer для клиентов:**
 

@@ -3,7 +3,11 @@
 Декларативная конфигурация: [`kong.yml`](kong.yml).
 
 - **Локально:** сервис `kong` описан в **корневом** [`docker-compose.yml`](../../docker-compose.yml) — достаточно `docker compose up -d` в корне репозитория. Отдельный [`docker-compose.kong.yml`](docker-compose.kong.yml) не обязателен (оставлен для совместимости).
-- **Kubernetes:** [`kong-values.yaml`](kong-values.yaml) — официальный Helm chart [Kong](https://github.com/Kong/charts).
+- **Kubernetes:** официальный Helm chart [Kong](https://github.com/Kong/charts), значения слоями:
+  - [`kong-values-common.yaml`](kong-values-common.yaml) — образ, dbless, proxy;
+  - [`kong-values-staging.yaml`](kong-values-staging.yaml) или [`kong-values-production.yaml`](kong-values-production.yaml) — реплики и ресурсы под окружение.
+
+  Пример: `helm upgrade --install kong kong/kong -f kong-values-common.yaml -f kong-values-staging.yaml -n kong`
 
 Проверка YAML:
 

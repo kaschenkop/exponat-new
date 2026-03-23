@@ -71,7 +71,12 @@ exponat/
 │       └── exponat/
 │           ├── Chart.yaml
 │           ├── values.yaml
+│           ├── values-development.yaml
 │           ├── values-staging.yaml
+│           ├── values-staging-lowfootprint.yaml
+│           ├── values-staging-gcp-incluster.yaml
+│           ├── values-staging-gcp-incluster-lowfootprint.yaml
+│           ├── values-staging-gcp-bootstrap.yaml
 │           ├── values-production.yaml
 │           └── templates/
 │

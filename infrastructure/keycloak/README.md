@@ -4,7 +4,7 @@
 
 ## Быстрый старт
 
-Keycloak входит в **корневой** `docker-compose.yml` (сервисы `postgres-keycloak`, `keycloak`). Достаточно из корня репозитория:
+Keycloak входит в **корневой** `docker-compose.yml` (сервис `keycloak`; одна инстанция Postgres для приложения и Keycloak). Достаточно из корня репозитория:
 
 ```bash
 docker compose up -d

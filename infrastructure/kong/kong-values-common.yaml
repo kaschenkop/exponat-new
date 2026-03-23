@@ -1,0 +1,32 @@
+# Общие настройки Kong Helm chart (все окружения).
+# Установка: передавайте вместе с kong-values-<env>.yaml:
+#   helm upgrade --install kong kong/kong \
+#     -f infrastructure/kong/kong-values-common.yaml \
+#     -f infrastructure/kong/kong-values-staging.yaml \
+#     -n kong
+#
+# https://github.com/Kong/charts/tree/main/charts/kong
+
+ingressController:
+  enabled: false
+
+image:
+  repository: kong
+  tag: "3.5"
+
+env:
+  database: "off"
+  KONG_ENV: production
+
+dblessConfig:
+  configMap: kong-dbless-config
+
+proxy:
+  type: LoadBalancer
+  annotations:
+    # Yandex Cloud; для GCP удалите или замените (см. docs/deployment/staging-gcp.md)
+    yandex.cloud/load-balancer-type: external
+    yandex.cloud/subnet-id: "REPLACE_WITH_SUBNET_ID"
+
+serviceMonitor:
+  enabled: false

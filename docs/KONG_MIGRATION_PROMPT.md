@@ -43,7 +43,9 @@ exponat/
 ├── infrastructure/
 │   └── kong/
 │       ├── kong.yml                          # Декларативная конфигурация
-│       ├── kong-values.yaml                  # Helm values для K8s
+│       ├── kong-values-common.yaml           # общие Helm values Kong
+│       ├── kong-values-staging.yaml          # staging
+│       ├── kong-values-production.yaml       # production
 │       ├── docker-compose.kong.yml           # Для локальной разработки
 │       └── README.md                         # Документация Kong setup
 └── docs/
@@ -578,7 +580,7 @@ consumers:
         secret: ${JWT_SECRET}  # from env variable
 ```
 
-### infrastructure/kong/kong-values.yaml
+### infrastructure/kong/kong-values-common.yaml (+ staging / production)
 
 Helm values для Kubernetes deployment:
 
@@ -779,7 +781,8 @@ helm repo add kong https://charts.konghq.com
 helm repo update
 
 helm install kong kong/kong \
-  -f infrastructure/kong/kong-values.yaml \
+  -f infrastructure/kong/kong-values-common.yaml \
+  -f infrastructure/kong/kong-values-staging.yaml \
   -n kong
 \`\`\`
 
@@ -923,7 +926,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000  # dev
 - name: Deploy Kong Gateway
   run: |
     helm upgrade --install kong kong/kong \
-      -f infrastructure/kong/kong-values.yaml \
+      -f infrastructure/kong/kong-values-common.yaml \
+      -f infrastructure/kong/kong-values-staging.yaml \
       -n kong \
       --create-namespace \
       --wait
@@ -1053,7 +1057,8 @@ kubectl create namespace kong
 
 # Install Kong
 helm install kong kong/kong \
-  -f infrastructure/kong/kong-values.yaml \
+  -f infrastructure/kong/kong-values-common.yaml \
+  -f infrastructure/kong/kong-values-staging.yaml \
   -n kong \
   --create-namespace
 
@@ -1088,7 +1093,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 Создай:
 1. infrastructure/kong/kong.yml - декларативная конфигурация всех services
-2. infrastructure/kong/kong-values.yaml - Helm values для K8s
+2. infrastructure/kong/kong-values-common.yaml + kong-values-staging.yaml (или production) — Helm values для K8s
 3. infrastructure/kong/docker-compose.kong.yml - для локальной разработки
 4. docs/kong-setup.md - инструкции
 

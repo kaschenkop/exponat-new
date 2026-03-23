@@ -50,9 +50,13 @@ jobs:
             --from-file=kong.yml=./infrastructure/kong/kong.yml \
             -n kong --dry-run=client -o yaml | kubectl apply -f -
           helm upgrade --install kong kong/kong \
-            -f ./infrastructure/kong/kong-values.yaml \
+            -f ./infrastructure/kong/kong-values-common.yaml \
+            -f ./infrastructure/kong/kong-values-staging.yaml \
             -n kong \
             --wait --timeout 10m
+
+      - name: Helm dependencies (exponat / Bitnami OCI)
+        run: helm dependency update ./infrastructure/helm/exponat
 
       - name: Deploy with Helm
         run: |

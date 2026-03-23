@@ -36,6 +36,9 @@ jobs:
           vercel-args: '--prod'
           working-directory: ./web
 
+      - name: Helm dependencies (exponat / Bitnami OCI)
+        run: helm dependency update ./infrastructure/helm/exponat
+
       - name: Deploy Backend
         run: |
           helm upgrade --install exponat ./infrastructure/helm/exponat \

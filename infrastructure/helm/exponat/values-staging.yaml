@@ -1,9 +1,10 @@
+# Staging: по одной реплике на сервис, чтобы снизить стоимость кластера.
 services:
   apiGateway:
     enabled: false
-    replicas: 2
+    replicas: 1
   projects:
-    replicas: 2
+    replicas: 1
   budget:
     replicas: 1
   dashboard:
@@ -18,6 +19,8 @@ ingress:
         - path: /
           pathType: Prefix
 
+# Расчёт на кластер с достаточной ёмкостью (см. docs/deployment/staging-gcp.md § «Масштаб ноды»).
+# Для одной e2-medium без второй ноды используйте values-staging-lowfootprint.yaml.
 resources:
   requests:
     memory: "256Mi"
