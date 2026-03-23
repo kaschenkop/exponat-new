@@ -1,8 +1,8 @@
-# Публикует backend-образы в GHCR: ghcr.io/<repo_owner>/<service> (owner = github.repository_owner).
-# GITHUB_TOKEN не может пушить в чужой org (например exponat), только в namespace владельца репозитория.
-# В CI Helm получает --set image.repositoryPrefix=<owner> (см. deploy-staging).
+# Публикует образы в GHCR: backend (Go/Python) + frontend (Next.js в ./web).
+# Деплой в кластер здесь НЕ выполняется — только build + push. GKE/Kong/Helm: workflow «Deploy to Staging».
+# ghcr.io/<repo_owner>/<имя> (см. deploy-staging — image.repositoryPrefix).
 
-name: Publish backend images to GHCR
+name: Publish images to GHCR
 
 on:
   # Вызывается из deploy-staging при push в develop (образы совпадают с коммитом деплоя).
@@ -11,6 +11,7 @@ on:
     branches: [main]
     paths:
       - 'backend/services/**'
+      - 'web/**'
       - '.github/workflows/publish-backend-ghcr.yml'
   workflow_dispatch:
 
@@ -42,6 +43,9 @@ jobs:
           - service: ai-document-gen
             context: ./backend/services/ai-document-gen
             dockerfile: ./backend/services/ai-document-gen/Dockerfile
+          - service: web
+            context: ./web
+            dockerfile: ./web/Dockerfile
     steps:
       - uses: actions/checkout@v4
 

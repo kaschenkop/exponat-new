@@ -1,5 +1,6 @@
-# Деплой staging с ветки develop: Vercel (web) + GKE (Kong + Helm exponat).
-# Образы backend публикуются в GHCR перед helm upgrade, чтобы тег latest совпадал с коммитом.
+# Полный staging: (1) образы в GHCR — workflow «Publish images to GHCR» (reusable),
+# (2) фронт на Vercel, (3) GKE: Kong + Helm exponat (единственный job с kubectl/helm здесь).
+# Если запускали только «Publish images…» — деплоя в кластер не будет: откройте этот workflow.
 
 name: Deploy to Staging
 
@@ -14,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish-backend:
-    name: Publish backend images to GHCR
+  publish-images:
+    name: Publish images to GHCR (backend + web)
     uses: ./.github/workflows/publish-backend-ghcr.yml
     secrets: inherit
 
@@ -39,7 +40,7 @@ jobs:
     name: Deploy Backend to Staging (GKE)
     runs-on: ubuntu-latest
     environment: staging
-    needs: [publish-backend]
+    needs: [publish-images]
     steps:
       - uses: actions/checkout@v4
 
