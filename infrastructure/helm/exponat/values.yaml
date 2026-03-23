@@ -32,6 +32,11 @@ services:
     enabled: true
     port: 8090
     replicas: 1
+  web:
+    enabled: false
+    port: 3000
+    healthPath: /health
+    replicas: 1
 
 postgresql:
   enabled: true
@@ -44,13 +49,10 @@ redis:
   architecture: standalone
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
-  hosts:
-    - host: api.exponat.local
-      paths:
-        - path: /
-          pathType: Prefix
+  annotations: {}
+  rules: []
 
 resources:
   requests:

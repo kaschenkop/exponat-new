@@ -19,3 +19,5 @@ services:
     enabled: false
   aiDocumentGen:
     enabled: false
+  web:
+    enabled: false

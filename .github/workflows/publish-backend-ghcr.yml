@@ -57,12 +57,29 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
+        if: matrix.service != 'web'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           provenance: false
           push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Build and push web (Next.js staging URLs)
+        if: matrix.service == 'web'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          provenance: false
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=https://api.staging.exponat.site
+            NEXT_PUBLIC_PROJECTS_API_URL=https://api.staging.exponat.site
+            NEXT_PUBLIC_DEV_ORGANIZATION_ID=11111111-1111-1111-1111-111111111111
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
             ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}

@@ -1,4 +1,5 @@
 # Staging: по одной реплике на сервис, чтобы снизить стоимость кластера.
+# Фронт (Next.js) в GKE: Ingress → сервис web; API через Kong LoadBalancer (см. docs/deployment/staging-gcp-k8s-db.md).
 services:
   apiGateway:
     enabled: false
@@ -11,13 +12,34 @@ services:
     replicas: 1
   aiDocumentGen:
     replicas: 1
+  web:
+    enabled: true
+    port: 3000
+    healthPath: /health
+    replicas: 1
+    readinessInitialDelaySeconds: 20
+    livenessInitialDelaySeconds: 30
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 768Mi
+        cpu: 1000m
+    envFrom:
+      - secretRef:
+          name: exponat-web-env
 
 ingress:
-  hosts:
-    - host: api.staging.exponat.site
+  enabled: true
+  className: nginx
+  rules:
+    - host: app.staging.exponat.site
       paths:
         - path: /
           pathType: Prefix
+          service: web
+          port: 80
 
 # Расчёт на кластер с достаточной ёмкостью (см. docs/deployment/staging-gcp.md § «Масштаб ноды»).
 # Для одной e2-medium без второй ноды используйте values-staging-lowfootprint.yaml.

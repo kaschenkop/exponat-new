@@ -1,7 +1,5 @@
-# Полный staging: (1) образы в GHCR — workflow «Publish images to GHCR» (reusable),
-# (2) фронт на Vercel, (3) GKE: Kong + Helm exponat (единственный job с kubectl/helm здесь).
-# Vercel: нужны секреты VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (repo или environment staging).
-# Без Vercel: repository variable SKIP_VERCEL=true ИЛИ workflow_dispatch с skip_vercel=true.
+# Staging с ветки develop: образы в GHCR (reusable) + GKE: Kong + Helm exponat (включая Next.js web + Ingress).
+# Vercel не используется. Фронт: Ingress на app.staging.exponat.site → сервис web.
 
 name: Deploy to Staging
 
@@ -10,14 +8,7 @@ on:
     branches:
       - develop
   workflow_dispatch:
-    inputs:
-      skip_vercel:
-        description: Пропустить деплой на Vercel (образы GHCR и GKE выполнятся)
-        required: false
-        default: false
-        type: boolean
 
-# Reusable workflow publish-backend-ghcr.yml пушит в GHCR — нужен packages: write у вызывающего workflow.
 permissions:
   contents: read
   packages: write
@@ -32,25 +23,8 @@ jobs:
     uses: ./.github/workflows/publish-backend-ghcr.yml
     secrets: inherit
 
-  deploy-frontend:
-    name: Deploy Frontend to Staging
-    if: ${{ vars.SKIP_VERCEL != 'true' && (github.event_name != 'workflow_dispatch' || inputs.skip_vercel != true) }}
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./web
-          scope: ${{ secrets.VERCEL_ORG_ID }}
-
-  deploy-backend:
-    name: Deploy Backend to Staging (GKE)
+  deploy-staging:
+    name: Deploy to GKE (Kong + Helm)
     runs-on: ubuntu-latest
     environment: staging
     needs: [publish-images]
@@ -91,7 +65,7 @@ jobs:
       - name: Helm dependencies (exponat / Bitnami OCI)
         run: helm dependency update ./infrastructure/helm/exponat
 
-      - name: Deploy exponat (GCP staging values)
+      - name: Deploy exponat (GCP staging + web Ingress)
         run: |
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
@@ -107,7 +81,7 @@ jobs:
   notify:
     name: Notify deployment
     runs-on: ubuntu-latest
-    needs: [deploy-frontend, deploy-backend]
+    needs: [deploy-staging]
     steps:
       - name: Slack notification
         uses: slackapi/slack-github-action@v1
@@ -120,7 +94,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Deployed to Staging\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`"
+                    "text": "Deployed to Staging (GKE)\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`"
                   }
                 }
               ]

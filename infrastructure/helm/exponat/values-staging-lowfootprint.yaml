@@ -14,13 +14,8 @@ services:
     replicas: 1
   aiDocumentGen:
     replicas: 1
-
-ingress:
-  hosts:
-    - host: api.staging.exponat.site
-      paths:
-        - path: /
-          pathType: Prefix
+  web:
+    replicas: 1
 
 resources:
   requests:

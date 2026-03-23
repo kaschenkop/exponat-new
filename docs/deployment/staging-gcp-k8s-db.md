@@ -89,6 +89,32 @@ kubectl create secret generic exponat-redis-auth -n staging `
 
 **Не коммитьте:** пароли, `*-secrets.yaml`, сгенерированные `.sql` с паролями. В `.gitignore` можно добавить шаблон `*.local.yaml` для локальных overrides.
 
+**3. Next.js (фронт в GKE)** — Secret **`exponat-web-env`** в `staging` (обычный `generic`, все ключи как **переменные окружения** контейнера `web`):
+
+| Ключ | Назначение |
+|------|------------|
+| `NEXTAUTH_URL` | Публичный URL фронта, например `https://app.staging.exponat.site` |
+| `NEXTAUTH_SECRET` | Случайная строка ≥ 32 символов |
+| `NEXT_PUBLIC_API_BASE_URL` | Базовый URL API (часто тот же хост, что у Kong, например `https://api.staging.exponat.site`) |
+| `NEXT_PUBLIC_PROJECTS_API_URL` | Обычно совпадает с `NEXT_PUBLIC_API_BASE_URL` |
+| `KEYCLOAK_ISSUER` | URL realm, например `https://auth.staging.exponat.site/realms/your-realm` |
+| `KEYCLOAK_CLIENT_ID` | Client ID веб-приложения в Keycloak |
+
+Пример (подставьте свои значения):
+
+```powershell
+kubectl create secret generic exponat-web-env -n staging `
+  --from-literal=NEXTAUTH_URL='https://app.staging.exponat.site' `
+  --from-literal=NEXTAUTH_SECRET='СГЕНЕРИРУЙТЕ_МИНИМУМ_32_СИМВОЛА' `
+  --from-literal=NEXT_PUBLIC_API_BASE_URL='https://api.staging.exponat.site' `
+  --from-literal=NEXT_PUBLIC_PROJECTS_API_URL='https://api.staging.exponat.site' `
+  --from-literal=KEYCLOAK_ISSUER='https://ВАШ_KEYCLOAK/realms/ВАШ_REALM' `
+  --from-literal=KEYCLOAK_CLIENT_ID='exponat-web' `
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+**DNS:** A/CNAME **`app.staging.exponat.site`** → внешний адрес **Ingress** (nginx). API по-прежнему через **Kong** (`api.staging…` или IP балансировщика Kong) — см. CORS в `infrastructure/kong/kong.yml` (origin `https://app.staging.exponat.site`).
+
 ### Keycloak: отдельная БД на том же Postgres
 
 После первого успешного старта PostgreSQL выполните **один раз**. Имя StatefulSet уточните: `kubectl get sts -n staging` (часто `exponat-postgresql`).

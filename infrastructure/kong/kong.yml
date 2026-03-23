@@ -21,6 +21,8 @@ plugins:
         # Продакшен: exponat.site (DNS)
         - https://exponat.site
         - https://staging.exponat.site
+        # Фронт в GKE (Ingress), API через Kong
+        - https://app.staging.exponat.site
         - http://localhost:3000
         - http://127.0.0.1:3000
       methods:
