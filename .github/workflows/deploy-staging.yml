@@ -1,6 +1,7 @@
 # Полный staging: (1) образы в GHCR — workflow «Publish images to GHCR» (reusable),
 # (2) фронт на Vercel, (3) GKE: Kong + Helm exponat (единственный job с kubectl/helm здесь).
-# Если запускали только «Publish images…» — деплоя в кластер не будет: откройте этот workflow.
+# Vercel: нужны секреты VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (repo или environment staging).
+# Без Vercel: repository variable SKIP_VERCEL=true ИЛИ workflow_dispatch с skip_vercel=true.
 
 name: Deploy to Staging
 
@@ -9,6 +10,12 @@ on:
     branches:
       - develop
   workflow_dispatch:
+    inputs:
+      skip_vercel:
+        description: Пропустить деплой на Vercel (образы GHCR и GKE выполнятся)
+        required: false
+        default: false
+        type: boolean
 
 # Reusable workflow publish-backend-ghcr.yml пушит в GHCR — нужен packages: write у вызывающего workflow.
 permissions:
@@ -27,6 +34,7 @@ jobs:
 
   deploy-frontend:
     name: Deploy Frontend to Staging
+    if: ${{ vars.SKIP_VERCEL != 'true' && (github.event_name != 'workflow_dispatch' || inputs.skip_vercel != true) }}
     runs-on: ubuntu-latest
     environment: staging
     steps:
