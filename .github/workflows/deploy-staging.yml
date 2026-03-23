@@ -1,11 +1,24 @@
+# Деплой staging с ветки develop: Vercel (web) + GKE (Kong + Helm exponat).
+# Образы backend публикуются в GHCR перед helm upgrade, чтобы тег latest совпадал с коммитом.
+
 name: Deploy to Staging
 
 on:
   push:
     branches:
       - develop
+  workflow_dispatch:
+
+concurrency:
+  group: staging-deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  publish-backend:
+    name: Publish backend images to GHCR
+    uses: ./.github/workflows/publish-backend-ghcr.yml
+    secrets: inherit
+
   deploy-frontend:
     name: Deploy Frontend to Staging
     runs-on: ubuntu-latest
@@ -23,11 +36,17 @@ jobs:
           scope: ${{ secrets.VERCEL_ORG_ID }}
 
   deploy-backend:
-    name: Deploy Backend to Staging
+    name: Deploy Backend to Staging (GKE)
     runs-on: ubuntu-latest
     environment: staging
+    needs: [publish-backend]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
 
       - name: Configure kubectl
         uses: azure/setup-kubectl@v3
@@ -58,12 +77,16 @@ jobs:
       - name: Helm dependencies (exponat / Bitnami OCI)
         run: helm dependency update ./infrastructure/helm/exponat
 
-      - name: Deploy with Helm
+      - name: Deploy exponat (GCP staging values)
         run: |
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
+            -f ./infrastructure/helm/exponat/values-staging-gcp-incluster.yaml \
+            -f ./infrastructure/helm/exponat/values-staging-gcp-incluster-lowfootprint.yaml \
             --namespace staging \
             --create-namespace \
+            --atomic \
+            --timeout 20m \
             --wait
 
   notify:
@@ -82,7 +105,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Deployed to Staging\nBranch: `develop`\nCommit: ${{ github.sha }}"
+                    "text": "Deployed to Staging\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`"
                   }
                 }
               ]

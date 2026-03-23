@@ -5,8 +5,10 @@
 name: Publish backend images to GHCR
 
 on:
+  # Вызывается из deploy-staging при push в develop (образы совпадают с коммитом деплоя).
+  workflow_call:
   push:
-    branches: [develop, main]
+    branches: [main]
     paths:
       - 'backend/services/**'
       - '.github/workflows/publish-backend-ghcr.yml'
