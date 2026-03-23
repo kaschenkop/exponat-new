@@ -2,6 +2,7 @@
 {{- if $svc.enabled }}
 {{- $dns := include "exponat.k8sServiceName" $name }}
 {{- $pullSecrets := (default dict $.Values.global).imagePullSecrets | default list }}
+{{- $imgPrefix := $.Values.image.repositoryPrefix | default "exponat" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -26,7 +27,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $dns }}
-          image: "{{ $.Values.image.registry }}/exponat/{{ $dns }}:{{ $.Values.image.tag }}"
+          image: "{{ $.Values.image.registry }}/{{ $imgPrefix }}/{{ $dns }}:{{ $.Values.image.tag }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           ports:
             - containerPort: {{ $svc.port }}

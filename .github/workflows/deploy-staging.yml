@@ -83,6 +83,7 @@ jobs:
             -f ./infrastructure/helm/exponat/values-staging.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster-lowfootprint.yaml \
+            --set image.repositoryPrefix=${{ github.repository_owner }} \
             --namespace staging \
             --create-namespace \
             --atomic \

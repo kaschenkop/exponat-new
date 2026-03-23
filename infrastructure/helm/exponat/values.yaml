@@ -1,11 +1,13 @@
 replicaCount: 1
 
-# Для приватных образов ghcr.io/exponat/*: создайте Secret и перечислите здесь (см. values-staging-gcp-incluster.yaml).
+# GHCR: образы вида <registry>/<repositoryPrefix>/<сервис> (по умолчанию ghcr.io/exponat/...).
+# Форк/другой owner: repositoryPrefix = GitHub owner (в CI задаётся --set из github.repository_owner).
 global:
   imagePullSecrets: []
 
 image:
   registry: ghcr.io
+  repositoryPrefix: exponat
   tag: latest
   pullPolicy: IfNotPresent
 
