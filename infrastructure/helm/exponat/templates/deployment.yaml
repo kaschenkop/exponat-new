@@ -1,26 +1,32 @@
 {{- range $name, $svc := .Values.services }}
 {{- if $svc.enabled }}
+{{- $dns := include "exponat.k8sServiceName" $name }}
+{{- $pullSecrets := (default dict $.Values.global).imagePullSecrets | default list }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $name }}
+  name: {{ $dns }}
   labels:
-    app: {{ $name }}
+    app: {{ $dns }}
     chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
 spec:
   replicas: {{ $svc.replicas | default 1 }}
   selector:
     matchLabels:
-      app: {{ $name }}
+      app: {{ $dns }}
   template:
     metadata:
       labels:
-        app: {{ $name }}
+        app: {{ $dns }}
     spec:
+      {{- if gt (len $pullSecrets) 0 }}
+      imagePullSecrets:
+        {{- toYaml $pullSecrets | nindent 8 }}
+      {{- end }}
       containers:
-        - name: {{ $name }}
-          image: "{{ $.Values.image.registry }}/exponat/{{ $name }}:{{ $.Values.image.tag }}"
+        - name: {{ $dns }}
+          image: "{{ $.Values.image.registry }}/exponat/{{ $dns }}:{{ $.Values.image.tag }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           ports:
             - containerPort: {{ $svc.port }}

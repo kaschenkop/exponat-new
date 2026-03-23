@@ -1,0 +1,28 @@
+# Production: несколько реплик, выше лимиты, anti-affinity.
+
+replicaCount: 3
+
+env:
+  nginx_worker_processes: "4"
+  nginx_worker_connections: "10000"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - kong
+          topologyKey: kubernetes.io/hostname

@@ -1,13 +1,14 @@
 {{- range $name, $svc := .Values.services }}
 {{- if $svc.enabled }}
+{{- $dns := include "exponat.k8sServiceName" $name }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $name }}
+  name: {{ $dns }}
 spec:
   selector:
-    app: {{ $name }}
+    app: {{ $dns }}
   ports:
     - protocol: TCP
       port: 80

@@ -37,7 +37,8 @@ Edge-трафик направляется на **Kong Gateway** (DB-less, де�
    helm repo add kong https://charts.konghq.com
    helm repo update
    helm upgrade --install kong kong/kong \
-     -f infrastructure/kong/kong-values.yaml \
+     -f infrastructure/kong/kong-values-common.yaml \
+     -f infrastructure/kong/kong-values-staging.yaml \
      -n kong \
      --wait --timeout 10m
    ```
@@ -53,7 +54,7 @@ Edge-трафик направляется на **Kong Gateway** (DB-less, де�
 
 ## Метрики и логи
 
-- Prometheus: плагин `prometheus` включён глобально; при включённом `serviceMonitor` в `kong-values.yaml` метрики собирает Prometheus Operator.
+- Prometheus: плагин `prometheus` включён глобально; при включённом `serviceMonitor` в `kong-values-common.yaml` метрики собирает Prometheus Operator.
 - Логи: плагин `file-log` пишет в stdout контейнера.
 
 ## Проверка декларативного файла

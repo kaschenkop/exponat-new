@@ -1,0 +1,15 @@
+# Staging: мало ресурсов, одна реплика (малый кластер / экономия).
+
+replicaCount: 1
+
+env:
+  nginx_worker_processes: "2"
+  nginx_worker_connections: "4096"
+
+resources:
+  requests:
+    cpu: 150m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi

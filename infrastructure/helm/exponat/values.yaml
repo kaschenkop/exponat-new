@@ -1,5 +1,9 @@
 replicaCount: 1
 
+# Для приватных образов ghcr.io/exponat/*: создайте Secret и перечислите здесь (см. values-staging-gcp-incluster.yaml).
+global:
+  imagePullSecrets: []
+
 image:
   registry: ghcr.io
   tag: latest

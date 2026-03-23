@@ -19,6 +19,8 @@ ingress:
         - path: /
           pathType: Prefix
 
+# Расчёт на кластер с достаточной ёмкостью (см. docs/deployment/staging-gcp.md § «Масштаб ноды»).
+# Для одной e2-medium без второй ноды используйте values-staging-lowfootprint.yaml.
 resources:
   requests:
     memory: "256Mi"

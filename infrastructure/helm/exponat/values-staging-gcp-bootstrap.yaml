@@ -1,0 +1,21 @@
+# Временный режим: только Postgres + Redis в кластере (микросервисы выключены).
+# Нужен, если на ноде не хватает CPU под всё сразу или образов ghcr.io/exponat/* ещё нет.
+#
+# helm upgrade --install exponat . \
+#   -f values-staging.yaml \
+#   -f values-staging-gcp-incluster.yaml \
+#   -f values-staging-gcp-bootstrap.yaml \
+#   -f values-staging-gcp-incluster-lowfootprint.yaml \
+#   -n staging
+
+services:
+  apiGateway:
+    enabled: false
+  projects:
+    enabled: false
+  budget:
+    enabled: false
+  dashboard:
+    enabled: false
+  aiDocumentGen:
+    enabled: false

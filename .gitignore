@@ -45,3 +45,10 @@ coverage/
 # Misc
 *.pem
 .vercel
+
+# Helm: Bitnami тянется через OCI при `helm dependency update` (см. CI)
+infrastructure/helm/exponat/charts/*.tgz
+
+# Локальные overrides и секреты (пароли, SQL с паролями)
+infrastructure/helm/exponat/**/*.local.yaml
+infrastructure/helm/exponat/**/*secrets*.yaml

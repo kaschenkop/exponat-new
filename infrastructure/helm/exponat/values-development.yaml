@@ -1,0 +1,37 @@
+# Локальная разработка / minikube: одна реплика, встроенные Postgres/Redis (см. values.yaml).
+# Пример: helm upgrade --install exponat . -f values.yaml -f values-development.yaml -n development
+
+services:
+  apiGateway:
+    enabled: false
+    replicas: 1
+  projects:
+    replicas: 1
+  budget:
+    replicas: 1
+  dashboard:
+    replicas: 1
+  aiDocumentGen:
+    replicas: 1
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.exponat.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
+
+postgresql:
+  enabled: true
+redis:
+  enabled: true
