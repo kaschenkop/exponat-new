@@ -20,7 +20,7 @@ services:
     replicas: 1
   web:
     enabled: true
-    # imageTag: по умолчанию latest; CI после успешного publish ставит $GITHUB_SHA (web собирается при любом publish в GHCR).
+    # imageTag: в CI при publish задаётся $GITHUB_SHA; при пропуске publish — helm --reuse-values не откатывает на latest.
     port: 3000
     healthPath: /api/health
     replicas: 1

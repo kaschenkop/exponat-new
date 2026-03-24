@@ -348,18 +348,24 @@ jobs:
           ) &
           W=$!
           trap 'kill "$W" 2>/dev/null || true' EXIT
-          # web: после успешного publish в GHCR всегда есть :$SHA (web собирается при любом publish). Не полагаемся на outputs reusable workflow.
-          WEB_TAG=latest
-          if [ "${{ needs.publish-images.result }}" = "success" ]; then
-            WEB_TAG="${{ github.sha }}"
+          # Без publish нельзя ставить services.web.imageTag=latest — Helm пересоздаёт RS со старым кэшем latest на ноде → 404 на пробах.
+          # --reuse-values сохраняет прошлый тег (SHA); при успешном publish явно обновляем на новый SHA.
+          HELM_EXTRA=(--set "image.repositoryPrefix=${{ github.repository_owner }}")
+          if helm status exponat -n "$ns" &>/dev/null; then
+            HELM_EXTRA+=(--reuse-values)
+            echo "::notice::Helm exponat уже есть — --reuse-values (не откатываем web на latest без publish)"
           fi
-          echo "::notice::Helm services.web.imageTag=${WEB_TAG} (SHA после успешного publish; latest если publish пропущен)"
+          if [ "${{ needs.publish-images.result }}" = "success" ]; then
+            HELM_EXTRA+=(--set-string "services.web.imageTag=${{ github.sha }}")
+            echo "::notice::Helm services.web.imageTag=${{ github.sha }} (publish успешен)"
+          else
+            echo "::notice::Helm: publish пропущен — тег web не задаём (остаётся из прошлого релиза при --reuse-values)"
+          fi
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster-lowfootprint.yaml \
-            --set image.repositoryPrefix=${{ github.repository_owner }} \
-            --set-string "services.web.imageTag=${WEB_TAG}" \
+            "${HELM_EXTRA[@]}" \
             --namespace "$ns" \
             --create-namespace \
             --atomic \
