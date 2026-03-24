@@ -258,6 +258,7 @@ kubectl exec -n staging deploy/exponat-postgresql -- pg_isready -U exponat
 | **В логах `localhost:5432` / `exponat_dev` при том что в Deployment уже есть `envFrom`** | Часто **залипший rolling update**: новый ReplicaSet не стартует (**ImagePullBackOff**), старый под без `envFrom` ещё работает и шумит в логах. | Почините pull с GHCR; либо временно **`kubectl scale rs <старое-имя> -n staging --replicas=0`** (имя из `kubectl get rs -l app=projects`). После успешного pull новый под поднимется с **`DATABASE_URL`**. |
 | **networking-dra-driver — 0/0** | Системный DaemonSet GKE. | К **приложению** обычно не относится; можно не трогать, если ноды **Ready**. |
 | **Kong — `FailedScheduling` / `Insufficient cpu`** (namespace `kong`) | Ноды уже заняты requests (exponat + системные поды), под Kong не влезает. | Уменьшить **`resources.requests.cpu`** в `infrastructure/kong/kong-values-staging.yaml` (по умолчанию снижено до **50m**), либо вторая нода / тип ВМ крупнее, либо временно освободить CPU (`kubectl describe nodes`). |
+| **Helm exponat: `web` — `may not specify more than 1 handler type`** | После ручного patch у пробы остались и **httpGet**, и **tcpSocket**. В PowerShell inline JSON к `kubectl patch` часто ломается. | Из корня репозитория: `kubectl patch deployment web -n staging --type=json --patch-file=./infrastructure/k8s/patches/web-deployment-probes-http.json` — затем снова `helm upgrade`. |
 
 **Режим «дешево, всё сразу» на 1–2× e2-medium** (урезанные requests, без смены типа ВМ):
 

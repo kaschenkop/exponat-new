@@ -17,8 +17,20 @@ services:
     port: 3000
     healthPath: /health
     replicas: 1
-    readinessInitialDelaySeconds: 20
-    livenessInitialDelaySeconds: 30
+    # Целиком задаём пробы (только httpGet): после ручного kubectl patch с tcpSocket
+    # стратегический merge Helm оставлял два handler — replace в CI и явный блок здесь это снимают.
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 3000
+      initialDelaySeconds: 20
+      periodSeconds: 10
     resources:
       requests:
         memory: 256Mi

@@ -41,18 +41,28 @@ spec:
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if $svc.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $svc.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             httpGet:
               path: {{ $healthPath }}
               port: {{ $svc.port }}
             initialDelaySeconds: {{ $svc.livenessInitialDelaySeconds | default 15 }}
             periodSeconds: 30
+          {{- end }}
+          {{- if $svc.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $svc.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: {{ $healthPath }}
               port: {{ $svc.port }}
             initialDelaySeconds: {{ $svc.readinessInitialDelaySeconds | default 5 }}
             periodSeconds: 10
+          {{- end }}
           resources:
             {{- toYaml $res | nindent 12 }}
 {{- end }}

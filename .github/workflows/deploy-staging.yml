@@ -224,6 +224,15 @@ jobs:
             helm rollback exponat -n staging --timeout 5m
           fi
 
+      - name: Normalize web Deployment probes (remove stale tcpSocket)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          if kubectl get deployment web -n staging -o name 2>/dev/null; then
+            echo "Сброс проб web на единственный handler (httpGet) — patch-file (без кавычек в shell)"
+            kubectl patch deployment web -n staging --type=json \
+              --patch-file=./infrastructure/k8s/patches/web-deployment-probes-http.json || true
+          fi
+
       - name: Deploy exponat (GCP staging + web Ingress)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: |
