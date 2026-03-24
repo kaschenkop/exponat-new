@@ -16,6 +16,11 @@ spec:
   {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}
   {{- end }}
+  {{- $tls := .Values.ingress.tls | default list }}
+  {{- if gt (len $tls) 0 }}
+  tls:
+    {{- toYaml $tls | nindent 4 }}
+  {{- end }}
   rules:
     {{- range $rules }}
     - host: {{ .host | quote }}

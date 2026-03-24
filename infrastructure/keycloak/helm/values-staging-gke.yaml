@@ -3,7 +3,7 @@
 #
 # Перед helm: python3 infrastructure/k8s/ensure_keycloak_staging.py staging
 # Секреты: keycloak-admin (ключ password), keycloak-db (ключ password) — создаётся скриптом + workflow.
-# DNS: A auth.staging → IP Ingress (nginx). TLS на Ingress (cert-manager) или пока HTTP.
+# DNS: A auth.staging → IP Ingress (nginx). TLS: cert-manager (ClusterIssuer в cluster-issuer.yaml).
 #
 # Установка:
 #   helm upgrade --install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
@@ -55,8 +55,10 @@ ingress:
   hostname: auth.staging.exponat.site
   path: /
   pathType: Prefix
-  tls: false
-  annotations: {}
+  # Секрет TLS: Bitnami ожидает имя вида «<hostname>-tls»; cert-manager создаст его по аннотации.
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
 
 keycloakConfigCli:
   enabled: true

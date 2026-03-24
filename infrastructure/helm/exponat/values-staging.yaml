@@ -55,6 +55,13 @@ services:
 ingress:
   enabled: true
   className: nginx
+  # cert-manager ClusterIssuer (см. cluster-issuer.yaml в корне репозитория). Для боевых сертификатов: letsencrypt-prod.
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  tls:
+    - hosts:
+        - app.staging.exponat.site
+      secretName: app-staging-exponat-tls
   rules:
     - host: app.staging.exponat.site
       paths:

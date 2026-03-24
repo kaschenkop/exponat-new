@@ -52,6 +52,8 @@ ingress:
   enabled: false
   className: nginx
   annotations: {}
+  # TLS: список { hosts: [], secretName } — см. values-staging.yaml + cert-manager.
+  tls: []
   rules: []
 
 resources:
