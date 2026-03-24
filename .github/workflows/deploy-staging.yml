@@ -88,13 +88,8 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # kubectl к GKE вызывает gke-gcloud-auth-plugin; ставим его через официальный SDK (не apt-образ gcloud на runner).
-      - name: Set up Cloud SDK (GKE auth plugin)
-        if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: gke-gcloud-auth-plugin
-
+      # use_auth_provider: true включает старый встроенный «gcp» plugin kubectl — он удалён;
+      # оставляем default false: в kubeconfig кладётся short-lived token (достаточно для helm --wait).
       - name: Get GKE credentials
         if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
         uses: google-github-actions/get-gke-credentials@v2
@@ -103,7 +98,6 @@ jobs:
           location: ${{ vars.GKE_LOCATION }}
           project_id: ${{ vars.GCP_PROJECT_ID }}
           use_dns_based_endpoint: ${{ vars.GKE_USE_DNS_BASED_ENDPOINT == 'true' }}
-          use_auth_provider: true
 
       - name: Check KUBE_CONFIG_STAGING
         if: ${{ vars.KUBERNETES_AUTH == 'kubeconfig' }}

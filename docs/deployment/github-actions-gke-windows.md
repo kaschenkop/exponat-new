@@ -240,8 +240,8 @@ docker login ghcr.io -u kaschenkop
 
 ### Что сделано в workflow
 
-- Установка **`gke-gcloud-auth-plugin`** и **`use_auth_provider: true`** в **Get GKE credentials** — токен обновляется при длительных **`helm --wait`**, а не один раз на весь job.
-- Шаг **GKE API connectivity (retries)** — несколько попыток **`kubectl get ns kube-system`** с **`--request-timeout=75s`** до тяжёлых Helm-операций.
+- **`get-gke-credentials`** без **`use_auth_provider: true`**: в kubeconfig попадает **краткоживущий access token** (~1 ч), kubectl **не** вызывает удалённый встроенный plugin **`gcp`**. Параметр **`use_auth_provider: true`** как раз включает старый plugin и на современном kubectl даёт ошибку *«The gcp auth plugin has been removed»*.
+- Если когда‑нибудь понадобится обновление учётных данных прямо во время job дольше TTL токена — смотрите [gke-gcloud-auth-plugin](https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke) и генерацию kubeconfig с **exec** (отдельная настройка, не `use_auth_provider`).
 
 ### DNS-based endpoint (рекомендуется при private / проблемах с IP)
 
