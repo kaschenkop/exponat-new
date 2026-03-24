@@ -158,8 +158,8 @@ jobs:
           STATUS=$(helm status kong -n kong -o json | jq -r '.info.status')
           echo "Helm kong текущий статус: $STATUS"
           if [[ "$STATUS" == pending-* ]]; then
-            echo "::warning::Снимаем залипший статус ($STATUS) через rollback"
-            helm rollback kong -n kong --wait --timeout 5m
+            echo "::warning::Снимаем залипший статус ($STATUS) через rollback (без --wait — иначе зависание при CrashLoop)"
+            helm rollback kong -n kong --timeout 3m
           fi
 
       - name: Helm upgrade Kong (chart)
@@ -201,8 +201,8 @@ jobs:
           STATUS=$(helm status exponat -n staging -o json | jq -r '.info.status')
           echo "Helm exponat текущий статус: $STATUS"
           if [[ "$STATUS" == pending-* ]]; then
-            echo "::warning::Снимаем залипший статус ($STATUS) через rollback"
-            helm rollback exponat -n staging --wait --timeout 10m
+            echo "::warning::Снимаем залипший статус ($STATUS) через rollback (без --wait)"
+            helm rollback exponat -n staging --timeout 5m
           fi
 
       - name: Deploy exponat (GCP staging + web Ingress)

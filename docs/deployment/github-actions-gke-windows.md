@@ -179,7 +179,7 @@ kubectl get ns
 Чаще всего предыдущий прогон CI **прервали** или он упал во время `helm upgrade`, релиз остался в **`pending-upgrade`** / **`pending-install`**.
 
 1. В новых версиях workflow перед upgrade выполняется **rollback** залипших релизов (`kong`, `exponat`).
-2. Вручную: `helm status kong -n kong` / `helm status exponat -n staging` — если статус `pending-*`, то `helm rollback kong -n kong` или `helm rollback exponat -n staging`.
+2. Вручную: `helm status kong -n kong` — если `pending-*`, выполните **`helm rollback kong -n kong`** **без** флага `--wait` (с `--wait` откат ждёт Ready подов и может «висеть», если Kong/сервисы в CrashLoop).
 
 ---
 
