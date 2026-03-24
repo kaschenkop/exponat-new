@@ -17,7 +17,11 @@ services:
     port: 3000
     healthPath: /health
     replicas: 1
-    # Подставить bind-адрес Next standalone (иначе K8s перебивает HOSTNAME именем пода).
+    # Next standalone слушает по HOSTNAME; kubelet подставляет HOSTNAME=имя пода → 404 на /health без 0.0.0.0.
+    # command гарантирует bind даже если env из манифеста перебита.
+    command: ["/bin/sh", "-c"]
+    args:
+      - exec env HOSTNAME=0.0.0.0 node server.js
     env:
       - name: HOSTNAME
         value: "0.0.0.0"
