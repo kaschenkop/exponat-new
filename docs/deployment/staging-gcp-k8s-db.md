@@ -25,6 +25,8 @@ Kubeconfig, снятый на **Windows** (`gke-gcloud-auth-plugin.exe`), на *
 
 Переменную **`KUBERNETES_AUTH=kubeconfig`** задавайте только если используете секрет **`KUBE_CONFIG_STAGING`** с машины **Linux/macOS** (`kubectl config view --raw --minify --flatten`).
 
+Пошагово под **Windows (PowerShell)**: [github-actions-gke-windows.md](./github-actions-gke-windows.md).
+
 ---
 
 ## 2. Что уже есть в репозитории
