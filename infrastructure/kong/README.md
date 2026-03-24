@@ -26,6 +26,8 @@ docker run --rm -e KONG_DATABASE=off -v "$PWD/kong.yml:/kong/kong.yml:ro" kong:3
 
 **Yandex Cloud Load Balancer:** в [`kong-values-common.yaml`](kong-values-common.yaml) аннотации proxy пустые; для Yandex передайте дополнительный values-файл с `yandex.cloud/load-balancer-type` и `yandex.cloud/subnet-id`.
 
+**GKE / COS без IPv6 на loopback:** если в логах `bind() to [::1]:8444 failed`, в staging задано `env.admin_listen` только на `127.0.0.1` — см. [`kong-values-staging.yaml`](kong-values-staging.yaml).
+
 ## Rate limiting
 
 В `kong.yml` для локальной разработки используется **`policy: local`** (счётчики в памяти процесса, без Redis на каждом запросе — иначе возможны многосекундные задержки при сбоях/особенностях сети к Redis). Для **нескольких реплик Kong** в Kubernetes задайте **`policy: redis`** и параметры `redis_host` / `redis_port` и т.д.
