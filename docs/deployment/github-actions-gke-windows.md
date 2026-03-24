@@ -144,7 +144,20 @@ kubectl create clusterrolebinding github-actions-staging-admin `
 
 ---
 
-## 7. Проверка
+## 7. Перекат только Kong через CI (без сборки образов)
+
+Если менялись **`infrastructure/kong/*.yaml`** или **`kong.yml`** и не нужен build в GHCR:
+
+1. Закоммитьте и **запушьте в `develop`** — сработает полный **Deploy to Staging** (образы + Kong + exponat).
+2. Либо **Actions → Deploy to Staging → Run workflow**:
+   - включите **Skip publish images** — пропустить job публикации в GHCR;
+   - включите **Kong only** — выполнится только namespace, ConfigMap и **helm upgrade kong** (чарт **exponat** не трогается).
+
+Таймаут ожидания готовности Kong в workflow — **15m**.
+
+---
+
+## 8. Проверка
 
 1. Запушьте в **`develop`** или запустите workflow **Deploy to Staging** вручную (**Actions**).
 2. Убедитесь, что шаги **Authenticate to Google Cloud** и **Get GKE credentials** проходят, затем **Deploy Kong** / **Deploy exponat**.

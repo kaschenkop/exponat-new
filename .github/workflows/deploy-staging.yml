@@ -16,6 +16,17 @@ on:
     branches:
       - develop
   workflow_dispatch:
+    inputs:
+      skip_publish_images:
+        description: Не собирать образы в GHCR (если менялись только Kong / values)
+        required: false
+        type: boolean
+        default: false
+      kong_only:
+        description: Только Kong (namespace, configmap, helm kong) — без чарта exponat
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -28,6 +39,7 @@ concurrency:
 jobs:
   publish-images:
     name: Publish images to GHCR (backend + web)
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_publish_images }}
     uses: ./.github/workflows/publish-backend-ghcr.yml
     secrets: inherit
 
@@ -36,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     needs: [publish-images]
+    if: ${{ !cancelled() && (needs.publish-images.result == 'success' || needs.publish-images.result == 'skipped') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -110,12 +123,14 @@ jobs:
             -f ./infrastructure/kong/kong-values-common.yaml \
             -f ./infrastructure/kong/kong-values-staging.yaml \
             -n kong \
-            --wait --timeout 10m
+            --wait --timeout 15m
 
       - name: Helm dependencies (exponat / Bitnami OCI)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: helm dependency update ./infrastructure/helm/exponat
 
       - name: Deploy exponat (GCP staging + web Ingress)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: |
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
