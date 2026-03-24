@@ -89,7 +89,12 @@ jobs:
           changed backend/services/dashboard/ && echo "dashboard=true" >> "$GITHUB_OUTPUT" || echo "dashboard=false" >> "$GITHUB_OUTPUT"
           changed backend/services/budget/ && echo "budget=true" >> "$GITHUB_OUTPUT" || echo "budget=false" >> "$GITHUB_OUTPUT"
           changed backend/services/ai-document-gen/ && echo "ai_document_gen=true" >> "$GITHUB_OUTPUT" || echo "ai_document_gen=false" >> "$GITHUB_OUTPUT"
-          changed web/ && echo "web=true" >> "$GITHUB_OUTPUT" || echo "web=false" >> "$GITHUB_OUTPUT"
+          # Web: не только web/, иначе правки только Helm/проб → образ не пушится, на ноде старый latest → 404 на health.
+          if changed web/ || changed web/Dockerfile || changed infrastructure/helm/exponat/values-staging.yaml || changed infrastructure/helm/exponat/templates/deployment.yaml || changed infrastructure/k8s/patches/web-deployment-probes-http.json; then
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web=false" >> "$GITHUB_OUTPUT"
+          fi
           if grep -q '=true$' "$GITHUB_OUTPUT"; then
             echo "any_service=true" >> "$GITHUB_OUTPUT"
           else

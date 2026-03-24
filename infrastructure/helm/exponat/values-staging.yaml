@@ -1,5 +1,11 @@
 # Staging: по одной реплике на сервис, чтобы снизить стоимость кластера.
 # Фронт (Next.js) в GKE: Ingress → сервис web; API через Kong LoadBalancer (см. docs/deployment/staging-gcp-k8s-db.md).
+#
+# image.pullPolicy: Always — иначе при tag latest узел оставляет старый слой («already present on machine»),
+# а коммиты только в Helm не пересобирают web: пробы бьют в роуты, которых нет в закэшированном образе → HTTP 404.
+image:
+  pullPolicy: Always
+
 services:
   apiGateway:
     enabled: false
@@ -15,10 +21,10 @@ services:
   web:
     enabled: true
     port: 3000
-    healthPath: /health
+    healthPath: /api/health
     replicas: 1
     # Next standalone: kubelet задаёт HOSTNAME=имя пода — ниже command выставляет 0.0.0.0.
-    # Проба: app/health/route.ts (middleware исключает /health от next-intl, не /ru/health).
+    # Проба: app/api/health/route.ts (matcher middleware исключает `api`; не зависит от локали).
     # Один массив command (sh -c «…») надёжнее, чем command+args; cwd и путь к server.js явно.
     workingDir: /app
     command:
@@ -32,13 +38,13 @@ services:
     # стратегический merge Helm оставлял два handler — replace в CI и явный блок здесь это снимают.
     livenessProbe:
       httpGet:
-        path: /health
+        path: /api/health
         port: 3000
       initialDelaySeconds: 30
       periodSeconds: 30
     readinessProbe:
       httpGet:
-        path: /health
+        path: /api/health
         port: 3000
       initialDelaySeconds: 20
       periodSeconds: 10
