@@ -280,8 +280,11 @@ jobs:
           STATUS=$(helm status kong -n kong -o json | jq -r '.info.status')
           echo "Helm kong текущий статус: $STATUS"
           if [[ "$STATUS" == pending-* ]]; then
-            echo "::warning::Снимаем залипший статус ($STATUS) через rollback (без --wait — иначе зависание при CrashLoop)"
-            helm rollback kong -n kong --timeout 3m
+            echo "::warning::Залипший статус ($STATUS) — rollback; при первом failed install отката нет"
+            if ! helm rollback kong -n kong --timeout 3m; then
+              echo "::warning::Rollback kong невозможен — uninstall (dbless Kong безопасен), затем upgrade --install"
+              helm uninstall kong -n kong --no-hooks --timeout 3m || true
+            fi
           fi
 
       - name: Helm upgrade Kong (chart)
@@ -327,8 +330,11 @@ jobs:
           STATUS=$(helm status exponat -n staging -o json | jq -r '.info.status')
           echo "Helm exponat текущий статус: $STATUS"
           if [[ "$STATUS" == pending-* ]]; then
-            echo "::warning::Снимаем залипший статус ($STATUS) через rollback (без --wait)"
-            helm rollback exponat -n staging --timeout 5m
+            echo "::warning::Залипший статус ($STATUS) — только rollback (авто-uninstall exponat удалит Postgres/Redis и PVC)"
+            if ! helm rollback exponat -n staging --timeout 5m; then
+              echo "::error::Rollback exponat невозможен (часто pending-install: «release has no 0 version»). Вручную: helm uninstall exponat -n staging (потеря данных БД в кластере) или разберите секреты релиза Helm в ns staging."
+              exit 1
+            fi
           fi
 
       - name: Deploy exponat (GCP staging + web Ingress)
@@ -419,8 +425,11 @@ jobs:
           STATUS=$(helm status keycloak -n staging -o json | jq -r '.info.status')
           echo "Helm keycloak текущий статус: $STATUS"
           if [[ "$STATUS" == pending-* ]]; then
-            echo "::warning::Снимаем залипший статус ($STATUS) через rollback (без --wait)"
-            helm rollback keycloak -n staging --timeout 5m
+            echo "::warning::Залипший статус ($STATUS) — rollback; при pending-install часто «release has no 0 version»"
+            if ! helm rollback keycloak -n staging --timeout 5m; then
+              echo "::warning::Rollback keycloak невозможен — uninstall (БД в exponat-postgresql остаётся), затем upgrade --install"
+              helm uninstall keycloak -n staging --no-hooks --timeout 5m || true
+            fi
           fi
 
       - name: Helm upgrade Keycloak (Bitnami)
