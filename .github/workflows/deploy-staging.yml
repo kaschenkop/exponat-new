@@ -130,17 +130,24 @@ jobs:
           helm repo add kong https://charts.konghq.com
           helm repo update
 
+      # Kong в ns kong; без FQDN хосты вида projects:8081 резолвятся в kong → 502 / падения проб.
+      - name: Render Kong config for GKE (staging FQDN)
+        run: |
+          python3 infrastructure/kong/render-kong-gke-staging.py \
+            infrastructure/kong/kong.yml -o /tmp/kong-gke-staging.yml
+          docker run --rm -v /tmp/kong-gke-staging.yml:/kong.yml:ro kong/deck:latest file validate /kong.yml
+
       - name: Deploy Kong Gateway
         run: |
           kubectl create namespace kong --dry-run=client -o yaml | kubectl apply -f -
           kubectl create configmap kong-dbless-config \
-            --from-file=kong.yml=./infrastructure/kong/kong.yml \
+            --from-file=kong.yml=/tmp/kong-gke-staging.yml \
             -n kong --dry-run=client -o yaml | kubectl apply -f -
           helm upgrade --install kong kong/kong \
             -f ./infrastructure/kong/kong-values-common.yaml \
             -f ./infrastructure/kong/kong-values-staging.yaml \
             -n kong \
-            --wait --timeout 15m
+            --wait --timeout 20m
 
       - name: Helm dependencies (exponat / Bitnami OCI)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
@@ -157,7 +164,7 @@ jobs:
             --namespace staging \
             --create-namespace \
             --atomic \
-            --timeout 20m \
+            --timeout 25m \
             --wait
 
   notify:
