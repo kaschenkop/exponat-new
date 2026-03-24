@@ -3,12 +3,15 @@
 
 replicaCount: 1
 
+# Чарт Kong при admin.enabled=false сам подставляет addresses 127.0.0.1 + [::1] для TLS Admin.
+# На GKE/COS [::1]:8444 часто не биндится — задаём только IPv4 (см. kong/charts _helpers.tpl).
+admin:
+  addresses:
+    - 127.0.0.1
+
 env:
   nginx_worker_processes: "2"
   nginx_worker_connections: "4096"
-  # GKE (COS): в поде нет IPv6 loopback — дефолт Kong [::1]:8444 даёт
-  # nginx: bind() to [::1]:8444 failed (99: Cannot assign requested address)
-  admin_listen: "127.0.0.1:8444 http2 ssl"
 
 resources:
   requests:
