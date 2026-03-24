@@ -29,5 +29,5 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
+# K8s задаёт HOSTNAME=имя пода и перекрывает ENV из образа — без 0.0.0.0 Next standalone не слушает сеть контейнера.
+CMD ["sh", "-c", "exec env HOSTNAME=0.0.0.0 node server.js"]

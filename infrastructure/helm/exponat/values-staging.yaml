@@ -17,6 +17,10 @@ services:
     port: 3000
     healthPath: /health
     replicas: 1
+    # Подставить bind-адрес Next standalone (иначе K8s перебивает HOSTNAME именем пода).
+    env:
+      - name: HOSTNAME
+        value: "0.0.0.0"
     # Целиком задаём пробы (только httpGet): после ручного kubectl patch с tcpSocket
     # стратегический merge Helm оставлял два handler — replace в CI и явный блок здесь это снимают.
     livenessProbe:
