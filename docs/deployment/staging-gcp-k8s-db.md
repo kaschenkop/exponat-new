@@ -259,6 +259,7 @@ kubectl exec -n staging deploy/exponat-postgresql -- pg_isready -U exponat
 | **networking-dra-driver — 0/0** | Системный DaemonSet GKE. | К **приложению** обычно не относится; можно не трогать, если ноды **Ready**. |
 | **Kong — `FailedScheduling` / `Insufficient cpu`** (namespace `kong`) | Ноды уже заняты requests (exponat + системные поды), под Kong не влезает. | Уменьшить **`resources.requests.cpu`** в `infrastructure/kong/kong-values-staging.yaml` (по умолчанию снижено до **50m**), либо вторая нода / тип ВМ крупнее, либо временно освободить CPU (`kubectl describe nodes`). |
 | **Helm exponat: `web` — `may not specify more than 1 handler type`** | После ручного patch у пробы остались и **httpGet**, и **tcpSocket**. В PowerShell inline JSON к `kubectl patch` часто ломается. | Из корня репозитория: `kubectl patch deployment web -n staging --type=json --patch-file=./infrastructure/k8s/patches/web-deployment-probes-http.json` — затем снова `helm upgrade`. |
+| **CI: `Get https://…/api/v1/... context deadline exceeded`** | Это **API control plane GKE** (в логе часто IP), не сервис **web**. Runner GitHub не достучался до apiserver: **Authorized networks**, приватный endpoint, сеть. | [github-actions-gke-windows.md](./github-actions-gke-windows.md) — раздел **«Таймаут Kubernetes API»**; при DNS-based endpoint в GKE — variable **`GKE_USE_DNS_BASED_ENDPOINT=true`**. |
 
 **Режим «дешево, всё сразу» на 1–2× e2-medium** (урезанные requests, без смены типа ВМ):
 

@@ -121,6 +121,7 @@ gcloud iam service-accounts keys create $KeyPath `
 | **`GCP_PROJECT_ID`** | `exponat-staging-491022` |
 | **`GKE_CLUSTER_NAME`** | `exponat-staging` |
 | **`GKE_LOCATION`** | Точно как в `gcloud`: для zonal-кластера **`europe-west3-a`**, для regional — **`europe-west3`** |
+| **`GKE_USE_DNS_BASED_ENDPOINT`** | Опционально: **`true`**, если в GKE включён DNS-based endpoint и из CI не проходит доступ к API по IP (см. § «Таймаут Kubernetes API» ниже) |
 
 ### 5.3 Режим kubeconfig (не рекомендуется для Windows → CI)
 
@@ -227,6 +228,37 @@ docker login ghcr.io -u kaschenkop
 
 ---
 
+## Таймаут Kubernetes API: `context deadline exceeded`, `Get "https://34.x.x.x/api/v1/..."`
+
+В логе Helm/kubectl URL вида **`https://34.x.x.x/api/v1/namespaces/staging/services/web`** — это **endpoint control plane GKE** (kube-apiserver), который попадает в `kubeconfig` после `get-gke-credentials`. Это **не** внешний IP сервиса **web** и не проверка здоровья пода по IP приложения.
+
+### Почему таймаут
+
+1. **Authorized networks** на control plane: разрешён только ваш офис/VPN, а **runner GitHub Actions** выходит в интернет с **других IP** → соединение до API не устанавливается, запрос «висит» до `context deadline exceeded`. Для staging часто временно открывают **`0.0.0.0/0`** или добавляют [диапазоны GitHub Actions](https://api.github.com/meta) (они меняются — неудобно). Проверка: **GKE → кластер → Networking → Control plane authorized networks**.
+2. **Приватный control plane** без маршрута из интернета: прямой IP API из публичного runner недоступен. Варианты: **DNS-based endpoint** (ниже), **self-hosted runner во VPC**, **Cloud Build / Cloud Deploy** в том же проекте GCP.
+3. Сообщение **`client rate limiter Wait returned an error: context deadline exceeded`** часто **следствие** того же: общий контекст запроса истёк, пока клиент ждал лимитер или сеть.
+
+### Что сделано в workflow
+
+- Установка **`gke-gcloud-auth-plugin`** и **`use_auth_provider: true`** в **Get GKE credentials** — токен обновляется при длительных **`helm --wait`**, а не один раз на весь job.
+- Шаг **GKE API connectivity (retries)** — несколько попыток **`kubectl get ns kube-system`** с **`--request-timeout=75s`** до тяжёлых Helm-операций.
+
+### DNS-based endpoint (рекомендуется при private / проблемах с IP)
+
+В консоли GKE включите **DNS-based endpoint** для кластера ([документация](https://cloud.google.com/kubernetes-engine/docs/concepts/network-isolation#dns-based_endpoint)).
+
+В GitHub (environment **staging** → **Variables**) добавьте:
+
+| Имя | Значение |
+|-----|----------|
+| **`GKE_USE_DNS_BASED_ENDPOINT`** | **`true`** |
+
+Workflow передаёт это в **`use_dns_based_endpoint`** для **`google-github-actions/get-gke-credentials`**: kubeconfig будет использовать **FQDN**, а не сырой IP — доступ извне VPC часто становится стабильнее при включённой фиче в GKE.
+
+Если DNS-based endpoint **не включён** в кластере, переменную **`true`** не задавайте (оставьте пустой / не создавайте).
+
+---
+
 ## Ошибка: `another operation (install/upgrade/rollback) is in progress` (Helm)
 
 Чаще всего предыдущий прогон CI **прервали** или он упал во время `helm upgrade`, релиз остался в **`pending-upgrade`** / **`pending-install`**.
@@ -249,6 +281,6 @@ docker login ghcr.io -u kaschenkop
 | Где | Имя |
 |-----|-----|
 | Секрет GitHub (environment **staging**) | **`GCP_SA_KEY`**, **`GHCR_READ_PACKAGES_TOKEN`**, опционально **`GHCR_DOCKER_USERNAME`** |
-| Variables | **`GCP_PROJECT_ID`**, **`GKE_CLUSTER_NAME`**, **`GKE_LOCATION`** |
+| Variables | **`GCP_PROJECT_ID`**, **`GKE_CLUSTER_NAME`**, **`GKE_LOCATION`**, опционально **`GKE_USE_DNS_BASED_ENDPOINT`** |
 | Workflow | [`.github/workflows/deploy-staging.yml`](../../.github/workflows/deploy-staging.yml) |
 | Связанная документация | [staging-gcp-k8s-db.md](./staging-gcp-k8s-db.md), [staging-gcp.md](./staging-gcp.md) |

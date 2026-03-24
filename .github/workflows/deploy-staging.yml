@@ -8,6 +8,8 @@
 # — kubeconfig: KUBERNETES_AUTH=kubeconfig и секрет KUBE_CONFIG_STAGING — только с Linux/macOS
 #   (kubectl config view --raw --minify --flatten). Конфиг с Windows (.exe в exec) в CI не работает.
 # Инструкция (Windows + GCP SA): docs/deployment/github-actions-gke-windows.md
+# Таймаут API (Get https://IP-control-plane/api/...): см. § «Таймаут Kubernetes API» в том же документе;
+# при private cluster / DNS endpoint — variable GKE_USE_DNS_BASED_ENDPOINT=true.
 # Keycloak staging: секрет KEYCLOAK_STAGING_ADMIN_PASSWORD в environment «staging»;
 # см. docs/deployment/staging-gcp-k8s-db.md § Keycloak в staging.
 
@@ -87,6 +89,11 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      - name: Install gke-gcloud-auth-plugin
+        if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
+        run: |
+          gcloud components install gke-gcloud-auth-plugin --quiet
+
       - name: Get GKE credentials
         if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
         uses: google-github-actions/get-gke-credentials@v2
@@ -94,6 +101,34 @@ jobs:
           cluster_name: ${{ vars.GKE_CLUSTER_NAME }}
           location: ${{ vars.GKE_LOCATION }}
           project_id: ${{ vars.GCP_PROJECT_ID }}
+          # По умолчанию kubeconfig указывает на IP control plane. Если из GitHub «не достучаться»
+          # (private endpoint, маршрутизация), в environment «staging» задайте variable
+          # GKE_USE_DNS_BASED_ENDPOINT=true — нужен включённый DNS-based endpoint в GKE.
+          use_dns_based_endpoint: ${{ vars.GKE_USE_DNS_BASED_ENDPOINT == 'true' }}
+          # Exec-плагин обновляет токен при длинных helm --wait (не один статичный access token).
+          use_auth_provider: true
+
+      - name: GKE API connectivity (retries)
+        if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
+        run: |
+          set -e
+          echo "Проверка доступа к Kubernetes API (не IP сервиса web — это endpoint control plane GKE)"
+          kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}{"\n"}' || true
+          ok=0
+          for i in 1 2 3 4 5; do
+            if kubectl get ns kube-system --request-timeout=75s >/dev/null 2>&1; then
+              echo "API ответил (попытка $i)"
+              ok=1
+              break
+            fi
+            echo "::warning::kubectl timeout, повтор через 20s (попытка $i/5)"
+            sleep 20
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Kubernetes API недоступен из runner после 5 попыток. Частые причины: private control plane без DNS endpoint, Authorized networks без доступа с GitHub, сеть GCP. См. docs/deployment/github-actions-gke-windows.md § «Таймаут Kubernetes API»."
+            exit 1
+          fi
+          kubectl get ns staging --request-timeout=75s 2>/dev/null || echo "::notice::namespace staging ещё нет — будет создан в следующих шагах"
 
       - name: Check KUBE_CONFIG_STAGING
         if: ${{ vars.KUBERNETES_AUTH == 'kubeconfig' }}
