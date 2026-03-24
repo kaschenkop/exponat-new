@@ -215,6 +215,21 @@ jobs:
             --docker-username="$DOCKER_USER" \
             --docker-password="$GHCR_READ_PACKAGES_TOKEN" \
             --dry-run=client -o yaml | kubectl apply -f -
+          # Те же учётные данные, что у kubelet: если здесь 403 — Helm ещё не начался, причина ясна.
+          CODE=$(curl -sS -o /tmp/ghcr-oauth.json -w "%{http_code}" -u "${DOCKER_USER}:${GHCR_READ_PACKAGES_TOKEN}" \
+            -G --data-urlencode "service=ghcr.io" \
+            --data-urlencode "scope=repository:${REPO_OWNER}/web:pull" \
+            "https://ghcr.io/token")
+          if [ "$CODE" != "200" ]; then
+            echo "::error::GHCR OAuth для repository:${REPO_OWNER}/web вернул HTTP ${CODE} (нужен 200). PAT: classic → scope read:packages; fine-grained → Packages Read для этого репозитория/орг. GHCR_DOCKER_USERNAME должен быть GitHub login владельца PAT (не org и не «любой» логин)."
+            head -c 400 /tmp/ghcr-oauth.json 2>/dev/null || true
+            exit 1
+          fi
+          if ! jq -e '.token' /tmp/ghcr-oauth.json >/dev/null 2>&1; then
+            echo "::error::Ответ ghcr.io/token без поля token"
+            exit 1
+          fi
+          echo "::notice::GHCR pull-доступ к ghcr.io/${REPO_OWNER}/web проверен (OAuth 200)."
 
       - name: Add Kong Helm repo
         run: |
