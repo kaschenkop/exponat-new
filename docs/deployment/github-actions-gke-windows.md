@@ -174,6 +174,59 @@ kubectl get ns
 
 ---
 
+## 9. kubectl / helm / docker из PowerShell (Windows)
+
+В этом репозитории **локальные** команды для копирования ориентируйте на **PowerShell**, не на bash (`&&`, `export`, `\` в конце строки в PowerShell не работают как в bash).
+
+| Bash-стиль | PowerShell |
+|------------|------------|
+| `cd repo && kubectl get pods` | `Set-Location C:\cursor\exponat; kubectl get pods` |
+| `export VAR=x` | `$env:VAR = "x"` |
+| Перенос строки `\` | Обратная кавычка `` ` `` в конце строки |
+| `kubectl logs pod --tail=80` | То же (kubectl одинаковый) |
+
+**Контекст GKE** (подставьте свои project / cluster / zone):
+
+```powershell
+gcloud config set project exponat-staging-491022
+gcloud container clusters get-credentials exponat-staging --zone europe-west3-a
+```
+
+**Helm: Kong** (из корня репозитория):
+
+```powershell
+Set-Location C:\cursor\exponat
+helm repo add kong https://charts.konghq.com
+helm repo update
+helm upgrade --install kong kong/kong `
+  -f .\infrastructure\kong\kong-values-common.yaml `
+  -f .\infrastructure\kong\kong-values-staging.yaml `
+  -n kong
+kubectl rollout status deployment/kong-kong -n kong --timeout=1200s
+```
+
+**Helm: снять залипший pending** (без `--wait`):
+
+```powershell
+helm status kong -n kong
+helm rollback kong -n kong
+```
+
+**Логи пода Kong:**
+
+```powershell
+kubectl logs -n kong -l app.kubernetes.io/name=kong --tail=80
+```
+
+**Docker login GHCR** (PAT вводится вручную при запросе пароля):
+
+```powershell
+docker logout ghcr.io
+docker login ghcr.io -u kaschenkop
+```
+
+---
+
 ## Ошибка: `another operation (install/upgrade/rollback) is in progress` (Helm)
 
 Чаще всего предыдущий прогон CI **прервали** или он упал во время `helm upgrade`, релиз остался в **`pending-upgrade`** / **`pending-install`**.
