@@ -32,9 +32,11 @@ permissions:
   contents: read
   packages: write
 
+# Новый прогон отменяет предыдущий — иначе два helm upgrade подряд дают
+# "another operation (install/upgrade/rollback) is in progress".
 concurrency:
   group: staging-deploy-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   publish-images:
@@ -145,6 +147,21 @@ jobs:
             --from-file=kong.yml=/tmp/kong-gke-staging.yml \
             -n kong --dry-run=client -o yaml | kubectl apply -f -
 
+      # После отмены job / таймаута release остаётся в pending-* — следующий upgrade падает.
+      - name: Unstick Helm release kong (if pending)
+        run: |
+          set -e
+          if ! helm status kong -n kong &>/dev/null; then
+            echo "Релиза kong ещё нет — OK"
+            exit 0
+          fi
+          STATUS=$(helm status kong -n kong -o json | jq -r '.info.status')
+          echo "Helm kong текущий статус: $STATUS"
+          if [[ "$STATUS" == pending-* ]]; then
+            echo "::warning::Снимаем залипший статус ($STATUS) через rollback"
+            helm rollback kong -n kong --wait --timeout 5m
+          fi
+
       - name: Helm upgrade Kong (chart)
         run: |
           echo "Helm: применение манифестов Kong (без --wait — дальше отдельный rollout)."
@@ -172,6 +189,21 @@ jobs:
       - name: Helm dependencies (exponat / Bitnami OCI)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: helm dependency update ./infrastructure/helm/exponat
+
+      - name: Unstick Helm release exponat (if pending)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          set -e
+          if ! helm status exponat -n staging &>/dev/null; then
+            echo "Релиза exponat ещё нет — OK"
+            exit 0
+          fi
+          STATUS=$(helm status exponat -n staging -o json | jq -r '.info.status')
+          echo "Helm exponat текущий статус: $STATUS"
+          if [[ "$STATUS" == pending-* ]]; then
+            echo "::warning::Снимаем залипший статус ($STATUS) через rollback"
+            helm rollback exponat -n staging --wait --timeout 10m
+          fi
 
       - name: Deploy exponat (GCP staging + web Ingress)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}

@@ -174,6 +174,15 @@ kubectl get ns
 
 ---
 
+## Ошибка: `another operation (install/upgrade/rollback) is in progress` (Helm)
+
+Чаще всего предыдущий прогон CI **прервали** или он упал во время `helm upgrade`, релиз остался в **`pending-upgrade`** / **`pending-install`**.
+
+1. В новых версиях workflow перед upgrade выполняется **rollback** залипших релизов (`kong`, `exponat`).
+2. Вручную: `helm status kong -n kong` / `helm status exponat -n staging` — если статус `pending-*`, то `helm rollback kong -n kong` или `helm rollback exponat -n staging`.
+
+---
+
 ## Ошибка: `not found: projects/.../locations/.../clusters/...`
 
 1. **`GKE_LOCATION`** не совпадает с типом кластера (часто в variable указан регион **`europe-west3`**, а кластер **zonal** в **`europe-west3-a`**) — см. блок про `gcloud container clusters describe ... value(location)` выше.
