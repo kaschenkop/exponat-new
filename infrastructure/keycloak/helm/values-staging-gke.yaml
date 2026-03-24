@@ -66,3 +66,12 @@ keycloakConfigCli:
   image:
     registry: public.ecr.aws
     repository: bitnami/keycloak-config-cli
+  # По умолчанию resourcesPreset: small — на 2–3× e2-medium с Kong/Postgres/Redis Job часто Unschedulable (0/1 nodes).
+  resourcesPreset: none
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
