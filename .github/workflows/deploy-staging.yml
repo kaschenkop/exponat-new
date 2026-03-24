@@ -1,5 +1,8 @@
 # Staging с ветки develop: образы в GHCR (reusable) + GKE: Kong + Helm exponat (включая Next.js web + Ingress).
 # Vercel не используется. Фронт: Ingress на app.staging.exponat.site → сервис web.
+#
+# Секреты (environment «staging» или repository): KUBE_CONFIG_STAGING — полный kubeconfig
+# (`kubectl config view --raw --minify --flatten`). Без него шаг Set K8s context падает с «kubeconfig not supplied».
 
 name: Deploy to Staging
 
@@ -38,6 +41,15 @@ jobs:
 
       - name: Configure kubectl
         uses: azure/setup-kubectl@v3
+
+      - name: Check KUBE_CONFIG_STAGING
+        env:
+          KCFG: ${{ secrets.KUBE_CONFIG_STAGING }}
+        run: |
+          if [ -z "$KCFG" ]; then
+            echo "::error::KUBE_CONFIG_STAGING пустой или не задан. Добавьте секрет: GitHub → Settings → Environments → staging → Environment secrets (или Repository secrets). Значение: вывод kubectl config view --raw --minify --flatten"
+            exit 1
+          fi
 
       - name: Set K8s context
         uses: azure/k8s-set-context@v3
