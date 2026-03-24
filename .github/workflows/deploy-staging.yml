@@ -1,8 +1,11 @@
 # Staging с ветки develop: образы в GHCR (reusable) + GKE: Kong + Helm exponat (включая Next.js web + Ingress).
-# Vercel не используется. Фронт: Ingress на app.staging.exponat.site → сервис web.
 #
-# Секреты (environment «staging» или repository): KUBE_CONFIG_STAGING — полный kubeconfig
-# (`kubectl config view --raw --minify --flatten`). Без него шаг Set K8s context падает с «kubeconfig not supplied».
+# Доступ к кластеру (выберите один вариант):
+# — Рекомендуется для GKE: repository variable KUBERNETES_AUTH не задавать или ≠ kubeconfig;
+#   секрет GCP_SA_KEY (JSON сервисного аккаунта с roles/container.developer);
+#   variables: GCP_PROJECT_ID, GKE_CLUSTER_NAME, GKE_LOCATION (зона или регион, напр. europe-west3-a).
+# — kubeconfig: KUBERNETES_AUTH=kubeconfig и секрет KUBE_CONFIG_STAGING — только с Linux/macOS
+#   (kubectl config view --raw --minify --flatten). Конфиг с Windows (.exe в exec) в CI не работает.
 
 name: Deploy to Staging
 
@@ -42,16 +45,49 @@ jobs:
       - name: Configure kubectl
         uses: azure/setup-kubectl@v3
 
+      - name: Check GKE service account credentials
+        if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
+        env:
+          SA: ${{ secrets.GCP_SA_KEY }}
+          PROJ: ${{ vars.GCP_PROJECT_ID }}
+          CLUSTER: ${{ vars.GKE_CLUSTER_NAME }}
+          LOC: ${{ vars.GKE_LOCATION }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::error::Задайте секрет GCP_SA_KEY (JSON ключа сервисного аккаунта GCP) и variables: GCP_PROJECT_ID, GKE_CLUSTER_NAME, GKE_LOCATION. Либо выставьте KUBERNETES_AUTH=kubeconfig и Linux-kubeconfig в KUBE_CONFIG_STAGING."
+            exit 1
+          fi
+          if [ -z "$PROJ" ] || [ -z "$CLUSTER" ] || [ -z "$LOC" ]; then
+            echo "::error::Заполните variables GCP_PROJECT_ID, GKE_CLUSTER_NAME, GKE_LOCATION (зона или регион кластера)."
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Get GKE credentials
+        if: ${{ vars.KUBERNETES_AUTH != 'kubeconfig' }}
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER_NAME }}
+          location: ${{ vars.GKE_LOCATION }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
       - name: Check KUBE_CONFIG_STAGING
+        if: ${{ vars.KUBERNETES_AUTH == 'kubeconfig' }}
         env:
           KCFG: ${{ secrets.KUBE_CONFIG_STAGING }}
         run: |
           if [ -z "$KCFG" ]; then
-            echo "::error::KUBE_CONFIG_STAGING пустой или не задан. Добавьте секрет: GitHub → Settings → Environments → staging → Environment secrets (или Repository secrets). Значение: вывод kubectl config view --raw --minify --flatten"
+            echo "::error::KUBE_CONFIG_STAGING пустой. Нужен kubeconfig с Linux (без gke-gcloud-auth-plugin.exe)."
             exit 1
           fi
 
-      - name: Set K8s context
+      - name: Set K8s context (kubeconfig)
+        if: ${{ vars.KUBERNETES_AUTH == 'kubeconfig' }}
         uses: azure/k8s-set-context@v3
         with:
           method: kubeconfig

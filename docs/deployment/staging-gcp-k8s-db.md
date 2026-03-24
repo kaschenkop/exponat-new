@@ -16,6 +16,15 @@
 
 **Рекомендация:** для **staging** с **прерываемыми** узлами либо используйте **обычные** ноды для пула с БД, либо смиритесь с редкими рестартами и храните **снимки** перед важными тестами.
 
+### Деплой из GitHub Actions (`Deploy to Staging`)
+
+Kubeconfig, снятый на **Windows** (`gke-gcloud-auth-plugin.exe`), на **ubuntu-latest** в Actions **не работает**. Для GKE в CI задайте:
+
+1. Секрет **`GCP_SA_KEY`** — JSON ключ сервисного аккаунта с ролью минимум **`roles/container.developer`** (или набор прав на деплой в нужные namespace).
+2. **Repository variables** (или variables окружения **staging**): **`GCP_PROJECT_ID`**, **`GKE_CLUSTER_NAME`**, **`GKE_LOCATION`** (зона или регион, например `europe-west3-a`).
+
+Переменную **`KUBERNETES_AUTH=kubeconfig`** задавайте только если используете секрет **`KUBE_CONFIG_STAGING`** с машины **Linux/macOS** (`kubectl config view --raw --minify --flatten`).
+
 ---
 
 ## 2. Что уже есть в репозитории
