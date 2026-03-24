@@ -200,6 +200,7 @@ kubectl exec -n staging deploy/exponat-postgresql -- pg_isready -U exponat
 | **projects / dashboard / … — ImagePullBackOff / 403 ghcr** | В Events: `failed to fetch anonymous token` / **403** — пакет **приватный**, кластер тянет образ без учётки. | Создайте **imagePullSecret** для `ghcr.io` (PAT с `read:packages`), пропишите **`global.imagePullSecrets`** в values и `helm upgrade` (см. комментарий в `values-staging-gcp-incluster.yaml`). Либо сделайте пакеты **public** в GitHub. |
 | **projects / dashboard / … — Does not have minimum availability** | Иначе: **нет образа** (404 / manifest unknown) или под падает после старта. | CI пушит в **`ghcr.io/<owner>/<сервис>`** (`owner` = GitHub owner репозитория); Helm в deploy-staging задаёт **`image.repositoryPrefix`**. Для ручного деплоя выставьте тот же префикс, что у образов в GHCR. Либо **`values-staging-gcp-bootstrap.yaml`**. |
 | **networking-dra-driver — 0/0** | Системный DaemonSet GKE. | К **приложению** обычно не относится; можно не трогать, если ноды **Ready**. |
+| **Kong — `FailedScheduling` / `Insufficient cpu`** (namespace `kong`) | Ноды уже заняты requests (exponat + системные поды), под Kong не влезает. | Уменьшить **`resources.requests.cpu`** в `infrastructure/kong/kong-values-staging.yaml` (по умолчанию снижено до **50m**), либо вторая нода / тип ВМ крупнее, либо временно освободить CPU (`kubectl describe nodes`). |
 
 **Режим «дешево, всё сразу» на 1–2× e2-medium** (урезанные requests, без смены типа ВМ):
 
@@ -211,7 +212,7 @@ helm upgrade --install exponat ./infrastructure/helm/exponat \
   --namespace staging --atomic --timeout 20m
 ```
 
-Ориентировочно по CPU requests: 4×80m + 150m (Postgres) + 50m (Redis) ≈ **520m** только под чарт — помещается на одну ноду с **940m** allocatable вместе с системными подами с запасом; **вторая нода** даёт запас под Kong / ingress и пики.
+Ориентировочно по CPU requests: 4×80m + 150m (Postgres) + 50m (Redis) ≈ **520m** только под чарт; Kong staging — **50m** (`kong-values-staging.yaml`). Системные поды GKE часто съедают **~850–930m** из **940m** allocatable на e2-medium — без второй ноды или урезания аддонов Kong мог не влезать при **150m** request.
 
 **Команда «сначала только БД», затем образы приложений:**
 
