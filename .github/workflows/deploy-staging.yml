@@ -221,7 +221,7 @@ jobs:
             --data-urlencode "scope=repository:${REPO_OWNER}/web:pull" \
             "https://ghcr.io/token")
           if [ "$CODE" != "200" ]; then
-            echo "::error::GHCR OAuth для repository:${REPO_OWNER}/web вернул HTTP ${CODE} (нужен 200). PAT: classic → scope read:packages; fine-grained → Packages Read для этого репозитория/орг. GHCR_DOCKER_USERNAME должен быть GitHub login владельца PAT (не org и не «любой» логин)."
+            echo "::error::GHCR OAuth для repository:${REPO_OWNER}/web вернул HTTP ${CODE} (нужен 200). Проверьте существующий PAT и GHCR_DOCKER_USERNAME (логин владельца PAT); часто помогает убрать лишний пробел в секрете или выставить GHCR_DOCKER_USERNAME явно. Classic: read:packages; fine-grained: Packages Read."
             head -c 400 /tmp/ghcr-oauth.json 2>/dev/null || true
             exit 1
           fi

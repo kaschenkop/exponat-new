@@ -1,9 +1,10 @@
 # Staging: по одной реплике на сервис, чтобы снизить стоимость кластера.
 # Фронт (Next.js) в GKE: Ingress → сервис web; API через Kong LoadBalancer (см. docs/deployment/staging-gcp-k8s-db.md).
 #
-# Только web: imagePullPolicy Always — свежий latest с GHCR без кэша ноды (см. deploy-staging / пробы).
-# Остальные сервисы — глобальный pullPolicy из values.yaml (IfNotPresent), иначе при каждом upgrade
-# все поды заново тянут ghcr.io и при протухшем PAT в imagePullSecret получают 403 на весь staging.
+# imagePullPolicy как у остальных сервисов (IfNotPresent): kubelet не ходит в GHCR, если слой уже на ноде.
+# У web раньше стояло Always — из‑за этого только он каждый раз запрашивал OAuth; при любом сбое секрета
+# казалось, что «ломается только web», хотя бэкенды просто жили с кэша. Свежий web: CI пушит latest,
+# триггеры в deploy-staging пересобирают web при изменениях web/Helm; при сомнениях — rollout restart.
 
 services:
   apiGateway:
@@ -19,7 +20,6 @@ services:
     replicas: 1
   web:
     enabled: true
-    imagePullPolicy: Always
     port: 3000
     healthPath: /api/health
     replicas: 1
