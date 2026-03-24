@@ -186,21 +186,26 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
 
-      # Долговечный PAT (read:packages): GITHUB_TOKEN в Secret кластера протухает после job.
-      # В docker login для ghcr.io username должен быть GitHub login владельца PAT (личный аккаунт).
-      # Для репозитория организации repository_owner = имя org — с личным PAT это даёт 403; задайте GHCR_DOCKER_USERNAME.
+      # Образы в GHCR пушатся в этом же репо через GITHUB_TOKEN (publish-backend-ghcr.yml) — у него уже есть доступ к пакетам.
+      # PAT в кластере нужен для pull между деплоями; если PAT даёт DENIED на OAuth (fine-grained/SSO/права), используем GITHUB_TOKEN
+      # только для этого прогона (после завершения job токен недействителен — см. notice ниже).
       - name: Create GHCR pull secret (staging)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         env:
           GHCR_READ_PACKAGES_TOKEN: ${{ secrets.GHCR_READ_PACKAGES_TOKEN }}
           GHCR_DOCKER_USERNAME: ${{ secrets.GHCR_DOCKER_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           ACTOR: ${{ github.actor }}
         run: |
-          if [ -z "$GHCR_READ_PACKAGES_TOKEN" ]; then
-            echo "::error::Добавьте в environment «staging» секрет GHCR_READ_PACKAGES_TOKEN — PAT с правом read:packages. Иначе kubelet получит 403 на ghcr.io."
-            exit 1
-          fi
+          set -e
+          ghcr_oauth_code() {
+            local u="$1" p="$2"
+            curl -sS -o /tmp/ghcr-oauth.json -w "%{http_code}" -u "${u}:${p}" \
+              -G --data-urlencode "service=ghcr.io" \
+              --data-urlencode "scope=repository:${REPO_OWNER}/web:pull" \
+              "https://ghcr.io/token"
+          }
           DOCKER_USER="${GHCR_DOCKER_USERNAME:-}"
           if [ -z "$DOCKER_USER" ]; then
             DOCKER_USER="$ACTOR"
@@ -208,28 +213,40 @@ jobs:
           if [ -z "$DOCKER_USER" ]; then
             DOCKER_USER="$REPO_OWNER"
           fi
-          echo "::notice::GHCR docker-username: ${DOCKER_USER} (переопределение: секрет GHCR_DOCKER_USERNAME)"
+          FINAL_USER=""
+          FINAL_PASS=""
+          if [ -n "${GHCR_READ_PACKAGES_TOKEN:-}" ]; then
+            echo "::notice::Проверка PAT (GHCR_DOCKER_USERNAME → ${DOCKER_USER})"
+            CODE=$(ghcr_oauth_code "$DOCKER_USER" "$GHCR_READ_PACKAGES_TOKEN")
+            if [ "$CODE" = "200" ] && jq -e '.token' /tmp/ghcr-oauth.json >/dev/null 2>&1; then
+              FINAL_USER="$DOCKER_USER"
+              FINAL_PASS="$GHCR_READ_PACKAGES_TOKEN"
+              echo "::notice::GHCR: в кластер записан PAT (pull между деплоями без привязки к job)."
+            else
+              echo "::warning::PAT не прошёл OAuth для ghcr.io/${REPO_OWNER}/web (HTTP ${CODE}). Типично: fine-grained без доступа к Packages, другой владелец PAT, SSO. Переходим на GITHUB_TOKEN этого workflow — тот же доступ, что у docker push в CI."
+              head -c 400 /tmp/ghcr-oauth.json 2>/dev/null || true
+            fi
+          else
+            echo "::notice::GHCR_READ_PACKAGES_TOKEN не задан — используем GITHUB_TOKEN."
+          fi
+          if [ -z "$FINAL_PASS" ]; then
+            CODE=$(ghcr_oauth_code "$ACTOR" "$GITHUB_TOKEN")
+            if [ "$CODE" != "200" ] || ! jq -e '.token' /tmp/ghcr-oauth.json >/dev/null 2>&1; then
+              echo "::error::GITHUB_TOKEN не дал OAuth 200 для ghcr.io/${REPO_OWNER}/web (HTTP ${CODE}). Нужны permissions packages: read (или write) у workflow и успешный push пакета из этого репозитория."
+              head -c 400 /tmp/ghcr-oauth.json 2>/dev/null || true
+              exit 1
+            fi
+            FINAL_USER="$ACTOR"
+            FINAL_PASS="$GITHUB_TOKEN"
+            echo "::notice::GHCR: в кластере GITHUB_TOKEN (действителен до конца этого job). Для стабильного pull после завершения workflow настройте PAT с read:packages или публичный пакет для staging."
+          fi
           kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret docker-registry ghcr-credentials -n staging \
             --docker-server=ghcr.io \
-            --docker-username="$DOCKER_USER" \
-            --docker-password="$GHCR_READ_PACKAGES_TOKEN" \
+            --docker-username="$FINAL_USER" \
+            --docker-password="$FINAL_PASS" \
             --dry-run=client -o yaml | kubectl apply -f -
-          # Те же учётные данные, что у kubelet: если здесь 403 — Helm ещё не начался, причина ясна.
-          CODE=$(curl -sS -o /tmp/ghcr-oauth.json -w "%{http_code}" -u "${DOCKER_USER}:${GHCR_READ_PACKAGES_TOKEN}" \
-            -G --data-urlencode "service=ghcr.io" \
-            --data-urlencode "scope=repository:${REPO_OWNER}/web:pull" \
-            "https://ghcr.io/token")
-          if [ "$CODE" != "200" ]; then
-            echo "::error::GHCR OAuth для repository:${REPO_OWNER}/web вернул HTTP ${CODE} (нужен 200). Проверьте существующий PAT и GHCR_DOCKER_USERNAME (логин владельца PAT); часто помогает убрать лишний пробел в секрете или выставить GHCR_DOCKER_USERNAME явно. Classic: read:packages; fine-grained: Packages Read."
-            head -c 400 /tmp/ghcr-oauth.json 2>/dev/null || true
-            exit 1
-          fi
-          if ! jq -e '.token' /tmp/ghcr-oauth.json >/dev/null 2>&1; then
-            echo "::error::Ответ ghcr.io/token без поля token"
-            exit 1
-          fi
-          echo "::notice::GHCR pull-доступ к ghcr.io/${REPO_OWNER}/web проверен (OAuth 200)."
+          echo "::notice::Secret ghcr-credentials: user=${FINAL_USER}"
 
       - name: Add Kong Helm repo
         run: |
