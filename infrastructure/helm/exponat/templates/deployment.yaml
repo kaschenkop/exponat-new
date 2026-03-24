@@ -30,7 +30,7 @@ spec:
       containers:
         - name: {{ $dns }}
           image: "{{ $.Values.image.registry }}/{{ $imgPrefix }}/{{ $dns }}:{{ $.Values.image.tag }}"
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ $svc.imagePullPolicy | default $.Values.image.pullPolicy }}
           ports:
             - containerPort: {{ $svc.port }}
           {{- with $svc.workingDir }}
