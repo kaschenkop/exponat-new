@@ -90,7 +90,7 @@ jobs:
           changed backend/services/budget/ && echo "budget=true" >> "$GITHUB_OUTPUT" || echo "budget=false" >> "$GITHUB_OUTPUT"
           changed backend/services/ai-document-gen/ && echo "ai_document_gen=true" >> "$GITHUB_OUTPUT" || echo "ai_document_gen=false" >> "$GITHUB_OUTPUT"
           # Web: не только web/, иначе правки только Helm/проб → образ не пушится, на ноде старый latest → 404 на health.
-          if changed web/ || changed web/Dockerfile || changed infrastructure/helm/exponat/values-staging.yaml || changed infrastructure/helm/exponat/templates/deployment.yaml || changed infrastructure/k8s/patches/web-deployment-probes-http.json; then
+          if changed web/ || changed web/Dockerfile || changed infrastructure/helm/exponat/values-staging.yaml || changed infrastructure/helm/exponat/templates/deployment.yaml || changed infrastructure/k8s/patches/web-deployment-probes-http.json || changed .github/workflows/deploy-staging.yml || changed .github/workflows/publish-backend-ghcr.yml; then
             echo "web=true" >> "$GITHUB_OUTPUT"
           else
             echo "web=false" >> "$GITHUB_OUTPUT"
@@ -347,11 +347,18 @@ jobs:
           ) &
           W=$!
           trap 'kill "$W" 2>/dev/null || true' EXIT
+          # web: мутабельный latest + IfNotPresent → на разных нодах разный возраст слоя; пробы на /api/health дают 404 на старом образе.
+          WEB_TAG=latest
+          if [ "${{ needs.publish-images.result }}" = "success" ] && [ "${{ needs.publish-images.outputs.built_web }}" = "true" ]; then
+            WEB_TAG="${{ github.sha }}"
+          fi
+          echo "::notice::Helm services.web.imageTag=${WEB_TAG} (SHA только если в этом прогоне собирали web в GHCR)"
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster-lowfootprint.yaml \
             --set image.repositoryPrefix=${{ github.repository_owner }} \
+            --set-string "services.web.imageTag=${WEB_TAG}" \
             --namespace "$ns" \
             --create-namespace \
             --atomic \

@@ -28,6 +28,10 @@ on:
         type: boolean
         required: false
         default: true
+    outputs:
+      built_web:
+        description: "true if web was built in this run (GHCR has :<commit-sha> tag)"
+        value: ${{ jobs.prepare.outputs.built_web }}
   push:
     branches: [main]
     paths:
@@ -50,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      built_web: ${{ steps.matrix.outputs.built_web }}
     steps:
       - id: matrix
         run: |
@@ -62,6 +67,11 @@ jobs:
             bb="${{ inputs.build_budget }}"
             ba="${{ inputs.build_ai_document_gen }}"
             bw="${{ inputs.build_web }}"
+          fi
+          if [ "$bw" = "true" ]; then
+            echo "built_web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "built_web=false" >> "$GITHUB_OUTPUT"
           fi
           rows=()
           [ "$bp" = "true" ] && rows+=('{"service":"projects","context":"./backend","dockerfile":"./backend/services/projects/Dockerfile"}')

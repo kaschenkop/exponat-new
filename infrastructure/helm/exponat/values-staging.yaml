@@ -20,6 +20,7 @@ services:
     replicas: 1
   web:
     enabled: true
+    # imageTag: по умолчанию = глобальный image.tag (latest). CI: --set-string services.web.imageTag=$GITHUB_SHA при сборке web.
     port: 3000
     healthPath: /api/health
     replicas: 1

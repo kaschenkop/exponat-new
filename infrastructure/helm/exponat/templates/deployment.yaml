@@ -4,6 +4,7 @@
 {{- $pullSecrets := (default dict $.Values.global).imagePullSecrets | default list }}
 {{- $imgPrefix := $.Values.image.repositoryPrefix | default "exponat" }}
 {{- $healthPath := $svc.healthPath | default "/health" }}
+{{- $imgTag := $svc.imageTag | default $.Values.image.tag }}
 {{- $res := $svc.resources | default $.Values.resources }}
 ---
 apiVersion: apps/v1
@@ -29,7 +30,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $dns }}
-          image: "{{ $.Values.image.registry }}/{{ $imgPrefix }}/{{ $dns }}:{{ $.Values.image.tag }}"
+          image: "{{ $.Values.image.registry }}/{{ $imgPrefix }}/{{ $dns }}:{{ $imgTag }}"
           imagePullPolicy: {{ $svc.imagePullPolicy | default $.Values.image.pullPolicy }}
           ports:
             - containerPort: {{ $svc.port }}
