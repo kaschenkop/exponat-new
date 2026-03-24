@@ -42,10 +42,75 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Образы в GHCR только для сервисов с изменениями в коммите (staging Helm: tag latest).
+  staging-changes:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_publish_images }}
+    outputs:
+      projects: ${{ steps.resolve.outputs.projects }}
+      dashboard: ${{ steps.resolve.outputs.dashboard }}
+      budget: ${{ steps.resolve.outputs.budget }}
+      ai_document_gen: ${{ steps.resolve.outputs.ai_document_gen }}
+      web: ${{ steps.resolve.outputs.web }}
+      any_service: ${{ steps.resolve.outputs.any_service }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Какие образы пересобрать
+        id: resolve
+        run: |
+          set -e
+          SHA="${{ github.sha }}"
+          all_true() {
+            echo "projects=true" >> "$GITHUB_OUTPUT"
+            echo "dashboard=true" >> "$GITHUB_OUTPUT"
+            echo "budget=true" >> "$GITHUB_OUTPUT"
+            echo "ai_document_gen=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            echo "any_service=true" >> "$GITHUB_OUTPUT"
+          }
+          B="${{ github.event.before }}"
+          if [ "${{ github.event_name }}" = "push" ] && [ -n "$B" ] && [ "$B" != "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$B"
+          elif git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            BASE_SHA=$(git rev-parse HEAD~1)
+          else
+            all_true
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA" "$SHA" -- .github/workflows/publish-backend-ghcr.yml | grep -q .; then
+            all_true
+            exit 0
+          fi
+          changed() { git diff --name-only "$BASE_SHA" "$SHA" -- "$1" | grep -q .; }
+          changed backend/services/projects/ && echo "projects=true" >> "$GITHUB_OUTPUT" || echo "projects=false" >> "$GITHUB_OUTPUT"
+          changed backend/services/dashboard/ && echo "dashboard=true" >> "$GITHUB_OUTPUT" || echo "dashboard=false" >> "$GITHUB_OUTPUT"
+          changed backend/services/budget/ && echo "budget=true" >> "$GITHUB_OUTPUT" || echo "budget=false" >> "$GITHUB_OUTPUT"
+          changed backend/services/ai-document-gen/ && echo "ai_document_gen=true" >> "$GITHUB_OUTPUT" || echo "ai_document_gen=false" >> "$GITHUB_OUTPUT"
+          changed web/ && echo "web=true" >> "$GITHUB_OUTPUT" || echo "web=false" >> "$GITHUB_OUTPUT"
+          if grep -q '=true$' "$GITHUB_OUTPUT"; then
+            echo "any_service=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any_service=false" >> "$GITHUB_OUTPUT"
+          fi
+
   publish-images:
     name: Publish images to GHCR (backend + web)
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_publish_images }}
+    needs: [staging-changes]
+    if: >-
+      ${{
+        (github.event_name != 'workflow_dispatch' || !inputs.skip_publish_images) &&
+        needs.staging-changes.outputs.any_service == 'true'
+      }}
     uses: ./.github/workflows/publish-backend-ghcr.yml
+    with:
+      build_projects: ${{ needs.staging-changes.outputs.projects == 'true' }}
+      build_dashboard: ${{ needs.staging-changes.outputs.dashboard == 'true' }}
+      build_budget: ${{ needs.staging-changes.outputs.budget == 'true' }}
+      build_ai_document_gen: ${{ needs.staging-changes.outputs.ai_document_gen == 'true' }}
+      build_web: ${{ needs.staging-changes.outputs.web == 'true' }}
     secrets: inherit
 
   deploy-staging:
@@ -240,16 +305,32 @@ jobs:
       - name: Deploy exponat (GCP staging + web Ingress)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: |
+          set -e
+          ns=staging
+          echo "Helm ждёт готовность Postgres/Redis (Bitnami) и всех Deployment (--atomic включает --wait). На узком кластере это часто 10–20+ мин; ниже снимок подов каждые 45s."
+          kubectl get pods -n "$ns" -o wide 2>/dev/null || true
+          (
+            while sleep 45; do
+              echo "::group::staging pods $(date -u +%H:%M:%SZ)"
+              kubectl get pods -n "$ns" -o wide 2>/dev/null || true
+              kubectl get events -n "$ns" --sort-by=.lastTimestamp 2>/dev/null | tail -12 || true
+              echo "::endgroup::"
+            done
+          ) &
+          W=$!
+          trap 'kill "$W" 2>/dev/null || true' EXIT
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster-lowfootprint.yaml \
             --set image.repositoryPrefix=${{ github.repository_owner }} \
-            --namespace staging \
+            --namespace "$ns" \
             --create-namespace \
             --atomic \
             --timeout 25m \
             --wait
+          kill "$W" 2>/dev/null || true
+          trap - EXIT
 
       # Keycloak: БД keycloak в том же Postgres (staging), Ingress auth.staging.exponat.site
       - name: Keycloak admin secret (staging)

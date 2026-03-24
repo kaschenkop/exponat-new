@@ -5,8 +5,29 @@
 name: Publish images to GHCR
 
 on:
-  # Вызывается из deploy-staging при push в develop (образы совпадают с коммитом деплоя).
+  # Вызывается из deploy-staging при push в develop; входы задают, какие образы собирать (по диффу в вызывающем workflow).
   workflow_call:
+    inputs:
+      build_projects:
+        type: boolean
+        required: false
+        default: true
+      build_dashboard:
+        type: boolean
+        required: false
+        default: true
+      build_budget:
+        type: boolean
+        required: false
+        default: true
+      build_ai_document_gen:
+        type: boolean
+        required: false
+        default: true
+      build_web:
+        type: boolean
+        required: false
+        default: true
   push:
     branches: [main]
     paths:
@@ -24,8 +45,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      build_projects: ${{ steps.flags.outputs.build_projects }}
+      build_dashboard: ${{ steps.flags.outputs.build_dashboard }}
+      build_budget: ${{ steps.flags.outputs.build_budget }}
+      build_ai_document_gen: ${{ steps.flags.outputs.build_ai_document_gen }}
+      build_web: ${{ steps.flags.outputs.build_web }}
+    steps:
+      - id: flags
+        run: |
+          if [ "${{ github.event_name }}" != "workflow_call" ]; then
+            echo "build_projects=true" >> $GITHUB_OUTPUT
+            echo "build_dashboard=true" >> $GITHUB_OUTPUT
+            echo "build_budget=true" >> $GITHUB_OUTPUT
+            echo "build_ai_document_gen=true" >> $GITHUB_OUTPUT
+            echo "build_web=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_projects=${{ inputs.build_projects }}" >> $GITHUB_OUTPUT
+            echo "build_dashboard=${{ inputs.build_dashboard }}" >> $GITHUB_OUTPUT
+            echo "build_budget=${{ inputs.build_budget }}" >> $GITHUB_OUTPUT
+            echo "build_ai_document_gen=${{ inputs.build_ai_document_gen }}" >> $GITHUB_OUTPUT
+            echo "build_web=${{ inputs.build_web }}" >> $GITHUB_OUTPUT
+          fi
+
   build-push:
     name: Build and push ${{ matrix.service }}
+    needs: [prepare]
+    if: >-
+      (matrix.service == 'projects' && needs.prepare.outputs.build_projects == 'true') ||
+      (matrix.service == 'dashboard' && needs.prepare.outputs.build_dashboard == 'true') ||
+      (matrix.service == 'budget' && needs.prepare.outputs.build_budget == 'true') ||
+      (matrix.service == 'ai-document-gen' && needs.prepare.outputs.build_ai_document_gen == 'true') ||
+      (matrix.service == 'web' && needs.prepare.outputs.build_web == 'true')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
