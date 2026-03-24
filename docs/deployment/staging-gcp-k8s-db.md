@@ -36,7 +36,7 @@ Kubeconfig, снятый на **Windows** (`gke-gcloud-auth-plugin.exe`), на *
 - **postgresql** (Bitnami), `condition: postgresql.enabled`
 - **redis** (Bitnami), `condition: redis.enabled`
 
-В `values.yaml` по умолчанию `postgresql.enabled: true` и `redis.enabled: true`. Образы приложений по-прежнему должны получать **`DATABASE_URL` и адрес Redis** — в текущих шаблонах `deployment.yaml` переменные **не заданы**; их нужно добавить в chart или через **Kustomize / патчи** после установки (см. ниже).
+В `values.yaml` по умолчанию `postgresql.enabled: true` и `redis.enabled: true`. Для GCP in-cluster в **`values-staging-gcp-incluster.yaml`** к деплоям **projects / budget / dashboard** подключён **`envFrom`** → Secret **`exponat-backend-env`** (см. § 4 ниже).
 
 ---
 
@@ -93,14 +93,40 @@ kubectl create secret generic exponat-postgres-auth -n staging `
 **2. Redis** — Secret `exponat-redis-auth`, ключ **`redis-password`**:
 
 ```bash
-kubectl create secret generic exponat-redis-auth -n staging `
-  --from-literal=redis-password='СГЕНЕРИРУЙТЕ_САМИ' `
+kubectl create secret generic exponat-redis-auth -n staging \
+  --from-literal=redis-password='СГЕНЕРИРУЙТЕ_САМИ' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 **Не коммитьте:** пароли, `*-secrets.yaml`, сгенерированные `.sql` с паролями. В `.gitignore` можно добавить шаблон `*.local.yaml` для локальных overrides.
 
-**3. Next.js (фронт в GKE)** — Secret **`exponat-web-env`** в `staging` (обычный `generic`, все ключи как **переменные окружения** контейнера `web`):
+**3. Микросервисы (projects, budget, dashboard)** — Secret **`exponat-backend-env`** в `staging`. Пароли берутся из уже созданных **`exponat-postgres-auth`** и **`exponat-redis-auth`** (скрипт ничего не печатает в консоль кроме результата `kubectl apply`):
+
+**PowerShell:**
+
+```powershell
+kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+
+$b64pw = kubectl get secret exponat-postgres-auth -n staging -o jsonpath='{.data.password}'
+$pw = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b64pw))
+$enc = [uri]::EscapeDataString($pw)
+$dbUrl = "postgres://exponat:${enc}@exponat-postgresql:5432/exponat_staging?sslmode=disable"
+
+$b64r = kubectl get secret exponat-redis-auth -n staging -o jsonpath='{.data.redis-password}'
+$rpw = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b64r))
+
+kubectl create secret generic exponat-backend-env -n staging `
+  --from-literal=DATABASE_URL=$dbUrl `
+  --from-literal=REDIS_ADDR=exponat-redis-master:6379 `
+  --from-literal=REDIS_PASSWORD=$rpw `
+  --from-literal=SKIP_AUTH=true `
+  --from-literal=DEFAULT_ORGANIZATION_ID=11111111-1111-1111-1111-111111111111 `
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Для **строгого JWT** уберите `SKIP_AUTH` и задайте в том же Secret переменные из кода (`OIDC_ISSUER`, `JWT_SECRET`, …).
+
+**4. Next.js (фронт в GKE)** — Secret **`exponat-web-env`** в `staging` (обычный `generic`, все ключи как **переменные окружения** контейнера `web`):
 
 | Ключ | Назначение |
 |------|------------|
@@ -246,7 +272,7 @@ KC_DB_URL=jdbc:postgresql://exponat-postgresql:5432/keycloak
 
 Пароль пользователя `keycloak` в БД задаётся одноразовой командой из § 4 (не храните его в Git).
 
-**Важно:** расширьте шаблоны Helm (`templates/deployment.yaml`) полями `env` / `envFrom` или вынесите конфиг в **Secret** и подключите к деплоям сервисов — иначе поды не увидят `DATABASE_URL`.
+**Важно:** для GCP in-cluster задайте Secret **`exponat-backend-env`** (§ 4) — в `values-staging-gcp-incluster.yaml` уже подключён **`envFrom`** для **projects / budget / dashboard**.
 
 ---
 
