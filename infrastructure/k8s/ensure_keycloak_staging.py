@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import json
 import secrets
+import shlex
 import string
 import subprocess
 import sys
@@ -19,8 +20,14 @@ def kubectl(*args: str) -> str:
     return out.strip()
 
 
-def kubectl_exec_sql(ns: str, sql: str) -> str:
-    """psql -U postgres внутри пода Bitnami (локальное подключение без PGPASSWORD)."""
+def kubectl_exec_sql(ns: str, sql: str, admin_password: str) -> str:
+    """psql -U postgres в поде Bitnami: нужен пароль суперпользователя (секрет postgres-password)."""
+    pw_q = shlex.quote(admin_password)
+    # -h 127.0.0.1 — md5/scram в pg_hba; без PGPASSWORD psql запрашивает пароль и в CI падает.
+    inner = (
+        f"export PGPASSWORD={pw_q}; "
+        "exec psql -U postgres -h 127.0.0.1 -v ON_ERROR_STOP=1 -f -"
+    )
     cmd = [
         "kubectl",
         "exec",
@@ -31,15 +38,10 @@ def kubectl_exec_sql(ns: str, sql: str) -> str:
         "-c",
         "postgresql",
         "--",
-        "psql",
-        "-U",
-        "postgres",
-        "-v",
-        "ON_ERROR_STOP=1",
-        "-f",
-        "-",
+        "sh",
+        "-c",
+        inner,
     ]
-    # text=True требует str для input; bytes → внутри communicate ломается (.encode на bytes).
     return subprocess.check_output(
         cmd, input=sql, text=True, encoding="utf-8"
     )
@@ -61,6 +63,24 @@ def main() -> int:
     except subprocess.CalledProcessError:
         print(f"Нет Secret exponat-postgres-auth в ns/{ns}.", file=sys.stderr)
         return 1
+
+    admin_b64 = kubectl(
+        "get",
+        "secret",
+        "exponat-postgres-auth",
+        "-n",
+        ns,
+        "-o",
+        "jsonpath={.data.postgres-password}",
+    )
+    if not admin_b64:
+        print(
+            f"В Secret exponat-postgres-auth нет ключа data.postgres-password "
+            f"(Bitnami adminPasswordKey). См. values-staging-gcp-incluster.yaml.",
+            file=sys.stderr,
+        )
+        return 1
+    admin_pw = base64.b64decode(admin_b64).decode("utf-8")
 
     # Пароль для роли keycloak в БД
     try:
@@ -88,11 +108,16 @@ def main() -> int:
         f"DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'keycloak') THEN "
         f"CREATE ROLE keycloak LOGIN PASSWORD '{esc}'; "
         f"ELSE ALTER ROLE keycloak WITH PASSWORD '{esc}'; END IF; END $$;",
+        admin_pw,
     )
 
-    chk = kubectl_exec_sql(ns, "SELECT 1 FROM pg_database WHERE datname = 'keycloak';").strip()
+    chk = kubectl_exec_sql(
+        ns, "SELECT 1 FROM pg_database WHERE datname = 'keycloak';", admin_pw
+    ).strip()
     if "1" not in chk.split():
-        kubectl_exec_sql(ns, "CREATE DATABASE keycloak OWNER keycloak;")
+        kubectl_exec_sql(
+            ns, "CREATE DATABASE keycloak OWNER keycloak;", admin_pw
+        )
 
     secret = {
         "apiVersion": "v1",
