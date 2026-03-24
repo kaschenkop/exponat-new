@@ -8,6 +8,8 @@
 # — kubeconfig: KUBERNETES_AUTH=kubeconfig и секрет KUBE_CONFIG_STAGING — только с Linux/macOS
 #   (kubectl config view --raw --minify --flatten). Конфиг с Windows (.exe в exec) в CI не работает.
 # Инструкция (Windows + GCP SA): docs/deployment/github-actions-gke-windows.md
+# Keycloak staging: секрет KEYCLOAK_STAGING_ADMIN_PASSWORD в environment «staging»;
+# см. docs/deployment/staging-gcp-k8s-db.md § Keycloak в staging.
 
 name: Deploy to Staging
 
@@ -234,6 +236,41 @@ jobs:
             --create-namespace \
             --atomic \
             --timeout 25m \
+            --wait
+
+      # Keycloak: БД keycloak в том же Postgres (staging), Ingress auth.staging.exponat.site
+      - name: Keycloak admin secret (staging)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        env:
+          KC_ADMIN_PW: ${{ secrets.KEYCLOAK_STAGING_ADMIN_PASSWORD }}
+        run: |
+          if [ -z "$KC_ADMIN_PW" ]; then
+            echo "::error::В environment «staging» задайте секрет KEYCLOAK_STAGING_ADMIN_PASSWORD (пароль пользователя admin в Keycloak)."
+            exit 1
+          fi
+          kubectl create secret generic keycloak-admin -n staging \
+            --from-literal=password="$KC_ADMIN_PW" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Ensure Keycloak DB and keycloak-db secret
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: python3 infrastructure/k8s/ensure_keycloak_staging.py staging
+
+      - name: Keycloak realm ConfigMap (import via keycloak-config-cli)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          kubectl create configmap keycloak-realm-export -n staging \
+            --from-file=realm-export.json=./infrastructure/keycloak/realm-export.json \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Helm upgrade Keycloak (Bitnami)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          helm upgrade --install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
+            --version 24.0.5 \
+            -f ./infrastructure/keycloak/helm/values-staging-gke.yaml \
+            -n staging \
+            --timeout 20m \
             --wait
 
   notify:

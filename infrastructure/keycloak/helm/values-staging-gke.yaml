@@ -1,0 +1,66 @@
+# Bitnami Keycloak (Helm OCI: registry-1.docker.io/bitnamicharts/keycloak)
+# Staging GKE: Postgres = сервис exponat-postgresql в том же namespace (staging).
+#
+# Перед helm: python3 infrastructure/k8s/ensure_keycloak_staging.py staging
+# Секреты: keycloak-admin (ключ password), keycloak-db (ключ password) — создаётся скриптом + workflow.
+# DNS: A auth.staging → IP Ingress (nginx). TLS на Ingress (cert-manager) или пока HTTP.
+#
+# Установка:
+#   helm upgrade --install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
+#     --version 24.0.5 -f infrastructure/keycloak/helm/values-staging-gke.yaml -n staging
+
+global:
+  imageRegistry: public.ecr.aws
+
+image:
+  repository: bitnami/keycloak
+
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: exponat-postgresql
+  port: 5432
+  user: keycloak
+  database: keycloak
+  existingSecret: keycloak-db
+  existingSecretPasswordKey: password
+
+auth:
+  adminUser: admin
+  existingSecret: keycloak-admin
+  passwordSecretKey: password
+
+production: true
+proxyHeaders: xforwarded
+httpEnabled: true
+hostnameStrict: false
+
+replicaCount: 1
+
+cache:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: auth.staging.exponat.site
+  path: /
+  pathType: Prefix
+  tls: false
+  annotations: {}
+
+keycloakConfigCli:
+  enabled: true
+  existingConfigmap: keycloak-realm-export
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/keycloak-config-cli

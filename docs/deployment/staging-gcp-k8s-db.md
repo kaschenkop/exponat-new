@@ -154,14 +154,42 @@ kubectl create secret generic exponat-web-env -n staging `
 
 **DNS:** A/CNAME **`app.staging.exponat.site`** → внешний адрес **Ingress** (nginx). API по-прежнему через **Kong** (`api.staging…` или IP балансировщика Kong) — см. CORS в `infrastructure/kong/kong.yml` (origin `https://app.staging.exponat.site`).
 
-### Keycloak: отдельная БД на том же Postgres
+### Keycloak в staging (Helm Bitnami)
 
-После первого успешного старта PostgreSQL выполните **один раз**. Имя StatefulSet уточните: `kubectl get sts -n staging` (часто `exponat-postgresql`).
+Развёртывание из CI: после успешного `helm exponat` workflow ставит **Keycloak** в тот же namespace **`staging`**, БД **`keycloak`** в существующем **Postgres** (`exponat-postgresql`), импортирует realm из `infrastructure/keycloak/realm-export.json` (job **keycloak-config-cli**).
 
-**Проще всего — интерактивный psql** (пароль суперпользователя `postgres` — тот, что в Secret `exponat-postgres-auth`, ключ `postgres-password`):
+1. **GitHub** — в environment **staging** добавьте секрет **`KEYCLOAK_STAGING_ADMIN_PASSWORD`** (сильный пароль для пользователя **admin** в консоли Keycloak).
+2. **DNS** — A-запись **`auth.staging`** → тот же **внешний IP Ingress** (nginx), что и для фронта (`app.staging`), если Keycloak отдаётся через тот же Ingress-класс.
+3. **Фронт** — в Secret **`exponat-web-env`** задайте  
+   `KEYCLOAK_ISSUER=https://auth.staging.exponat.site/realms/exponat-development`  
+   (realm **`exponat-development`** как в экспорте). После смены секрета перезапустите Deployment **`web`**.
+
+Локально / без полного CI:
 
 ```bash
-kubectl exec -it -n staging sts/exponat-postgresql -- psql -U postgres
+kubectl create secret generic keycloak-admin -n staging --from-literal=password='ВАШ_ПАРОЛЬ_ADMIN' --dry-run=client -o yaml | kubectl apply -f -
+python3 infrastructure/k8s/ensure_keycloak_staging.py staging
+kubectl create configmap keycloak-realm-export -n staging \
+  --from-file=realm-export.json=./infrastructure/keycloak/realm-export.json \
+  --dry-run=client -o yaml | kubectl apply -f -
+helm upgrade --install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
+  --version 24.0.5 \
+  -f ./infrastructure/keycloak/helm/values-staging-gke.yaml \
+  -n staging --timeout 20m --wait
+```
+
+Values: `infrastructure/keycloak/helm/values-staging-gke.yaml`. Образы тянутся с **`public.ecr.aws/bitnami/...`** (как Postgres в `values-staging-gcp-incluster.yaml`), чтобы реже упираться в лимит Docker Hub.
+
+После появления Keycloak для **строгого JWT** на бэкенде уберите `SKIP_AUTH` из **`exponat-backend-env`** и задайте **`OIDC_ISSUER`** с тем же URL, что и `KEYCLOAK_ISSUER` (см. `docs/keycloak-setup.md`).
+
+### Keycloak: отдельная БД на том же Postgres (ручной SQL, если без скрипта)
+
+Если не используете `ensure_keycloak_staging.py`, после первого успешного старта PostgreSQL выполните **один раз**. Имя StatefulSet: `kubectl get sts -n staging` (часто `exponat-postgresql`).
+
+**Интерактивный psql** (пароль суперпользователя `postgres` — Secret `exponat-postgres-auth`, ключ `postgres-password`):
+
+```bash
+kubectl exec -it -n staging sts/exponat-postgresql -c postgresql -- psql -U postgres
 ```
 
 В консоли `psql`:
@@ -173,9 +201,9 @@ GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;
 \q
 ```
 
-**Не кладите** этот SQL в репозиторий.
+**Не кладите** этот SQL с реальными паролями в репозиторий.
 
-**Альтернатива до первого запуска БД:** временный файл `init-keycloak.sql` (в `.gitignore`), Secret `kubectl create secret generic exponat-postgres-init-scripts -n staging --from-file=00-keycloak-db.sql=init-keycloak.sql` и в **локальном** (не коммитимом) patch values поле `primary.initdb.scriptsSecret: exponat-postgres-init-scripts`. Если PVC уже создан без этого шага, initdb не выполнится повторно — используйте интерактивный `psql` выше.
+**Альтернатива до первого запуска БД:** временный файл `init-keycloak.sql` (в `.gitignore`), Secret `kubectl create secret generic exponat-postgres-init-scripts -n staging --from-file=00-keycloak-db.sql=init-keycloak.sql` и в **локальном** (не коммитимом) patch values поле `primary.initdb.scriptsSecret: exponat-postgres-init-scripts`. Если PVC уже создан без этого шага, initdb не выполнится повторно — используйте интерактивный `psql` или скрипт выше.
 
 Имена сервисов Kubernetes после установки релиза `exponat` в namespace `staging` (типично для Bitnami как субчартов):
 

@@ -32,7 +32,8 @@ cd infrastructure/keycloak && docker compose -f docker-compose.keycloak.yml up -
 
 ## Kubernetes
 
-Шаблон values для Helm (например, chart `codecentric/keycloak`) — `keycloak-values.yaml`. Подставьте секреты, хост `auth.exponat.site` (продакшен DNS), образ `quay.io/keycloak/keycloak:23.0` или новее по политике безопасности.
+- **Staging (GKE):** Helm chart **Bitnami** (OCI), values `helm/values-staging-gke.yaml`, скрипт `../k8s/ensure_keycloak_staging.py`, шаги в `.github/workflows/deploy-staging.yml`. DNS: `auth.staging.exponat.site` → Ingress.
+- **Шаблон (legacy / свой chart):** `keycloak-values.yaml` (quay.io/keycloak, пример под codecentric — chart устарел).
 
 ## См. также
 
