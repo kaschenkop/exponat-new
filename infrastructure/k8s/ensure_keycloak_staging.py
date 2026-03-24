@@ -39,7 +39,10 @@ def kubectl_exec_sql(ns: str, sql: str) -> str:
         "-f",
         "-",
     ]
-    return subprocess.check_output(cmd, input=sql.encode("utf-8"), text=True)
+    # text=True требует str для input; bytes → внутри communicate ломается (.encode на bytes).
+    return subprocess.check_output(
+        cmd, input=sql, text=True, encoding="utf-8"
+    )
 
 
 def main() -> int:
