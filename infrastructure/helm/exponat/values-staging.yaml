@@ -15,7 +15,7 @@ services:
   web:
     enabled: true
     port: 3000
-    healthPath: /health
+    healthPath: /api/health
     replicas: 1
     # Next standalone: listen на HOSTNAME; kubelet даёт HOSTNAME=имя пода → HTTP 404 на /health.
     # Один массив command (sh -c «…») надёжнее, чем command+args; cwd и путь к server.js явно.
@@ -31,13 +31,13 @@ services:
     # стратегический merge Helm оставлял два handler — replace в CI и явный блок здесь это снимают.
     livenessProbe:
       httpGet:
-        path: /health
+        path: /api/health
         port: 3000
       initialDelaySeconds: 30
       periodSeconds: 30
     readinessProbe:
       httpGet:
-        path: /health
+        path: /api/health
         port: 3000
       initialDelaySeconds: 20
       periodSeconds: 10
