@@ -115,7 +115,8 @@ jobs:
       build_dashboard: ${{ needs.staging-changes.outputs.dashboard == 'true' }}
       build_budget: ${{ needs.staging-changes.outputs.budget == 'true' }}
       build_ai_document_gen: ${{ needs.staging-changes.outputs.ai_document_gen == 'true' }}
-      build_web: ${{ needs.staging-changes.outputs.web == 'true' }}
+      # web всегда вместе с любым publish: иначе built_web/outputs с reusable ломаются → deploy ставит latest → старый кэш на ноде и 404 на пробах.
+      build_web: ${{ needs.staging-changes.outputs.any_service == 'true' }}
     secrets: inherit
 
   deploy-staging:
@@ -347,12 +348,12 @@ jobs:
           ) &
           W=$!
           trap 'kill "$W" 2>/dev/null || true' EXIT
-          # web: мутабельный latest + IfNotPresent → на разных нодах разный возраст слоя; пробы на /api/health дают 404 на старом образе.
+          # web: после успешного publish в GHCR всегда есть :$SHA (web собирается при любом publish). Не полагаемся на outputs reusable workflow.
           WEB_TAG=latest
-          if [ "${{ needs.publish-images.result }}" = "success" ] && [ "${{ needs.publish-images.outputs.built_web }}" = "true" ]; then
+          if [ "${{ needs.publish-images.result }}" = "success" ]; then
             WEB_TAG="${{ github.sha }}"
           fi
-          echo "::notice::Helm services.web.imageTag=${WEB_TAG} (SHA только если в этом прогоне собирали web в GHCR)"
+          echo "::notice::Helm services.web.imageTag=${WEB_TAG} (SHA после успешного publish; latest если publish пропущен)"
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
             -f ./infrastructure/helm/exponat/values-staging-gcp-incluster.yaml \
