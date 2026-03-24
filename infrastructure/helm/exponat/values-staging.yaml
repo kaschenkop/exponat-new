@@ -22,7 +22,7 @@ services:
     resources:
       requests:
         memory: 256Mi
-        cpu: 100m
+        cpu: 70m
       limits:
         memory: 768Mi
         cpu: 1000m
@@ -41,12 +41,12 @@ ingress:
           service: web
           port: 80
 
-# Расчёт на кластер с достаточной ёмкостью (см. docs/deployment/staging-gcp.md § «Масштаб ноды»).
-# Для одной e2-medium без второй ноды используйте values-staging-lowfootprint.yaml.
+# Низкие CPU requests для планирования на 2–4× e2-medium вместе с Kong + Bitnami.
+# Ещё ниже — values-staging-lowfootprint.yaml (не подмешан в CI по умолчанию).
 resources:
   requests:
-    memory: "256Mi"
-    cpu: "250m"
+    memory: "192Mi"
+    cpu: "70m"
   limits:
     memory: "512Mi"
     cpu: "1000m"

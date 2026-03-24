@@ -1,6 +1,5 @@
 # Staging: мало ресурсов, одна реплика (малый кластер / экономия).
-# CPU request держим низким: на 2× e2-medium с системными подами + exponat часто
-# FailedScheduling Insufficient cpu при 150m+ (см. kubectl get events -n kong).
+# CPU request минимальный для планирования рядом с exponat + Postgres/Redis.
 
 replicaCount: 1
 
@@ -10,7 +9,7 @@ env:
 
 resources:
   requests:
-    cpu: 50m
+    cpu: 25m
     memory: 256Mi
   limits:
     cpu: 1000m

@@ -1,4 +1,4 @@
-# Урезанные CPU/memory requests для Postgres и Redis на 1–2× e2-medium (~940m allocatable CPU на ноду).
+# Урезанные CPU/memory requests для Postgres и Redis на малом кластере (~940m allocatable CPU на ноду).
 # Всегда в паре с values-staging-gcp-incluster.yaml (секреты) и values-staging-lowfootprint.yaml (сервисы).
 #
 # Из корня репозитория:
@@ -13,7 +13,7 @@ postgresql:
     resources:
       requests:
         memory: 256Mi
-        cpu: 150m
+        cpu: 100m
       limits:
         memory: 1Gi
         cpu: 1000m
@@ -23,7 +23,7 @@ redis:
     resources:
       requests:
         memory: 128Mi
-        cpu: 50m
+        cpu: 25m
       limits:
         memory: 512Mi
         cpu: 500m
