@@ -33,6 +33,9 @@ spec:
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           ports:
             - containerPort: {{ $svc.port }}
+          {{- with $svc.workingDir }}
+          workingDir: {{ . | quote }}
+          {{- end }}
           {{- with $svc.command }}
           command:
             {{- toYaml . | nindent 12 }}

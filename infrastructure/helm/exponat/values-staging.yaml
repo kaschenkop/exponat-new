@@ -17,11 +17,13 @@ services:
     port: 3000
     healthPath: /health
     replicas: 1
-    # Next standalone слушает по HOSTNAME; kubelet подставляет HOSTNAME=имя пода → 404 на /health без 0.0.0.0.
-    # command гарантирует bind даже если env из манифеста перебита.
-    command: ["/bin/sh", "-c"]
-    args:
-      - exec env HOSTNAME=0.0.0.0 node server.js
+    # Next standalone: listen на HOSTNAME; kubelet даёт HOSTNAME=имя пода → HTTP 404 на /health.
+    # Один массив command (sh -c «…») надёжнее, чем command+args; cwd и путь к server.js явно.
+    workingDir: /app
+    command:
+      - /bin/sh
+      - -c
+      - export HOSTNAME=0.0.0.0; exec node /app/server.js
     env:
       - name: HOSTNAME
         value: "0.0.0.0"
