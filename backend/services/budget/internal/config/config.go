@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 type Config struct {
 	Port        string
@@ -9,9 +12,16 @@ type Config struct {
 }
 
 func Load() *Config {
+	dbURL := getEnv("DATABASE_URL", "")
+	if dbURL == "" {
+		if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
+			log.Fatal("DATABASE_URL is required in Kubernetes (envFrom secret exponat-backend-env)")
+		}
+		dbURL = "postgres://postgres:postgres@localhost:5432/exponat_dev?sslmode=disable"
+	}
 	return &Config{
 		Port:        getEnv("PORT", "8082"),
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/exponat_dev?sslmode=disable"),
+		DatabaseURL: dbURL,
 		RedisAddr:   getEnv("REDIS_ADDR", "localhost:6379"),
 	}
 }

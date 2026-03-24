@@ -12,6 +12,9 @@ import (
 func Connect(ctx context.Context) (*pgxpool.Pool, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
+		if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
+			return nil, fmt.Errorf("DATABASE_URL is empty: mount Secret exponat-backend-env (envFrom) for staging/Kubernetes")
+		}
 		dsn = "postgres://postgres:postgres@localhost:5432/exponat_dev?sslmode=disable"
 	}
 
