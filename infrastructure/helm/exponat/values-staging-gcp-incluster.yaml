@@ -5,7 +5,8 @@
 # — см. staging-gcp-k8s-db.md § «Секрет для микросервисов». Без него projects/budget/dashboard падают на localhost:5432.
 #
 # imagePullSecrets:
-# - ghcr.io: при 403 на анонимный pull (приватный пакет) создайте PAT (read:packages) и Secret:
+# - ghcr.io: при 403 — PAT read:packages; в docker-username укажите логин владельца PAT (не обязательно имя org).
+#   В CI: секреты GHCR_READ_PACKAGES_TOKEN и при необходимости GHCR_DOCKER_USERNAME (см. deploy-staging.yml).
 #     kubectl create secret docker-registry ghcr-credentials -n staging \
 #       --docker-server=ghcr.io --docker-username=GITHUB_USER --docker-password=ghp_xxx
 #   затем:

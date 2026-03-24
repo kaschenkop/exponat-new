@@ -111,19 +111,32 @@ jobs:
           kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
 
       # Долговечный PAT (read:packages): GITHUB_TOKEN в Secret кластера протухает после job.
+      # В docker login для ghcr.io username должен быть GitHub login владельца PAT (личный аккаунт).
+      # Для репозитория организации repository_owner = имя org — с личным PAT это даёт 403; задайте GHCR_DOCKER_USERNAME.
       - name: Create GHCR pull secret (staging)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         env:
           GHCR_READ_PACKAGES_TOKEN: ${{ secrets.GHCR_READ_PACKAGES_TOKEN }}
+          GHCR_DOCKER_USERNAME: ${{ secrets.GHCR_DOCKER_USERNAME }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          ACTOR: ${{ github.actor }}
         run: |
           if [ -z "$GHCR_READ_PACKAGES_TOKEN" ]; then
-            echo "::error::Добавьте в environment «staging» секрет GHCR_READ_PACKAGES_TOKEN — PAT с правом read:packages (user: владелец пакетов, обычно совпадает с github.repository_owner). Иначе kubelet получит 403 на ghcr.io."
+            echo "::error::Добавьте в environment «staging» секрет GHCR_READ_PACKAGES_TOKEN — PAT с правом read:packages. Иначе kubelet получит 403 на ghcr.io."
             exit 1
           fi
+          DOCKER_USER="${GHCR_DOCKER_USERNAME:-}"
+          if [ -z "$DOCKER_USER" ]; then
+            DOCKER_USER="$ACTOR"
+          fi
+          if [ -z "$DOCKER_USER" ]; then
+            DOCKER_USER="$REPO_OWNER"
+          fi
+          echo "::notice::GHCR docker-username: ${DOCKER_USER} (переопределение: секрет GHCR_DOCKER_USERNAME)"
           kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret docker-registry ghcr-credentials -n staging \
             --docker-server=ghcr.io \
-            --docker-username="${{ github.repository_owner }}" \
+            --docker-username="$DOCKER_USER" \
             --docker-password="$GHCR_READ_PACKAGES_TOKEN" \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -185,6 +198,10 @@ jobs:
           fi
           kubectl get pods -n kong -o wide
           kubectl get svc -n kong -o wide
+
+      - name: Ensure exponat-backend-env (from postgres/redis secrets)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: python3 infrastructure/k8s/ensure_exponat_backend_env.py staging
 
       - name: Helm dependencies (exponat / Bitnami OCI)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}

@@ -110,7 +110,7 @@ gcloud iam service-accounts keys create $KeyPath `
 1. Репозиторий → **Settings** → **Environments** → **staging** (создайте, если нет).
 2. **Environment secrets** → **Add secret**:
    - **`GCP_SA_KEY`** — вставьте **полный** текст JSON из шага 4 (как есть, многострочно).
-   - **`GHCR_READ_PACKAGES_TOKEN`** — [Personal Access Token](https://github.com/settings/tokens) (classic) с **`read:packages`**; владелец пакетов в GHCR должен совпадать с **`github.repository_owner`** (для `kaschenkop/exponat-new` — пользователь **`kaschenkop`**). Workflow создаёт/обновляет в кластере `Secret/ghcr-credentials` в namespace **`staging`** для pull образов `ghcr.io/<owner>/...`. Не используйте заглушку вроде букв «PAT» — только реальный токен. При SSO у org — **Authorize** для токена.
+   - **`GHCR_READ_PACKAGES_TOKEN`** — [Personal Access Token](https://github.com/settings/tokens) (classic) с **`read:packages`**. Workflow пишет в кластер `Secret/ghcr-credentials` (namespace **`staging`**) для pull `ghcr.io/<repository_owner>/...`. В поле **docker-username** для ghcr.io должен быть **GitHub login владельца PAT**; по умолчанию workflow подставляет **`github.actor`**. Если при этом всё ещё **403**, добавьте секрет **`GHCR_DOCKER_USERNAME`** = ваш личный логин (типично для репозитория **организации**, когда `repository_owner` — имя org). Не используйте заглушку вроде букв «PAT». При SSO у org — **Authorize** для токена.
 
 ### 5.2 Variables (тот же environment или Repository variables)
 
@@ -248,7 +248,7 @@ docker login ghcr.io -u kaschenkop
 
 | Где | Имя |
 |-----|-----|
-| Секрет GitHub (environment **staging**) | **`GCP_SA_KEY`**, **`GHCR_READ_PACKAGES_TOKEN`** |
+| Секрет GitHub (environment **staging**) | **`GCP_SA_KEY`**, **`GHCR_READ_PACKAGES_TOKEN`**, опционально **`GHCR_DOCKER_USERNAME`** |
 | Variables | **`GCP_PROJECT_ID`**, **`GKE_CLUSTER_NAME`**, **`GKE_LOCATION`** |
 | Workflow | [`.github/workflows/deploy-staging.yml`](../../.github/workflows/deploy-staging.yml) |
 | Связанная документация | [staging-gcp-k8s-db.md](./staging-gcp-k8s-db.md), [staging-gcp.md](./staging-gcp.md) |

@@ -27,6 +27,8 @@ Kubeconfig, снятый на **Windows** (`gke-gcloud-auth-plugin.exe`), на *
 
 Пошагово под **Windows (PowerShell)**: [github-actions-gke-windows.md](./github-actions-gke-windows.md).
 
+**GHCR (образы `ghcr.io/...`):** в environment **staging** нужен секрет **`GHCR_READ_PACKAGES_TOKEN`** — PAT с правом **`read:packages`**. Для `docker login ghcr.io` username должен совпадать с **GitHub login владельца этого PAT** (личный аккаунт). Workflow по умолчанию подставляет **`github.actor`** (кто запустил/запушил); если пакеты под организацией, а PAT личный, при 403 задайте секрет **`GHCR_DOCKER_USERNAME`** = ваш логин на GitHub. Перед Helm workflow создаёт **`exponat-backend-env`** из **`exponat-postgres-auth`** / **`exponat-redis-auth`**, если секрета ещё нет (`infrastructure/k8s/ensure_exponat_backend_env.py`).
+
 ---
 
 ## 2. Что уже есть в репозитории
