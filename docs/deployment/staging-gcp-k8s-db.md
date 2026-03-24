@@ -21,7 +21,7 @@
 Kubeconfig, снятый на **Windows** (`gke-gcloud-auth-plugin.exe`), на **ubuntu-latest** в Actions **не работает**. Для GKE в CI задайте:
 
 1. Секрет **`GCP_SA_KEY`** — JSON ключ сервисного аккаунта с ролью минимум **`roles/container.developer`** (или набор прав на деплой в нужные namespace).
-2. **Repository variables** (или variables окружения **staging**): **`GCP_PROJECT_ID`**, **`GKE_CLUSTER_NAME`**, **`GKE_LOCATION`** (зона или регион, например `europe-west3-a`).
+2. **Repository variables** (или variables окружения **staging**): **`GCP_PROJECT_ID`**, **`GKE_CLUSTER_NAME`**, **`GKE_LOCATION`** — значение из `gcloud container clusters list` (колонка LOCATION): для **zonal** — зона (`europe-west3-a`), для **regional** — регион (`europe-west3`). См. [github-actions-gke-windows.md](./github-actions-gke-windows.md).
 
 Переменную **`KUBERNETES_AUTH=kubeconfig`** задавайте только если используете секрет **`KUBE_CONFIG_STAGING`** с машины **Linux/macOS** (`kubectl config view --raw --minify --flatten`).
 

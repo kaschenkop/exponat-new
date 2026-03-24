@@ -3,7 +3,8 @@
 # Доступ к кластеру (выберите один вариант):
 # — Рекомендуется для GKE: repository variable KUBERNETES_AUTH не задавать или ≠ kubeconfig;
 #   секрет GCP_SA_KEY (JSON сервисного аккаунта с roles/container.developer);
-#   variables: GCP_PROJECT_ID, GKE_CLUSTER_NAME, GKE_LOCATION (зона или регион, напр. europe-west3-a).
+#   variables: GCP_PROJECT_ID, GKE_CLUSTER_NAME, GKE_LOCATION — как в gcloud container clusters list
+#   (zonal: europe-west3-a; regional: europe-west3). Только регион при zonal-кластере → not found.
 # — kubeconfig: KUBERNETES_AUTH=kubeconfig и секрет KUBE_CONFIG_STAGING — только с Linux/macOS
 #   (kubectl config view --raw --minify --flatten). Конфиг с Windows (.exe в exec) в CI не работает.
 # Инструкция (Windows + GCP SA): docs/deployment/github-actions-gke-windows.md

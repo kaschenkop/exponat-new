@@ -35,6 +35,29 @@ gcloud container clusters list
 
 Если кластер **regional**, в `$env:GKE_ZONE` укажите регион, например `europe-west3`.
 
+### `GKE_LOCATION` в GitHub — буквально как в `gcloud container clusters list`
+
+В variable **`GKE_LOCATION`** нужно подставить значение из колонки **LOCATION** вывода:
+
+```powershell
+gcloud container clusters list --project=$env:PROJECT_ID
+```
+
+| Тип кластера | Пример LOCATION | Что вписать в `GKE_LOCATION` |
+|--------------|-----------------|--------------------------------|
+| **Zonal** (одна зона) | `europe-west3-a` | **`europe-west3-a`** (не `europe-west3`) |
+| **Regional** | `europe-west3` | **`europe-west3`** |
+
+Если указать только **`europe-west3`**, а кластер создан как **zonal** в `europe-west3-a`, API ищет *региональный* кластер и отвечает **`not found`**. Исправление: в GitHub Variables поменять **`GKE_LOCATION`** на зону с **`-a` / `-b`** и т.д.
+
+Уточнить одной командой:
+
+```powershell
+gcloud container clusters describe $env:GKE_CLUSTER --project=$env:PROJECT_ID --format="value(location)"
+```
+
+Подставьте вывод этой команды в **`GKE_LOCATION`**.
+
 ---
 
 ## 2. Создать сервисный аккаунт
@@ -96,7 +119,7 @@ gcloud iam service-accounts keys create $KeyPath `
 |-----|------------------|
 | **`GCP_PROJECT_ID`** | `exponat-staging-491022` |
 | **`GKE_CLUSTER_NAME`** | `exponat-staging` |
-| **`GKE_LOCATION`** | `europe-west3-a` или `europe-west3` |
+| **`GKE_LOCATION`** | Точно как в `gcloud`: для zonal-кластера **`europe-west3-a`**, для regional — **`europe-west3`** |
 
 ### 5.3 Режим kubeconfig (не рекомендуется для Windows → CI)
 
@@ -134,6 +157,14 @@ gcloud auth activate-service-account --key-file=$KeyPath
 gcloud container clusters get-credentials $env:GKE_CLUSTER --zone $env:GKE_ZONE --project $env:PROJECT_ID
 kubectl get ns
 ```
+
+---
+
+## Ошибка: `not found: projects/.../locations/.../clusters/...`
+
+1. **`GKE_LOCATION`** не совпадает с типом кластера (часто в variable указан регион **`europe-west3`**, а кластер **zonal** в **`europe-west3-a`**) — см. блок про `gcloud container clusters describe ... value(location)` выше.
+2. Неверные **`GCP_PROJECT_ID`** или **`GKE_CLUSTER_NAME`** — сверить с `gcloud container clusters list`.
+3. Сервисный аккаунт без доступа к проекту обычно даёт **permission denied**, не `not found`; `not found` почти всегда про имя/локацию.
 
 ---
 
