@@ -38,18 +38,15 @@ def main() -> int:
         f"target: dashboard.{args.namespace}.svc.cluster.local:80",
     )
 
-    # Старые ConfigMap / ручные правки: любой containerPort на FQDN этих сервисов → :80.
-    for svc in ("projects", "dashboard", "budget"):
-        fq = f"{svc}.{args.namespace}.svc.cluster.local"
-        for bad in ("8080", "8081", "8082", "8083"):
-            src = src.replace(f"{fq}:{bad}", f"{fq}:80")
-
     ns = args.namespace
 
     def url_fqdn(m: re.Match[str]) -> str:
         indent, host, port = m.group(1), m.group(2), m.group(3)
         if "svc.cluster.local" in host:
             return m.group(0)
+        # У exponat-сервисов в K8s внешний порт Service всегда 80, не containerPort.
+        if host in ("projects", "dashboard", "budget"):
+            port = "80"
         return f"{indent}url: http://{host}.{ns}.svc.cluster.local:{port}"
 
     src = re.sub(
@@ -63,6 +60,12 @@ def main() -> int:
         f"ai-document-gen.{ns}.svc.cluster.local:8000",
         f"ai-document-gen.{ns}.svc.cluster.local:8090",
     )
+
+    # После всех подстановок: снять containerPort с FQDN (старые CM, url_fqdn и т.д.).
+    for svc in ("projects", "dashboard", "budget"):
+        fq = f"{svc}.{args.namespace}.svc.cluster.local"
+        for bad in ("8080", "8081", "8082", "8083"):
+            src = src.replace(f"{fq}:{bad}", f"{fq}:80")
 
     args.output.write_text(src, encoding="utf-8")
     print(f"Wrote {args.output}")

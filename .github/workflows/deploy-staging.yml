@@ -297,6 +297,8 @@ jobs:
             -f ./infrastructure/kong/kong-values-staging.yaml \
             -n kong \
             --timeout 5m
+          # Только смена ConfigMap не меняет spec Deployment — Kong может держать старые upstream’ы (:8081/:8083).
+          kubectl rollout restart deployment/kong-kong -n kong
 
       - name: Wait for Kong Deployment rollout
         run: |
