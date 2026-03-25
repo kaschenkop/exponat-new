@@ -25,6 +25,13 @@ if (keycloakTlsInsecure) {
 const clientId = process.env.KEYCLOAK_CLIENT_ID ?? 'exponat-web';
 const keycloakApiClientId = process.env.KEYCLOAK_API_CLIENT_ID ?? 'exponat-api';
 
+/** Issuer в ответе Keycloak (query `iss`) и в well-known без завершающего `/` — иначе openid-client даёт OAuthCallback. */
+function normalizeKeycloakIssuer(url: string): string {
+  return url.trim().replace(/\/+$/, '');
+}
+
+const keycloakClientSecret = process.env.KEYCLOAK_CLIENT_SECRET?.trim();
+
 /**
  * Без секрета NextAuth отдаёт 500 на /api/auth/session (CLIENT_FETCH_ERROR).
  * Всегда задаём строку; для реального production обязательно выставьте NEXTAUTH_SECRET в окружении.
@@ -50,11 +57,14 @@ const nextAuthSecret = resolveNextAuthSecret();
  * Issuer Keycloak (well-known OpenID). В development — локальный Keycloak (см. docs/keycloak-setup.md).
  * В production без этого значения подключается заглушка, чтобы не было 500 (вход не сработает, пока не зададите KEYCLOAK_ISSUER).
  */
-const keycloakIssuerUrl =
+const keycloakIssuerUrlRaw =
   process.env.KEYCLOAK_ISSUER ??
   (process.env.NODE_ENV === 'development'
     ? 'http://localhost:8090/realms/exponat-development'
     : undefined);
+const keycloakIssuerUrl = keycloakIssuerUrlRaw
+  ? normalizeKeycloakIssuer(keycloakIssuerUrlRaw)
+  : undefined;
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   const issuer = keycloakIssuerUrl;
@@ -111,8 +121,14 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 const keycloakProvider = keycloakIssuerUrl
   ? KeycloakProvider({
       clientId,
-      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET ?? '',
       issuer: keycloakIssuerUrl,
+      // Публичный клиент (PKCE): без секрета — явно token_endpoint_auth_method: none, иначе пустой client_secret ломает обмен code (OAuthCallback).
+      clientSecret: keycloakClientSecret ?? '',
+      ...(keycloakClientSecret
+        ? {}
+        : {
+            client: { token_endpoint_auth_method: 'none' as const },
+          }),
       authorization: {
         params: {
           scope: 'openid email profile',
@@ -204,5 +220,6 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60,
   },
   secret: nextAuthSecret,
-  debug: process.env.NODE_ENV === 'development',
+  debug:
+    process.env.NODE_ENV === 'development' || process.env.NEXTAUTH_DEBUG === 'true',
 };
