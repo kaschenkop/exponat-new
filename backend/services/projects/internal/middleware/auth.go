@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gin-gonic/gin"
@@ -70,7 +72,14 @@ func ensureJWKS() (jwt.Keyfunc, error) {
 	if u == "" {
 		return nil, errors.New("OIDC_ISSUER or JWT_JWKS_URL not set")
 	}
-	k, err := keyfunc.NewDefault([]string{u})
+	k, err := keyfunc.NewDefaultOverrideCtx(
+		context.Background(),
+		[]string{u},
+		keyfunc.Override{
+			HTTPTimeout: 15 * time.Second,
+			Client:      &http.Client{Timeout: 15 * time.Second},
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
