@@ -49,6 +49,42 @@ resources:
     cpu: "1"
     memory: 1536Mi
 
+# Кастомная тема login «exponat» (realm-export.json → loginTheme). В образ Bitnami тема не входит;
+# CI создаёт ConfigMap keycloak-theme-exponat; initContainer кладёт файлы в /opt/bitnami/keycloak/themes/exponat.
+extraVolumes:
+  - name: keycloak-theme-exponat-data
+    emptyDir: {}
+  - name: keycloak-theme-exponat-src
+    configMap:
+      name: keycloak-theme-exponat
+
+initContainers:
+  - name: install-exponat-theme
+    image: public.ecr.aws/docker/library/busybox:1.36
+    imagePullPolicy: IfNotPresent
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /out/login/resources/css /out/login/messages
+        cp /src/theme.properties /out/login/
+        cp /src/exponat.css /out/login/resources/css/
+        cp /src/messages_ru.properties /out/login/messages/
+        chown -R 1001:1001 /out
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+      - name: keycloak-theme-exponat-src
+        mountPath: /src
+        readOnly: true
+      - name: keycloak-theme-exponat-data
+        mountPath: /out
+
+extraVolumeMounts:
+  - name: keycloak-theme-exponat-data
+    mountPath: /opt/bitnami/keycloak/themes/exponat
+
 ingress:
   enabled: true
   ingressClassName: nginx

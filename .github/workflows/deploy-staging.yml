@@ -434,6 +434,15 @@ jobs:
             --from-file=realm-export.json=./infrastructure/keycloak/realm-export.json \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Keycloak login theme ConfigMap (exponat)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          kubectl create configmap keycloak-theme-exponat -n staging \
+            --from-file=theme.properties=./infrastructure/keycloak/themes/exponat/login/theme.properties \
+            --from-file=exponat.css=./infrastructure/keycloak/themes/exponat/login/resources/css/exponat.css \
+            --from-file=messages_ru.properties=./infrastructure/keycloak/themes/exponat/login/messages/messages_ru.properties \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Prune old Keycloak config-cli Jobs (failed runs clutter ns / confuse helm --wait)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: |

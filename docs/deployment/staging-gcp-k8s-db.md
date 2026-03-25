@@ -172,6 +172,11 @@ python3 infrastructure/k8s/ensure_keycloak_staging.py staging
 kubectl create configmap keycloak-realm-export -n staging \
   --from-file=realm-export.json=./infrastructure/keycloak/realm-export.json \
   --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap keycloak-theme-exponat -n staging \
+  --from-file=theme.properties=./infrastructure/keycloak/themes/exponat/login/theme.properties \
+  --from-file=exponat.css=./infrastructure/keycloak/themes/exponat/login/resources/css/exponat.css \
+  --from-file=messages_ru.properties=./infrastructure/keycloak/themes/exponat/login/messages/messages_ru.properties \
+  --dry-run=client -o yaml | kubectl apply -f -
 helm upgrade --install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
   --version 24.0.5 \
   -f ./infrastructure/keycloak/helm/values-staging-gke.yaml \

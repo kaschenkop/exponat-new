@@ -4,7 +4,7 @@
 
 Централизованная аутентификация (OIDC/OAuth2), SSO, MFA и роли — через **Keycloak**. Фронтенд использует **NextAuth.js** с провайдером Keycloak (**authorization code + PKCE**, как задано в провайдере NextAuth v4); бэкенд (например, `projects`) валидирует **access token** по **JWKS** (`OIDC_ISSUER` или `JWT_JWKS_URL`).
 
-**Тема входа:** кастомная тема `exponat` лежит в `infrastructure/keycloak/themes/exponat` и монтируется в контейнер Keycloak как `/opt/keycloak/themes/exponat`. В realm задано `loginTheme: exponat` (см. `realm-export.json`).
+**Тема входа:** кастомная тема `exponat` лежит в `infrastructure/keycloak/themes/exponat`. В realm задано `loginTheme: exponat` (см. `realm-export.json`). **Локально (docker-compose)** монтирование: `/opt/keycloak/themes/exponat`. **Staging GKE (Bitnami Helm)** — ConfigMap `keycloak-theme-exponat` + initContainer в `infrastructure/keycloak/helm/values-staging-gke.yaml`, путь в поде: `/opt/bitnami/keycloak/themes/exponat`. Без этих файлов Keycloak показывает дефолтную тему Keycloak.
 
 **Если страница входа Keycloak не меняется:**
 
