@@ -45,7 +45,7 @@ func main() {
 	})
 
 	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.GatewayContextMiddleware())
 	projects.Mount(api, database, hub)
 
 	addr := ":8081"

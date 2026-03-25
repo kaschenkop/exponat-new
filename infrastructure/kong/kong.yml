@@ -130,8 +130,16 @@ services:
           - /api/projects
         strip_path: false
     plugins:
-      # JWT не вешаем: браузер шлёт Keycloak access_token (RS256); Kong OSS jwt — HS256 по consumer.
-      # Проверка — на сервисах (projects/dashboard) через JWKS.
+      - name: jwt
+        config:
+          uri_param_names:
+            - jwt
+          cookie_names:
+            - jwt
+          claims_to_verify:
+            - exp
+          key_claim_name: iss
+          secret_is_base64: false
       - name: rate-limiting
         config:
           second: 10
@@ -157,6 +165,12 @@ services:
           - /api/dashboard
         strip_path: false
     plugins:
+      - name: jwt
+        config:
+          claims_to_verify:
+            - exp
+          key_claim_name: iss
+          secret_is_base64: false
       - name: rate-limiting
         config:
           minute: 100
@@ -176,6 +190,12 @@ services:
           - /api/v1/budgets
         strip_path: false
     plugins:
+      - name: jwt
+        config:
+          claims_to_verify:
+            - exp
+          key_claim_name: iss
+          secret_is_base64: false
       - name: rate-limiting
         config:
           minute: 100
@@ -397,7 +417,8 @@ services:
           policy: local
 
 # -----------------------------------------------------------------------------
-# Consumers (JWT). Секрет замените через CI/секреты, не коммитьте прод-значения.
+# Consumers (JWT). Keycloak access_token (RS256): consumer keycloak-realm, key = iss realm.
+# Для GKE render-kong-gke-staging.py подставляет JWKS (--keycloak-issuer). Плейсхолдеры — только до рендера.
 # -----------------------------------------------------------------------------
 consumers:
   - username: exponat-anonymous
@@ -409,3 +430,20 @@ consumers:
       - key: exponat-jwt-key
         algorithm: HS256
         secret: dev-change-in-production-use-secret-manager
+
+  - username: keycloak-realm
+    custom_id: keycloak-realm
+    jwt_secrets:
+      - key: "https://placeholder.invalid/realms/placeholder"
+        algorithm: RS256
+        secret: "jwt-rs256-not-used"
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2/bdtZK9rnjzK+nKonOP
+          551pajLkeI9hELQfLqyjAJBk4ZqOJxl0CDj9yaS3mWB4nlFX7wAz6jmzQFsSUHUC
+          5GNlGvcf782kG+MO6Gk//nmJgrd3nNmmKzxDF6WDyaivQlVOpMgzW12Dt1ifuUhr
+          iNQXsNtChEAEP7wH7KGTHbcKW1uOACtxyZLqa8zQm3xSxvAP7bOjCFYd9dZsl4E0
+          19jeLlyGIXdZBSEQSQen1C3rdLTIBLz314XLAwXLAgnkdgGbDs1iOfOE5sA5XtSY
+          p3XDzM1trYA0ZbaBeN174u1vCKNjcF3gVdMoV3XMFw09X8pPXGLdrtAl3eUhKRzM
+          xQIDAQAB
+          -----END PUBLIC KEY-----

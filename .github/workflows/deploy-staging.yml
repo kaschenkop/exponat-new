@@ -259,8 +259,10 @@ jobs:
       # Kong в ns kong; без FQDN хосты вида projects:8081 резолвятся в kong → 502 / падения проб.
       - name: Render Kong config for GKE (staging FQDN)
         run: |
+          python3 -m pip install -r infrastructure/kong/render-requirements.txt
           python3 infrastructure/kong/render-kong-gke-staging.py \
-            infrastructure/kong/kong.yml -o /tmp/kong-gke-staging.yml
+            infrastructure/kong/kong.yml -o /tmp/kong-gke-staging.yml \
+            --keycloak-issuer "https://auth.staging.exponat.site/realms/exponat-development"
           docker run --rm -v /tmp/kong-gke-staging.yml:/kong.yml:ro kong/deck:latest file validate /kong.yml
 
       # kubectl apply завершается сразу; «зависание» обычно на helm --wait (нет вывода до Ready).

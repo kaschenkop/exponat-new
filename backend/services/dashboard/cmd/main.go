@@ -58,7 +58,7 @@ func main() {
 	})
 
 	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.GatewayContextMiddleware())
 	{
 		dash := api.Group("/dashboard")
 		{
