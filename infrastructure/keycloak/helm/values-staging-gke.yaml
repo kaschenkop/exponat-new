@@ -62,6 +62,9 @@ ingress:
 
 keycloakConfigCli:
   enabled: true
+  # Пустой объект затирает дефолт чарта (helm.sh/hook post-upgrade и т.д.). Иначе Helm ждёт hook отдельно и часто
+  # падает с «timed out waiting for the condition», хотя Job ещё ждёт Keycloak (KEYCLOAK_AVAILABILITYCHECK_TIMEOUT).
+  annotations: {}
   existingConfigmap: keycloak-realm-export
   image:
     registry: public.ecr.aws

@@ -439,7 +439,7 @@ jobs:
             --version 24.0.5 \
             -f ./infrastructure/keycloak/helm/values-staging-gke.yaml \
             -n staging \
-            --timeout 35m \
+            --timeout 60m \
             --wait
 
   notify:
