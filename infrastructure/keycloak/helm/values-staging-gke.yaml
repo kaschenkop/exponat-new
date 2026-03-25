@@ -62,9 +62,12 @@ ingress:
 
 keycloakConfigCli:
   enabled: true
-  # Пустой объект затирает дефолт чарта (helm.sh/hook post-upgrade и т.д.). Иначе Helm ждёт hook отдельно и часто
-  # падает с «timed out waiting for the condition», хотя Job ещё ждёт Keycloak (KEYCLOAK_AVAILABILITYCHECK_TIMEOUT).
-  annotations: {}
+  # Убрать helm hooks: иначе post-upgrade hook ждёт Job отдельно и часто «timed out waiting for the condition»,
+  # пока внутри контейнера ещё идёт KEYCLOAK_AVAILABILITYCHECK_TIMEOUT. null снимает ключи при merge с дефолтом чарта.
+  annotations:
+    helm.sh/hook: null
+    helm.sh/hook-delete-policy: null
+    helm.sh/hook-weight: null
   existingConfigmap: keycloak-realm-export
   image:
     registry: public.ecr.aws
