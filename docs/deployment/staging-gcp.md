@@ -473,7 +473,7 @@ kubectl get ingress -n staging
 
 ## 13. Keycloak на staging
 
-Локально Keycloak использует вторую БД на том же Postgres (`migrations/000_keycloak_database.sql`). В GCP: та же схема — **один Cloud SQL**, БД `keycloak`, отдельный пользователь с доступом только к ней.
+Локально Keycloak использует вторую БД на том же Postgres (`migrations/initdb/000_keycloak_database.sql`). В GCP: та же схема — **один Cloud SQL**, БД `keycloak`, отдельный пользователь с доступом только к ней.
 
 Развёртывание в Kubernetes: официальный chart или образ `quay.io/keycloak/keycloak` + переменные `KC_DB_URL`, как в `docker-compose.yml`. Внешний доступ — отдельный Ingress / поддомен `auth.staging...`, в Vercel/Next.js — `KEYCLOAK_ISSUER` на этот URL.
 
@@ -481,7 +481,7 @@ kubectl get ingress -n staging
 
 ## 14. Миграции схемы БД
 
-Выполните SQL-миграции из каталога `migrations/` против `exponat_staging` (через `psql` с Cloud SQL Proxy на локальной машине или Job в кластере). Порядок и наличие скриптов проверьте в репозитории.
+Выполните миграции из `migrations/app/` через **golang-migrate** против `exponat_staging` (см. `infrastructure/k8s/apply_exponat_app_migrations.sh` или Cloud SQL Proxy + `migrate up`). Порядок задаёт номер в имени файла `NNNNNN_*.up.sql`.
 
 ---
 

@@ -18,7 +18,7 @@
 
 Порт **8090** на хосте (чтобы не конфликтовать с `dashboard` на **8080** в корневом `docker-compose`).
 
-Keycloak описан в **корневом** `docker-compose.yml` (сервис `keycloak`; БД `keycloak` в том же Postgres, что и приложение — см. `migrations/000_keycloak_database.sql`). Поднимается вместе со стеком:
+Keycloak описан в **корневом** `docker-compose.yml` (сервис `keycloak`; БД `keycloak` в том же Postgres, что и приложение — см. `migrations/initdb/000_keycloak_database.sql`). Поднимается вместе со стеком:
 
 ```bash
 docker compose up -d

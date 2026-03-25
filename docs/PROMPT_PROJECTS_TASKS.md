@@ -33,7 +33,7 @@
 
 ---
 
-## 1. База данных — миграция `005_project_tasks.sql`
+## 1. База данных — миграция `migrations/app/000005_project_tasks.up.sql`
 
 ```sql
 CREATE TABLE IF NOT EXISTS project_tasks (
@@ -719,7 +719,7 @@ export const BORDER_COLOR = '#E0E0E0'
 ## 7. Порядок реализации (рекомендуемый)
 
 ### Этап 1: Backend — модели и API
-1. Создать миграцию `005_project_tasks.sql`
+1. Создать следующий файл `migrations/app/000006_....up.sql` (golang-migrate)
 2. Создать `internal/models/task.go`
 3. Создать `internal/repository/task_repo.go` (CRUD + фильтры + reorder)
 4. Создать `internal/services/task_service.go` (логика + WS events)

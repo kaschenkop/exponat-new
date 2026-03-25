@@ -1,4 +1,4 @@
--- Демо-данные (идемпотентно по id). Выполняется после 002_projects_module (projects.manager_id NOT NULL и новые статусы).
+-- Демо-данные (идемпотентно по id). После 000002_projects_module.
 INSERT INTO organizations (id, name) VALUES
   ('11111111-1111-1111-1111-111111111111', 'Демо-организация')
 ON CONFLICT (id) DO NOTHING;
@@ -8,7 +8,6 @@ INSERT INTO users (id, name, avatar) VALUES
   ('33333333-3333-3333-3333-333333333333', 'Иван Смирнов', NULL)
 ON CONFLICT (id) DO NOTHING;
 
--- Совпадает с fallback в log_project_activity / log_project_changes (FK activity_log.user_id → users)
 INSERT INTO users (id, name, avatar) VALUES
   ('00000000-0000-0000-0000-000000000001', 'Система', NULL)
 ON CONFLICT (id) DO NOTHING;

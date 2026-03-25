@@ -1,5 +1,5 @@
 -- Экспонат: расширение проектов (команда, фазы, аудит, статистика)
--- Выполняется после 001_dashboard_tables; перед 003_seed_demo (сид проектов требует manager_id и новых статусов).
+-- После 000001; перед 000003_seed_demo.
 
 -- 1) Расширяем projects
 ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_status_check;
@@ -24,14 +24,17 @@ UPDATE projects SET manager_id = '22222222-2222-2222-2222-222222222222' WHERE ma
 
 ALTER TABLE projects ALTER COLUMN manager_id SET NOT NULL;
 
+ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_status_check;
 ALTER TABLE projects ADD CONSTRAINT projects_status_check CHECK (
   status IN ('draft', 'planning', 'active', 'on_hold', 'completed', 'cancelled')
 );
 
+ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_type_check;
 ALTER TABLE projects ADD CONSTRAINT projects_type_check CHECK (
   type IN ('museum', 'corporate', 'expo_forum', 'other')
 );
 
+ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_progress_check;
 ALTER TABLE projects ADD CONSTRAINT projects_progress_check CHECK (progress >= 0 AND progress <= 100);
 
 -- Синхронизация счётчиков с существующими таблицами
@@ -112,7 +115,7 @@ CREATE TRIGGER update_project_phases_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- 6) Аудит project_changes (упрощённый, без обязательного current_setting при отсутствии)
+-- 6) Аудит project_changes
 CREATE OR REPLACE FUNCTION log_project_changes()
 RETURNS TRIGGER AS $$
 DECLARE

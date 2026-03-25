@@ -328,7 +328,7 @@ kubectl describe pvc -n staging
 
 - Ручной дамп: `kubectl exec` + `pg_dump` в файл или в **GCS** (`gsutil`).
 - [Velero](https://velero.io/) для бэкапа PVC (сложнее в настройке).
-- Для совсем тестового staging — пересоздание сидов из `migrations/`.
+- Для совсем тестового staging — пересоздание сидов из `migrations/app/` (миграции через golang-migrate, см. `infrastructure/k8s/apply_exponat_app_migrations.sh`).
 
 ---
 

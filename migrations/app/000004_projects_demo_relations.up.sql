@@ -1,4 +1,4 @@
--- Демо: команда и фазы (после 003_seed_demo — нужны строки projects).
+-- Демо: команда и фазы (после 000003_seed_demo).
 INSERT INTO project_team (project_id, user_id, role, permissions, joined_at) VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'manager', '["edit","delete","manage_team"]'::jsonb, NOW() - INTERVAL '15 days'),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '33333333-3333-3333-3333-333333333333', 'designer', '["edit"]'::jsonb, NOW() - INTERVAL '12 days'),
