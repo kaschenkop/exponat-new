@@ -1,5 +1,5 @@
 -- Экспонат: задачи проекта (Kanban, Gantt, List, Calendar)
--- Выполняется после 003_projects_module.sql
+-- Выполняется после 004_projects_demo_relations.sql
 
 -- 1) Задачи
 CREATE TABLE IF NOT EXISTS project_tasks (
