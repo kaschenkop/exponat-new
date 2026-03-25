@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Экспонат — AI-платформа для кураторов музейных выставок. От идеи до монтажа в одном инструменте." />
+  <title>Экспонат — AI-платформа для музейных выставок</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header" id="top" role="banner">
+    <div class="site-header__inner container">
+      <a class="site-logo" href="#top" aria-label="Экспонат — наверх">
+        <svg class="site-logo__icon" width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M6 10L16 4L26 10V22L16 28L6 22V10Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M16 4V28M6 10L26 22M26 10L6 22" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+        </svg>
+        <span class="site-logo__text">Экспонат</span>
+      </a>
+      <nav class="site-nav" aria-label="Основная навигация">
+        <a class="site-nav__link" href="#features">Возможности</a>
+        <a class="site-nav__link" href="#pricing">Тарифы</a>
+        <a class="site-nav__link" href="#faq">FAQ</a>
+        <a class="site-nav__link" href="#contacts">Контакты</a>
+      </nav>
+      <div class="site-header__actions">
+        <a class="btn btn--ghost btn--sm" href="https://app.staging.exponat.site/login" rel="noopener noreferrer">Войти</a>
+        <a class="btn btn--primary btn--sm btn--pulse" href="https://app.staging.exponat.site" rel="noopener noreferrer">Попробовать бесплатно</a>
+      </div>
+      <button type="button" class="site-header__burger" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="site-header__mobile-nav">
+      <a href="#features">Возможности</a>
+      <a href="#pricing">Тарифы</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contacts">Контакты</a>
+      <a class="btn btn--ghost" href="https://app.staging.exponat.site/login" rel="noopener noreferrer">Войти</a>
+      <a class="btn btn--primary" href="https://app.staging.exponat.site" rel="noopener noreferrer">Попробовать бесплатно</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__mesh" aria-hidden="true"></div>
+      <div class="hero__particles" aria-hidden="true"></div>
+      <div class="hero__content container">
+        <div class="hero__text">
+          <h1 class="hero__title" id="hero-title"><span class="hero__typed" data-full="AI-платформа для кураторов музейных выставок"></span><span class="hero__cursor" aria-hidden="true">|</span></h1>
+          <p class="hero__lead">От идеи до монтажа — в одном инструменте. AI подбирает экспонаты, прогнозирует бюджет и генерирует документы за вас.</p>
+          <div class="hero__ctas">
+            <a class="btn btn--hero-primary btn--lg btn--pulse" href="https://app.staging.exponat.site" rel="noopener noreferrer">Попробовать бесплатно →</a>
+            <a class="btn btn--hero-ghost btn--lg" href="#contacts">Запросить демо</a>
+          </div>
+          <p class="hero__note">Бесплатно для 1 выставки. Без привязки карты.</p>
+        </div>
+        <div class="hero__mockup-wrap" id="hero-mockup">
+          <div class="hero__mockup-float">
+            <div class="hero__mockup-tilt">
+              <div class="browser-frame">
+                <div class="browser-frame__chrome">
+                  <span class="browser-frame__dot"></span>
+                  <span class="browser-frame__dot"></span>
+                  <span class="browser-frame__dot"></span>
+                </div>
+                <div class="browser-frame__viewport">
+                  <picture>
+                    <source srcset="app-mockup.webp" type="image/webp" />
+                    <img
+                      src="app-mockup.png"
+                      width="1200"
+                      height="750"
+                      alt="Интерфейс Экспонат: дашборд выставки"
+                      decoding="async"
+                      fetchpriority="high"
+                    />
+                  </picture>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="hero__scroll-hint" href="#problem-solution" aria-label="Прокрутить к содержанию">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </section>
+
+    <section class="section problem-solution" id="problem-solution">
+      <div class="container problem-solution__grid">
+        <div class="problem-solution__col problem-solution__col--left">
+          <h2 class="section__title section__title--sm">Знакомо?</h2>
+          <ul class="ps-list ps-list--pain">
+            <li class="ps-item" data-ps="pain">❌ Концепция — в голове, в Word и в почте</li>
+            <li class="ps-item" data-ps="pain">❌ Межмузейные выдачи — звонки и бумажные акты</li>
+            <li class="ps-item" data-ps="pain">❌ Бюджет — Excel, который никто не обновляет</li>
+            <li class="ps-item" data-ps="pain">❌ Коллаборация — «Перешлите ту версию из декабря»</li>
+          </ul>
+        </div>
+        <div class="problem-solution__divider" aria-hidden="true">
+          <div class="problem-solution__arrow">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path class="ps-arrow-path" d="M12 24H36M28 16L36 24L28 32" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="problem-solution__col problem-solution__col--right">
+          <h2 class="section__title section__title--sm">С Экспонатом</h2>
+          <ul class="ps-list ps-list--solution">
+            <li class="ps-item" data-ps="solution">✅ Единая платформа для всего процесса</li>
+            <li class="ps-item" data-ps="solution">✅ AI генерирует документы и подбирает экспонаты</li>
+            <li class="ps-item" data-ps="solution">✅ Бюджет с прогнозом в реальном времени</li>
+            <li class="ps-item" data-ps="solution">✅ Общее пространство для всех участников</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section features" id="features">
+      <div class="container">
+        <h2 class="section__title">Возможности</h2>
+        <div class="features__grid">
+          <article class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3L14.5 8.5L20 9L16 13L17 19L12 16L7 19L8 13L4 9L9.5 8.5L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5 21L7 17M19 21L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3 class="feature-card__title">AI-концепт-билдер</h3>
+            <p class="feature-card__text">Подбор экспонатов по теме, генерация текстов, визуальный редактор схемы зала</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 16L4 19M4 19L7 22M4 19H17M17 8L20 5M20 5L17 2M20 5H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3 class="feature-card__title">Умная логистика</h3>
+            <p class="feature-card__text">Календарь выдач, AI-скоринг рисков транспортировки, автогенерация актов</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 19V5M4 19H20M4 19L8 14M8 14V10M8 14L12 9M12 9V5M12 9L16 5M16 5V9M16 9L20 5M20 5V19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3 class="feature-card__title">Предиктивный бюджет</h3>
+            <p class="feature-card__text">AI-прогноз затрат по категориям, план/факт контроль, алерты при отклонении</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7ZM23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3 class="feature-card__title">Совместная работа</h3>
+            <p class="feature-card__text">Межмузейный воркспейс, мультиканальный захват решений из Telegram и email</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section how-it-works" id="how-it-works">
+      <div class="container">
+        <h2 class="section__title">Как это работает</h2>
+        <div class="steps">
+          <div class="steps__track" aria-hidden="true">
+            <svg class="steps__line-svg" viewBox="0 0 100 12" preserveAspectRatio="none">
+              <path class="steps__line-path" d="M0 6 H100" vector-effect="non-scaling-stroke" fill="none" stroke="url(#gradLine)" stroke-width="2"/>
+              <defs>
+                <linearGradient id="gradLine" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#6C5CE7"/>
+                  <stop offset="100%" stop-color="#A78BFA"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <ol class="steps__list">
+            <li class="step" data-step="1">
+              <span class="step__num">1</span>
+              <div class="step__body">
+                <h3 class="step__title">Создайте выставку</h3>
+                <p class="step__text">Задайте тему, даты, загрузите материалы — AI обработает всё автоматически</p>
+              </div>
+            </li>
+            <li class="step" data-step="2">
+              <span class="step__num">2</span>
+              <div class="step__body">
+                <h3 class="step__title">AI сделает рутину</h3>
+                <p class="step__text">Подберёт экспонаты, спрогнозирует бюджет, сгенерирует документы и извлечёт решения из Telegram</p>
+              </div>
+            </li>
+            <li class="step" data-step="3">
+              <span class="step__num">3</span>
+              <div class="step__body">
+                <h3 class="step__title">Управляйте вместе</h3>
+                <p class="step__text">Канбан задач, бюджет, выдачи, схема зала — всё в одном окне для всей команды</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section stats" id="stats">
+      <div class="container">
+        <div class="stats__grid">
+          <div class="stat" data-stat="3000" data-suffix="+">
+            <span class="stat__value"><span class="stat__num">0</span><span class="stat__suffix">+</span></span>
+            <span class="stat__label">музеев в России</span>
+          </div>
+          <div class="stat" data-stat="40" data-suffix="%">
+            <span class="stat__value"><span class="stat__num">0</span><span class="stat__suffix">%</span></span>
+            <span class="stat__label">времени экономит AI</span>
+          </div>
+          <div class="stat" data-stat="85" data-suffix="%">
+            <span class="stat__value"><span class="stat__num">0</span><span class="stat__suffix">%</span></span>
+            <span class="stat__label">музеев хотят цифровизацию</span>
+          </div>
+          <div class="stat stat--law" data-stat-text="152-ФЗ">
+            <span class="stat__value stat__value--plain">152-ФЗ</span>
+            <span class="stat__label">полное соответствие</span>
+          </div>
+        </div>
+        <blockquote class="stats__quote">
+          <p>«Экспонат сэкономил нам 3 недели на подготовке документов для передвижной выставки»</p>
+          <cite>— Анна П., куратор</cite>
+        </blockquote>
+      </div>
+    </section>
+
+    <section class="section pricing" id="pricing">
+      <div class="container">
+        <h2 class="section__title">Тарифы</h2>
+        <div class="pricing__scroll">
+          <div class="pricing__grid">
+            <article class="price-card">
+              <h3 class="price-card__name">Старт</h3>
+              <p class="price-card__price">Бесплатно</p>
+              <ul class="price-card__features">
+                <li><span class="ok">✓</span> 1 выставка</li>
+                <li><span class="ok">✓</span> 3 пользователя</li>
+                <li><span class="ok">✓</span> Базовые AI</li>
+                <li><span class="no">—</span> Межмузейные выдачи</li>
+              </ul>
+              <a class="btn btn--outline btn--block" href="https://app.staging.exponat.site" rel="noopener noreferrer">Начать бесплатно</a>
+            </article>
+            <article class="price-card price-card--featured">
+              <span class="price-card__badge">Популярный</span>
+              <h3 class="price-card__name">Профи</h3>
+              <p class="price-card__price">25 000 ₽ <span class="price-card__period">/мес</span></p>
+              <ul class="price-card__features">
+                <li><span class="ok">✓</span> 10 выставок</li>
+                <li><span class="ok">✓</span> 15 пользователей</li>
+                <li><span class="ok">✓</span> Полные AI</li>
+                <li><span class="ok">✓</span> Межмузейные выдачи</li>
+              </ul>
+              <a class="btn btn--primary btn--block btn--pulse" href="https://app.staging.exponat.site" rel="noopener noreferrer">Подключить</a>
+            </article>
+            <article class="price-card">
+              <h3 class="price-card__name">Энтерпрайз</h3>
+              <p class="price-card__price">120 000 ₽ <span class="price-card__period">/мес</span></p>
+              <ul class="price-card__features">
+                <li><span class="ok">✓</span> Безлимит выставок</li>
+                <li><span class="ok">✓</span> API</li>
+                <li><span class="ok">✓</span> SLA 99.9%</li>
+                <li><span class="ok">✓</span> Приоритетная поддержка</li>
+              </ul>
+              <a class="btn btn--outline btn--block" href="#contacts">Связаться</a>
+            </article>
+            <article class="price-card">
+              <h3 class="price-card__name">Платформа</h3>
+              <p class="price-card__price">350 000 ₽ <span class="price-card__period">/мес</span></p>
+              <ul class="price-card__features">
+                <li><span class="ok">✓</span> Региональная аналитика</li>
+                <li><span class="ok">✓</span> Безлимит</li>
+                <li><span class="ok">✓</span> Выделенный менеджер</li>
+                <li><span class="ok">✓</span> Кастомные отчёты</li>
+              </ul>
+              <a class="btn btn--outline btn--block" href="#contacts">Обсудить</a>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section faq" id="faq">
+      <div class="container container--narrow">
+        <h2 class="section__title">Частые вопросы</h2>
+        <div class="faq__list" role="list">
+          <div class="faq-item" role="listitem">
+            <button type="button" class="faq-item__trigger" aria-expanded="false" id="faq-btn-1" aria-controls="faq-panel-1">
+              Для каких музеев подходит Экспонат?
+              <span class="faq-item__icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-item__panel" id="faq-panel-1" role="region" aria-labelledby="faq-btn-1">
+              <div class="faq-item__inner">
+                <p>Для любых: от небольших краеведческих до федеральных. Тариф «Старт» бесплатен.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" role="listitem">
+            <button type="button" class="faq-item__trigger" aria-expanded="false" id="faq-btn-2" aria-controls="faq-panel-2">
+              Нужно ли отказываться от КАМИС?
+              <span class="faq-item__icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-item__panel" id="faq-panel-2" role="region" aria-labelledby="faq-btn-2">
+              <div class="faq-item__inner">
+                <p>Нет. Экспонат дополняет КАМИС: мы управляем выставочным процессом, КАМИС — учётом фондов.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" role="listitem">
+            <button type="button" class="faq-item__trigger" aria-expanded="false" id="faq-btn-3" aria-controls="faq-panel-3">
+              Где хранятся данные?
+              <span class="faq-item__icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-item__panel" id="faq-panel-3" role="region" aria-labelledby="faq-btn-3">
+              <div class="faq-item__inner">
+                <p>Все данные на территории РФ (Yandex Cloud, Москва). Соответствие 152-ФЗ.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" role="listitem">
+            <button type="button" class="faq-item__trigger" aria-expanded="false" id="faq-btn-4" aria-controls="faq-panel-4">
+              Можно ли работать с несколькими музеями?
+              <span class="faq-item__icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-item__panel" id="faq-panel-4" role="region" aria-labelledby="faq-btn-4">
+              <div class="faq-item__inner">
+                <p>Да. Межинституциональный воркспейс позволяет вести совместные и передвижные выставки.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" role="listitem">
+            <button type="button" class="faq-item__trigger" aria-expanded="false" id="faq-btn-5" aria-controls="faq-panel-5">
+              Как устроен AI?
+              <span class="faq-item__icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-item__panel" id="faq-panel-5" role="region" aria-labelledby="faq-btn-5">
+              <div class="faq-item__inner">
+                <p>Мы используем российские LLM для генерации текстов и собственные ML-модели для бюджетирования и скоринга рисков. Ваши данные не покидают РФ.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-banner" aria-labelledby="cta-title">
+      <div class="cta-banner__mesh" aria-hidden="true"></div>
+      <div class="container cta-banner__inner">
+        <h2 class="cta-banner__title" id="cta-title">Готовы упростить создание выставок?</h2>
+        <p class="cta-banner__lead">Попробуйте бесплатно — первая выставка за наш счёт</p>
+        <a class="btn btn--hero-primary btn--xl btn--pulse" href="https://app.staging.exponat.site" rel="noopener noreferrer">Начать бесплатно →</a>
+        <p class="cta-banner__mail">Или напишите нам: <a href="mailto:info@exponat.site">info@exponat.site</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contacts">
+    <div class="container site-footer__grid">
+      <div class="site-footer__brand">
+        <a class="site-logo site-logo--footer" href="#top">
+          <svg class="site-logo__icon" width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 10L16 4L26 10V22L16 28L6 22V10Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M16 4V28M6 10L26 22M26 10L6 22" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+          </svg>
+          <span class="site-logo__text">Экспонат</span>
+        </a>
+        <p class="site-footer__desc">AI-платформа для управления музейными выставками</p>
+      </div>
+      <div>
+        <h3 class="site-footer__heading">Продукт</h3>
+        <ul class="site-footer__links">
+          <li><a href="#features">Возможности</a></li>
+          <li><a href="#pricing">Тарифы</a></li>
+          <li><span class="site-footer__soon">API (скоро)</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="site-footer__heading">Компания</h3>
+        <ul class="site-footer__links">
+          <li><a href="#contacts">О нас</a></li>
+          <li><span class="site-footer__soon">Блог</span></li>
+          <li><a href="mailto:info@exponat.site">Контакты</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="site-footer__heading">Правовая информация</h3>
+        <ul class="site-footer__links">
+          <li><a href="#">Политика конфиденциальности</a></li>
+          <li><a href="#">Условия</a></li>
+          <li><span>152-ФЗ</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="site-footer__bottom container">
+      <p>© 2026 ООО «Экспонат». Все права защищены.</p>
+      <p><a href="https://reestr.digital.gov.ru/" rel="noopener noreferrer" target="_blank">Реестр российского ПО</a></p>
+      <div class="site-footer__social">
+        <a href="#" aria-label="Telegram">TG</a>
+        <a href="#" aria-label="ВКонтакте">VK</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
