@@ -130,17 +130,8 @@ services:
           - /api/projects
         strip_path: false
     plugins:
-      - name: jwt
-        config:
-          uri_param_names:
-            - jwt
-          cookie_names:
-            - jwt
-          claims_to_verify:
-            - exp
-          key_claim_name: iss
-          secret_is_base64: false
-          anonymous: exponat-anonymous
+      # JWT не вешаем: браузер шлёт Keycloak access_token (RS256); Kong OSS jwt — HS256 по consumer.
+      # Проверка — на сервисах (projects/dashboard) через JWKS.
       - name: rate-limiting
         config:
           second: 10
@@ -166,13 +157,6 @@ services:
           - /api/dashboard
         strip_path: false
     plugins:
-      - name: jwt
-        config:
-          claims_to_verify:
-            - exp
-          key_claim_name: iss
-          secret_is_base64: false
-          anonymous: exponat-anonymous
       - name: rate-limiting
         config:
           minute: 100
@@ -192,13 +176,6 @@ services:
           - /api/v1/budgets
         strip_path: false
     plugins:
-      - name: jwt
-        config:
-          claims_to_verify:
-            - exp
-          key_claim_name: iss
-          secret_is_base64: false
-          anonymous: exponat-anonymous
       - name: rate-limiting
         config:
           minute: 100
