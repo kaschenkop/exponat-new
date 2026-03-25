@@ -12,10 +12,16 @@ services:
     replicas: 1
   projects:
     replicas: 1
+    env:
+      - name: CORS_ALLOWED_ORIGINS
+        value: "https://app.staging.exponat.site"
   budget:
     replicas: 1
   dashboard:
     replicas: 1
+    env:
+      - name: CORS_ALLOWED_ORIGINS
+        value: "https://app.staging.exponat.site"
   aiDocumentGen:
     replicas: 1
   web:
