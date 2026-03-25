@@ -21,7 +21,8 @@ def main() -> int:
     src = args.source.read_text(encoding="utf-8")
 
     # Upstreams (targets) — в K8s Service чарта exponat везде port: 80 → targetPort (8081/8080/8082).
-    # Ходить на :8081/:8083 с именем сервиса нельзя: на ClusterIP слушает только порт сервиса (80).
+    # Ходить на containerPort (:8081/:8080/:8082) или выдуманный :8083 с FQDN нельзя: на ClusterIP
+    # слушает только порт сервиса (80). Иначе Kong логирует таймаут на <ClusterIP>:8083.
     repl = [
         ("target: projects:8081", f"target: projects.{args.namespace}.svc.cluster.local:80"),
         ("target: dashboard:8080", f"target: dashboard.{args.namespace}.svc.cluster.local:80"),
@@ -31,6 +32,17 @@ def main() -> int:
         if a not in src:
             print(f"warn: pattern not found: {a!r}", file=sys.stderr)
         src = src.replace(a, b)
+    # Опционально: старый kong.yml / ручные правки с неверным портом dashboard.
+    src = src.replace(
+        "target: dashboard:8083",
+        f"target: dashboard.{args.namespace}.svc.cluster.local:80",
+    )
+
+    # Старые ConfigMap / ручные правки: любой containerPort на FQDN этих сервисов → :80.
+    for svc in ("projects", "dashboard", "budget"):
+        fq = f"{svc}.{args.namespace}.svc.cluster.local"
+        for bad in ("8080", "8081", "8082", "8083"):
+            src = src.replace(f"{fq}:{bad}", f"{fq}:80")
 
     ns = args.namespace
 
