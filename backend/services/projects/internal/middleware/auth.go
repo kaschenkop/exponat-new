@@ -44,12 +44,11 @@ func GatewayContextMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		h := c.GetHeader("Authorization")
-		if h == "" || !strings.HasPrefix(h, "Bearer ") {
+		raw := bearerTokenRaw(c)
+		if raw == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing bearer token"})
 			return
 		}
-		raw := strings.TrimPrefix(h, "Bearer ")
 		payload, err := decodeJWTPayload(raw)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token payload"})
@@ -71,6 +70,18 @@ func GatewayContextMiddleware() gin.HandlerFunc {
 		c.Set("permissions", []string{})
 		c.Next()
 	}
+}
+
+// bearerTokenRaw: Authorization: Bearer (REST) или query jwt= (WebSocket — браузер не шлёт заголовки).
+func bearerTokenRaw(c *gin.Context) string {
+	h := c.GetHeader("Authorization")
+	if strings.HasPrefix(h, "Bearer ") {
+		return strings.TrimPrefix(h, "Bearer ")
+	}
+	if q := strings.TrimSpace(c.Query("jwt")); q != "" {
+		return q
+	}
+	return ""
 }
 
 func decodeJWTPayload(raw string) (map[string]any, error) {
