@@ -46,6 +46,12 @@ coverage/
 *.pem
 .vercel
 
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Helm: Bitnami тянется через OCI при `helm dependency update` (см. CI)
 infrastructure/helm/exponat/charts/*.tgz
 
