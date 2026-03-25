@@ -24,9 +24,8 @@ proxy:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       # Браузеры часто ходят по HTTP/2; curl по умолчанию — HTTP/1.1. Редкие сочетания nginx↔клиент дают зависание на h2.
       nginx.ingress.kubernetes.io/use-http2: "false"
-      # В curl (Schannel) на этом хосте встречалось «remote party requests renegotiation» — часть клиентов на этом ломается/таймаутится.
-      nginx.ingress.kubernetes.io/server-snippet: |
-        ssl_renegotiation off;
+      # server-snippet (ssl_renegotiation off) нельзя: в кластере allow-snippet-annotations=false.
+      # При необходимости задайте ssl_renegotiation в ConfigMap ingress-nginx-controller (глобально).
       nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
       nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
       nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
