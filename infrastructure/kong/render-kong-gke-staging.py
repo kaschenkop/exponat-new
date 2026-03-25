@@ -67,6 +67,7 @@ def main() -> int:
         for bad in ("8080", "8081", "8082", "8083"):
             src = src.replace(f"{fq}:{bad}", f"{fq}:80")
 
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(src, encoding="utf-8")
     print(f"Wrote {args.output}")
     return 0
