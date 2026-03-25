@@ -2,6 +2,9 @@
 # Применяет SQL-миграции приложения к БД exponat_staging (не трогает keycloak).
 # Использование: bash infrastructure/k8s/apply_exponat_app_migrations.sh [namespace]
 # Требуется: kubectl, секрет exponat-postgres-auth (ключ postgres-password), под Bitnami PostgreSQL.
+#
+# Файлы подхватываются автоматически: migrations/NNN_*.sql (NNN — три цифры), порядок — лексикографический.
+# Пропускается префикс 000_* (напр. 000_keycloak_database.sql — только для init-образа Postgres).
 set -euo pipefail
 
 NS="${1:-staging}"
@@ -37,18 +40,27 @@ kubectl wait --for=condition=Ready "pod/$POD" -n "$NS" --timeout=300s
 
 PW="$(kubectl get secret "$POSTGRES_SECRET" -n "$NS" -o jsonpath='{.data.postgres-password}' | base64 -d)"
 
-FILES=(
-  "$REPO_ROOT/migrations/001_dashboard_tables.sql"
-  "$REPO_ROOT/migrations/002_seed_demo.sql"
-  "$REPO_ROOT/migrations/003_projects_module.sql"
-  "$REPO_ROOT/migrations/004_project_tasks.sql"
-)
+MIGRATIONS_DIR="$REPO_ROOT/migrations"
+shopt -s nullglob
+candidates=("$MIGRATIONS_DIR"/[0-9][0-9][0-9]_*.sql)
+shopt -u nullglob
 
-for f in "${FILES[@]}"; do
-  if [[ ! -f "$f" ]]; then
-    echo "error: файл не найден: $f" >&2
-    exit 1
-  fi
+files=()
+for f in "${candidates[@]}"; do
+  [[ -f "$f" ]] || continue
+  base=$(basename "$f")
+  [[ "$base" == 000_* ]] && continue
+  files+=("$f")
+done
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "error: в $MIGRATIONS_DIR нет подходящих файлов [0-9][0-9][0-9]_*.sql (кроме 000_*)" >&2
+  exit 1
+fi
+
+mapfile -t sorted < <(printf '%s\n' "${files[@]}" | LC_ALL=C sort)
+
+for f in "${sorted[@]}"; do
   echo "Applying $(basename "$f") -> $APP_DB ..."
   kubectl exec -i -n "$NS" "$POD" -- env PGPASSWORD="$PW" \
     psql -U "$POSTGRES_USER" -d "$APP_DB" -v ON_ERROR_STOP=1 <"$f"
