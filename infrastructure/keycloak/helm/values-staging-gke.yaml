@@ -73,7 +73,10 @@ keycloakConfigCli:
     registry: public.ecr.aws
     repository: bitnami/keycloak-config-cli
   # Чарт 24.0.5: AVAILABILITYCHECK включён, но без timeout — на слабом GKE Keycloak не готов → BackoffLimitExceeded.
-  backoffLimit: 12
+  backoffLimit: 4
+  cleanupAfterFinished:
+    enabled: true
+    seconds: 900
   extraEnvVars:
     - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
       value: "1200"

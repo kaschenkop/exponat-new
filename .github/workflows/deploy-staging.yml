@@ -95,6 +95,8 @@ jobs:
           else
             echo "web=false" >> "$GITHUB_OUTPUT"
           fi
+          # Только Keycloak (values/realm) — тоже publish: иначе deploy без publish, reuse-values держит :SHA, pull с ноды → 403.
+          changed infrastructure/keycloak/ && echo "keycloak_changed=true" >> "$GITHUB_OUTPUT" || echo "keycloak_changed=false" >> "$GITHUB_OUTPUT"
           if grep -q '=true$' "$GITHUB_OUTPUT"; then
             echo "any_service=true" >> "$GITHUB_OUTPUT"
           else
@@ -354,18 +356,21 @@ jobs:
           ) &
           W=$!
           trap 'kill "$W" 2>/dev/null || true' EXIT
-          # Без publish нельзя ставить services.web.imageTag=latest — Helm пересоздаёт RS со старым кэшем latest на ноде → 404 на пробах.
-          # --reuse-values сохраняет прошлый тег (SHA); при успешном publish явно обновляем на новый SHA.
+          # publish успешен → SHA (образ только что в GHCR). publish пропущен → latest + Always: иначе reuse-values оставляет
+          # старый :SHA, kubelet тянет при новом поде — секрет в кластере часто мёртвый → 403; свежий токен из этого job тянет latest.
           HELM_EXTRA=(--set "image.repositoryPrefix=${{ github.repository_owner }}")
           if helm status exponat -n "$ns" &>/dev/null; then
             HELM_EXTRA+=(--reuse-values)
-            echo "::notice::Helm exponat уже есть — --reuse-values (не откатываем web на latest без publish)"
+            echo "::notice::Helm exponat — --reuse-values (прочие ключи), web переопределяем ниже"
           fi
           if [ "${{ needs.publish-images.result }}" = "success" ]; then
             HELM_EXTRA+=(--set-string "services.web.imageTag=${{ github.sha }}")
-            echo "::notice::Helm services.web.imageTag=${{ github.sha }} (publish успешен)"
+            HELM_EXTRA+=(--set-string "services.web.imagePullPolicy=IfNotPresent")
+            echo "::notice::Helm web imageTag=${{ github.sha }}, pull IfNotPresent"
           else
-            echo "::notice::Helm: publish пропущен — тег web не задаём (остаётся из прошлого релиза при --reuse-values)"
+            HELM_EXTRA+=(--set-string "services.web.imageTag=latest")
+            HELM_EXTRA+=(--set-string "services.web.imagePullPolicy=Always")
+            echo "::notice::Helm web imageTag=latest, pull Always (publish пропущен — избегаем зависшего :SHA + 403)"
           fi
           helm upgrade --install exponat ./infrastructure/helm/exponat \
             -f ./infrastructure/helm/exponat/values-staging.yaml \
@@ -413,6 +418,11 @@ jobs:
           kubectl create configmap keycloak-realm-export -n staging \
             --from-file=realm-export.json=./infrastructure/keycloak/realm-export.json \
             --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Prune old Keycloak config-cli Jobs (failed runs clutter ns / confuse helm --wait)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          kubectl delete jobs -n staging -l app.kubernetes.io/component=keycloak-config-cli --ignore-not-found 2>/dev/null || true
 
       - name: Unstick Helm release keycloak (if pending)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
