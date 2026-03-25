@@ -389,6 +389,17 @@ jobs:
           kill "$W" 2>/dev/null || true
           trap - EXIT
 
+      # Без SQL из migrations/ поды projects/dashboard падают с 500 (relation does not exist).
+      - name: Apply Postgres app migrations (exponat_staging)
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
+        run: |
+          set -e
+          if kubectl get pods -n staging -l app.kubernetes.io/name=postgresql -o name 2>/dev/null | grep -q .; then
+            bash infrastructure/k8s/apply_exponat_app_migrations.sh staging
+          else
+            echo "::notice::В namespace staging нет Bitnami PostgreSQL — пропуск миграций (при Cloud SQL выполните SQL из migrations/ вручную)."
+          fi
+
       - name: Normalize web Deployment probes (remove stale tcpSocket)
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.kong_only }}
         run: |
