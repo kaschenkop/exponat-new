@@ -48,8 +48,11 @@ resolve_postgres_svc() {
   kubectl get svc -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -E 'postgresql' | head -1 || true
 }
 
+# Заполняется ensure_migrate_binary (не используйте $(ensure_migrate_binary) — весь stdout функции попадёт в переменную).
+MIGRATE_BIN=""
+
 ensure_migrate_binary() {
-  local os arch url name cache bin
+  local os arch url cache bin tgz found
   case "$(uname -s)" in
     Linux) os=linux ;;
     Darwin) os=darwin ;;
@@ -70,15 +73,29 @@ ensure_migrate_binary() {
   mkdir -p "$cache"
   bin="$cache/migrate-v${MIGRATE_VER}-${os}-${arch}"
   if [[ -x "$bin" ]]; then
-    echo "$bin"
-    return
+    MIGRATE_BIN="$bin"
+    return 0
   fi
   url="https://github.com/golang-migrate/migrate/releases/download/v${MIGRATE_VER}/migrate.${os}-${arch}.tar.gz"
-  echo "Downloading migrate v${MIGRATE_VER} (${os}-${arch})..."
-  curl -fsSL "$url" | tar xz -C "$cache" migrate
-  mv "$cache/migrate" "$bin"
+  tgz="$cache/migrate.${MIGRATE_VER}.${os}-${arch}.tar.gz"
+  echo "Downloading migrate v${MIGRATE_VER} (${os}-${arch})..." >&2
+  curl -fsSL "$url" -o "$tgz"
+  tar xzf "$tgz" -C "$cache"
+  rm -f "$tgz"
+  if [[ -f "$cache/migrate" ]]; then
+    mv -f "$cache/migrate" "$bin"
+  else
+    found="$(find "$cache" -maxdepth 3 -type f \( -name migrate -o -name "migrate.${os}-${arch}" \) 2>/dev/null | head -1)"
+    if [[ -n "$found" ]]; then
+      mv -f "$found" "$bin"
+    else
+      echo "error: в архиве migrate не найден бинарник (содержимое $cache):" >&2
+      ls -la "$cache" >&2 || true
+      exit 1
+    fi
+  fi
   chmod +x "$bin"
-  echo "$bin"
+  MIGRATE_BIN="$bin"
 }
 
 shopt -s nullglob
@@ -107,7 +124,11 @@ PW="$(kubectl get secret "$POSTGRES_SECRET" -n "$NS" -o jsonpath='{.data.postgre
 ENC_PW="$(printf '%s' "$PW" | python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.stdin.read(), safe=''))")"
 DATABASE_URL="postgres://${POSTGRES_USER}:${ENC_PW}@127.0.0.1:5432/${APP_DB}?sslmode=disable"
 
-MIGRATE_BIN="$(ensure_migrate_binary)"
+ensure_migrate_binary
+if [[ -z "$MIGRATE_BIN" || ! -x "$MIGRATE_BIN" ]]; then
+  echo "error: бинарник migrate недоступен: ${MIGRATE_BIN:-<пусто>}" >&2
+  exit 1
+fi
 
 echo "Port-forward $NS svc/$SVC -> 127.0.0.1:5432"
 kubectl port-forward -n "$NS" "svc/$SVC" 5432:5432 >/dev/null 2>&1 &
