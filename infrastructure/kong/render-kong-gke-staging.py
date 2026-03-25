@@ -20,11 +20,12 @@ def main() -> int:
     args = p.parse_args()
     src = args.source.read_text(encoding="utf-8")
 
-    # Upstreams (targets)
+    # Upstreams (targets) — в K8s Service чарта exponat везде port: 80 → targetPort (8081/8080/8082).
+    # Ходить на :8081/:8083 с именем сервиса нельзя: на ClusterIP слушает только порт сервиса (80).
     repl = [
-        ("target: projects:8081", f"target: projects.{args.namespace}.svc.cluster.local:8081"),
-        ("target: dashboard:8080", f"target: dashboard.{args.namespace}.svc.cluster.local:8083"),
-        ("target: budget:8082", f"target: budget.{args.namespace}.svc.cluster.local:8082"),
+        ("target: projects:8081", f"target: projects.{args.namespace}.svc.cluster.local:80"),
+        ("target: dashboard:8080", f"target: dashboard.{args.namespace}.svc.cluster.local:80"),
+        ("target: budget:8082", f"target: budget.{args.namespace}.svc.cluster.local:80"),
     ]
     for a, b in repl:
         if a not in src:
