@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Применяет SQL-миграции приложения к БД exponat_staging (не трогает keycloak).
 # Использование: bash infrastructure/k8s/apply_exponat_app_migrations.sh [namespace]
-# Требуется: kubectl, секрет exponat-postgres-auth (ключ postgres-password), под Bitnami PostgreSQL.
+# Требуется: kubectl, секрет exponat-postgres-auth (postgres-password для миграций, role APP_DB_USER — см. ниже).
+# Миграции выполняются от postgres (нужен для CREATE EXTENSION и т.п.), затем выдаются права роли приложения (exponat).
 #
 # Файлы подхватываются автоматически: migrations/NNN_*.sql (NNN — три цифры), порядок — лексикографический.
 # Пропускается префикс 000_* (напр. 000_keycloak_database.sql — только для init-образа Postgres).
@@ -11,6 +12,8 @@ NS="${1:-staging}"
 POSTGRES_SECRET="${POSTGRES_SECRET:-exponat-postgres-auth}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
 APP_DB="${APP_DB:-exponat_staging}"
+# Роль из DATABASE_URL микросервисов (таблицы создаёт postgres — без GRANT exponat получает 42501).
+APP_DB_USER="${APP_DB_USER:-exponat}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -65,5 +68,18 @@ for f in "${sorted[@]}"; do
   kubectl exec -i -n "$NS" "$POD" -- env PGPASSWORD="$PW" \
     psql -U "$POSTGRES_USER" -d "$APP_DB" -v ON_ERROR_STOP=1 <"$f"
 done
+
+echo "Granting privileges on $APP_DB to role $APP_DB_USER ..."
+kubectl exec -i -n "$NS" "$POD" -- env PGPASSWORD="$PW" \
+  psql -U "$POSTGRES_USER" -d "$APP_DB" -v ON_ERROR_STOP=1 <<EOF
+GRANT CONNECT ON DATABASE ${APP_DB} TO ${APP_DB_USER};
+GRANT USAGE, CREATE ON SCHEMA public TO ${APP_DB_USER};
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${APP_DB_USER};
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${APP_DB_USER};
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT ALL ON TABLES TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT ALL ON SEQUENCES TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT ALL ON FUNCTIONS TO ${APP_DB_USER};
+EOF
 
 echo "Migrations applied successfully."
