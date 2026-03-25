@@ -71,7 +71,9 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    # NextAuth callback: несколько больших Set-Cookie → иначе nginx: «upstream sent too big header».
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
   tls:
     - hosts:
         - app.staging.exponat.site
