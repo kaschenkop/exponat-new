@@ -67,6 +67,11 @@ ingress:
   # со staging LE fetch OIDC с auth.* падает → NextAuth OAuthSignin («не удалось начать вход»).
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Callback /api/auth/callback/* ходит в Keycloak за токеном; дефолтные таймауты nginx → 502 Bad Gateway.
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
   tls:
     - hosts:
         - app.staging.exponat.site
