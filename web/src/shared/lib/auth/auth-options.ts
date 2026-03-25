@@ -9,6 +9,19 @@ import {
   readRealmRoles,
 } from '@/shared/lib/auth/decode-access-token';
 
+/**
+ * Keycloak по публичному HTTPS с LE staging / неполной цепочкой → openid-client и fetch падают с
+ * «unable to get local issuer certificate». Правильное решение — prod LE + полный chain на Ingress.
+ * Временный обход только для staging: добавьте в секрет exponat-web-env KEYCLOAK_TLS_INSECURE=true.
+ */
+const keycloakTlsInsecure = process.env.KEYCLOAK_TLS_INSECURE === 'true';
+if (keycloakTlsInsecure) {
+  console.warn(
+    '[auth] KEYCLOAK_TLS_INSECURE=true: отключена проверка TLS для исходящего HTTPS процесса Node. Уберите после исправления сертификатов.',
+  );
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const clientId = process.env.KEYCLOAK_CLIENT_ID ?? 'exponat-web';
 const keycloakApiClientId = process.env.KEYCLOAK_API_CLIENT_ID ?? 'exponat-api';
 

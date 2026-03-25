@@ -21,6 +21,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Актуальный пакет доверенных CA (публичные корни); снижает сюрпризы TLS при запросах к Keycloak/API.
+RUN apk add --no-cache ca-certificates
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public

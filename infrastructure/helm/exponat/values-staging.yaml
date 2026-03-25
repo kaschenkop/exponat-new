@@ -63,9 +63,10 @@ services:
 ingress:
   enabled: true
   className: nginx
-  # cert-manager ClusterIssuer (см. cluster-issuer.yaml в корне репозитория). Для боевых сертификатов: letsencrypt-prod.
+  # cert-manager ClusterIssuer (см. cluster-issuer.yaml). Prod LE: браузер и Node.js доверяют цепочке;
+  # со staging LE fetch OIDC с auth.* падает → NextAuth OAuthSignin («не удалось начать вход»).
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: letsencrypt-prod
   tls:
     - hosts:
         - app.staging.exponat.site
