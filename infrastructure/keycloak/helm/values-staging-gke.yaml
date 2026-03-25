@@ -66,12 +66,17 @@ keycloakConfigCli:
   image:
     registry: public.ecr.aws
     repository: bitnami/keycloak-config-cli
+  # Чарт 24.0.5: AVAILABILITYCHECK включён, но без timeout — на слабом GKE Keycloak не готов → BackoffLimitExceeded.
+  backoffLimit: 12
+  extraEnvVars:
+    - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
+      value: "1200"
   # По умолчанию resourcesPreset: small — на 2–3× e2-medium с Kong/Postgres/Redis Job часто Unschedulable (0/1 nodes).
   resourcesPreset: none
   resources:
     requests:
       cpu: 50m
-      memory: 128Mi
+      memory: 256Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 768Mi
