@@ -152,7 +152,7 @@ kubectl create secret generic exponat-web-env -n staging `
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-**DNS:** A/CNAME **`app.staging.exponat.site`** → внешний адрес **Ingress** (nginx). API по-прежнему через **Kong** (`api.staging…` или IP балансировщика Kong) — см. CORS в `infrastructure/kong/kong.yml` (origin `https://app.staging.exponat.site`).
+**DNS:** A/CNAME **`app.staging.exponat.site`** и **`api.staging.exponat.site`** → **один** внешний адрес **Ingress** (nginx); Kong в staging отдаётся через Ingress с TLS от cert-manager (`kong-values-staging.yaml`). Старый отдельный LoadBalancer Kong для API не используется. CORS: `infrastructure/kong/kong.yml` (origin `https://app.staging.exponat.site`).
 
 ### Keycloak в staging (Helm Bitnami)
 

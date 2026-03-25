@@ -1,7 +1,35 @@
 # Staging: мало ресурсов, одна реплика (малый кластер / экономия).
 # CPU request минимальный для планирования рядом с exponat + Postgres/Redis.
+#
+# API (https://api.staging…): Kong раньше был LoadBalancer:443 с дефолтным cert Kong → ERR_CERT_AUTHORITY_INVALID в браузере.
+# Прокси через тот же nginx Ingress + cert-manager (letsencrypt-prod), что и app. Важно: DNS A **api.staging.exponat.site**
+# должен указывать на **внешний IP Ingress nginx** (как app.staging), а не на старый IP LoadBalancer Kong.
 
 replicaCount: 1
+
+proxy:
+  type: ClusterIP
+  # TLS только на Ingress; иначе chart направляет Ingress backend на proxy:443 → снова самоподпись Kong.
+  tls:
+    enabled: false
+  http:
+    enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: api.staging.exponat.site
+    path: /
+    pathType: Prefix
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    tls:
+      - secretName: api-staging-exponat-tls
+        hosts:
+          - api.staging.exponat.site
 
 # Чарт Kong при admin.enabled=false сам подставляет addresses 127.0.0.1 + [::1] для TLS Admin.
 # На GKE/COS IPv6 loopback ([::1]) не доступен — nginx bind() падает с EADDRNOTAVAIL.
