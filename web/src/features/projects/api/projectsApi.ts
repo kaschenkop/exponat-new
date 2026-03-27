@@ -201,5 +201,12 @@ export function projectsWebSocketUrl(projectId: string): string {
     organizationId: org,
     userId: uid,
   });
+  // Kong JWT + GatewayContextMiddleware: браузерный WebSocket не передаёт Authorization.
+  if (typeof window !== 'undefined') {
+    const token = window.localStorage.getItem('access_token');
+    if (token) {
+      q.set('jwt', token);
+    }
+  }
   return `${base}/api/projects/ws?${q.toString()}`;
 }

@@ -1,16 +1,42 @@
-# Публикует backend-образы в GHCR по путям, которые ожидает Helm:
-#   ghcr.io/exponat/<service>:latest (и тег по SHA коммита).
-# Без этого в кластере будет ErrImagePull даже при корректном imagePullSecret.
+# Публикует образы в GHCR: backend (Go/Python) + frontend (Next.js в ./web).
+# Деплой в кластер здесь НЕ выполняется — только build + push. GKE/Kong/Helm: workflow «Deploy to Staging».
+# ghcr.io/<repo_owner>/<имя> (см. deploy-staging — image.repositoryPrefix).
 
-name: Publish backend images to GHCR
+name: Publish images to GHCR
 
 on:
-  # Вызывается из deploy-staging при push в develop (образы совпадают с коммитом деплоя).
+  # Вызывается из deploy-staging при push в develop; входы задают, какие образы собирать (по диффу в вызывающем workflow).
   workflow_call:
+    inputs:
+      build_projects:
+        type: boolean
+        required: false
+        default: true
+      build_dashboard:
+        type: boolean
+        required: false
+        default: true
+      build_budget:
+        type: boolean
+        required: false
+        default: true
+      build_ai_document_gen:
+        type: boolean
+        required: false
+        default: true
+      build_web:
+        type: boolean
+        required: false
+        default: true
+    outputs:
+      built_web:
+        description: "true if web was built in this run (GHCR has :<commit-sha> tag)"
+        value: ${{ jobs.prepare.outputs.built_web }}
   push:
     branches: [main]
     paths:
       - 'backend/services/**'
+      - 'web/**'
       - '.github/workflows/publish-backend-ghcr.yml'
   workflow_dispatch:
 
@@ -23,25 +49,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # В reusable workflow нельзя использовать matrix в job-level if — только динамический include.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      built_web: ${{ steps.matrix.outputs.built_web }}
+    steps:
+      - id: matrix
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" != "workflow_call" ]; then
+            bp=true bd=true bb=true ba=true bw=true
+          else
+            bp="${{ inputs.build_projects }}"
+            bd="${{ inputs.build_dashboard }}"
+            bb="${{ inputs.build_budget }}"
+            ba="${{ inputs.build_ai_document_gen }}"
+            bw="${{ inputs.build_web }}"
+          fi
+          if [ "$bw" = "true" ]; then
+            echo "built_web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "built_web=false" >> "$GITHUB_OUTPUT"
+          fi
+          rows=()
+          [ "$bp" = "true" ] && rows+=('{"service":"projects","context":"./backend","dockerfile":"./backend/services/projects/Dockerfile"}')
+          [ "$bd" = "true" ] && rows+=('{"service":"dashboard","context":"./backend","dockerfile":"./backend/services/dashboard/Dockerfile"}')
+          [ "$bb" = "true" ] && rows+=('{"service":"budget","context":"./backend/services/budget","dockerfile":"./backend/services/budget/Dockerfile"}')
+          [ "$ba" = "true" ] && rows+=('{"service":"ai-document-gen","context":"./backend/services/ai-document-gen","dockerfile":"./backend/services/ai-document-gen/Dockerfile"}')
+          [ "$bw" = "true" ] && rows+=('{"service":"web","context":"./web","dockerfile":"./web/Dockerfile"}')
+          if [ "${#rows[@]}" -eq 0 ]; then
+            echo 'matrix=[]' >> "$GITHUB_OUTPUT"
+          else
+            echo "matrix=[$(IFS=,; echo "${rows[*]}")]" >> "$GITHUB_OUTPUT"
+          fi
+
   build-push:
     name: Build and push ${{ matrix.service }}
+    needs: [prepare]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - service: projects
-            context: ./backend
-            dockerfile: ./backend/services/projects/Dockerfile
-          - service: dashboard
-            context: ./backend
-            dockerfile: ./backend/services/dashboard/Dockerfile
-          - service: budget
-            context: ./backend/services/budget
-            dockerfile: ./backend/services/budget/Dockerfile
-          - service: ai-document-gen
-            context: ./backend/services/ai-document-gen
-            dockerfile: ./backend/services/ai-document-gen/Dockerfile
+        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +104,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
+        if: matrix.service != 'web'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
@@ -60,5 +112,21 @@ jobs:
           provenance: false
           push: true
           tags: |
-            ghcr.io/exponat/${{ matrix.service }}:latest
-            ghcr.io/exponat/${{ matrix.service }}:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Build and push web (Next.js staging URLs)
+        if: matrix.service == 'web'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          provenance: false
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=https://api.staging.exponat.site
+            NEXT_PUBLIC_PROJECTS_API_URL=https://api.staging.exponat.site
+            NEXT_PUBLIC_DEV_ORGANIZATION_ID=11111111-1111-1111-1111-111111111111
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}

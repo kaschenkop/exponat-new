@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"exponat/projects"
@@ -31,21 +32,14 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(ginLogger())
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Organization-Id", "X-User-Id"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	r.Use(cors.New(buildCORSConfig()))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "service": "projects"})
 	})
 
 	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.GatewayContextMiddleware())
 	projects.Mount(api, database, hub)
 
 	addr := ":8081"
@@ -56,6 +50,34 @@ func main() {
 	if err := r.Run(addr); err != nil {
 		slog.Error("server", "err", err)
 		os.Exit(1)
+	}
+}
+
+// buildCORSConfig: localhost по умолчанию; для staging/prod задайте CORS_ALLOWED_ORIGINS (через запятую).
+// Поддерживается один '*' на паттерн (gin-contrib/cors), напр. https://*.staging.exponat.site
+func buildCORSConfig() cors.Config {
+	origins := []string{"http://localhost:3000", "http://127.0.0.1:3000"}
+	wildcard := false
+	if v := os.Getenv("CORS_ALLOWED_ORIGINS"); v != "" {
+		for _, part := range strings.Split(v, ",") {
+			o := strings.TrimSpace(part)
+			if o == "" {
+				continue
+			}
+			origins = append(origins, o)
+			if strings.Contains(o, "*") {
+				wildcard = true
+			}
+		}
+	}
+	return cors.Config{
+		AllowOrigins:     origins,
+		AllowWildcard:    wildcard,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Organization-Id", "X-User-Id"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}
 }
 

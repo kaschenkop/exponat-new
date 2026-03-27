@@ -1,30 +1,103 @@
 # Staging: по одной реплике на сервис, чтобы снизить стоимость кластера.
+# Фронт (Next.js) в GKE: Ingress → сервис web; API через Kong LoadBalancer (см. docs/deployment/staging-gcp-k8s-db.md).
+#
+# imagePullPolicy как у остальных сервисов (IfNotPresent): kubelet не ходит в GHCR, если слой уже на ноде.
+# У web раньше стояло Always — из‑за этого только он каждый раз запрашивал OAuth; при любом сбое секрета
+# казалось, что «ломается только web», хотя бэкенды просто жили с кэша. Свежий web: CI пушит latest,
+# триггеры в deploy-staging пересобирают web при изменениях web/Helm; при сомнениях — rollout restart.
+
 services:
   apiGateway:
     enabled: false
     replicas: 1
   projects:
     replicas: 1
+    env:
+      - name: CORS_ALLOWED_ORIGINS
+        value: "https://app.staging.exponat.site"
   budget:
     replicas: 1
   dashboard:
     replicas: 1
+    env:
+      - name: CORS_ALLOWED_ORIGINS
+        value: "https://app.staging.exponat.site"
   aiDocumentGen:
     replicas: 1
+  web:
+    enabled: true
+    # imageTag: в CI при publish задаётся $GITHUB_SHA; при пропуске publish — helm --reuse-values не откатывает на latest.
+    port: 3000
+    healthPath: /api/health
+    replicas: 1
+    # Next standalone: kubelet задаёт HOSTNAME=имя пода — ниже command выставляет 0.0.0.0.
+    # Проба: app/api/health/route.ts (matcher middleware исключает `api`; не зависит от локали).
+    # Один массив command (sh -c «…») надёжнее, чем command+args; cwd и путь к server.js явно.
+    workingDir: /app
+    command:
+      - /bin/sh
+      - -c
+      - export HOSTNAME=0.0.0.0; exec node /app/server.js
+    env:
+      - name: HOSTNAME
+        value: "0.0.0.0"
+    # Целиком задаём пробы (только httpGet): после ручного kubectl patch с tcpSocket
+    # стратегический merge Helm оставлял два handler — replace в CI и явный блок здесь это снимают.
+    livenessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 20
+      periodSeconds: 10
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 70m
+      limits:
+        memory: 768Mi
+        cpu: 1000m
+    envFrom:
+      - secretRef:
+          name: exponat-web-env
 
 ingress:
-  hosts:
-    - host: api.staging.exponat.site
+  enabled: true
+  className: nginx
+  # cert-manager ClusterIssuer (см. cluster-issuer.yaml). Prod LE: браузер и Node.js доверяют цепочке;
+  # со staging LE fetch OIDC с auth.* падает → NextAuth OAuthSignin («не удалось начать вход»).
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Callback /api/auth/callback/* ходит в Keycloak за токеном; дефолтные таймауты nginx → 502 Bad Gateway.
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    # NextAuth callback: несколько больших Set-Cookie → иначе nginx: «upstream sent too big header».
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
+  tls:
+    - hosts:
+        - app.staging.exponat.site
+      secretName: app-staging-exponat-tls
+  rules:
+    - host: app.staging.exponat.site
       paths:
         - path: /
           pathType: Prefix
+          service: web
+          port: 80
 
-# Расчёт на кластер с достаточной ёмкостью (см. docs/deployment/staging-gcp.md § «Масштаб ноды»).
-# Для одной e2-medium без второй ноды используйте values-staging-lowfootprint.yaml.
+# Низкие CPU requests для планирования на 2–4× e2-medium вместе с Kong + Bitnami.
+# Ещё ниже — values-staging-lowfootprint.yaml (не подмешан в CI по умолчанию).
 resources:
   requests:
-    memory: "256Mi"
-    cpu: "250m"
+    memory: "192Mi"
+    cpu: "70m"
   limits:
     memory: "512Mi"
     cpu: "1000m"

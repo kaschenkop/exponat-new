@@ -12,11 +12,10 @@ services:
     replicas: 2
 
 ingress:
-  hosts:
-    - host: api.exponat.site
-      paths:
-        - path: /
-          pathType: Prefix
+  enabled: false
+  className: nginx
+  annotations: {}
+  rules: []
 
 resources:
   requests:

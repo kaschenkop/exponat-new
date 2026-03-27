@@ -1,5 +1,5 @@
 -- Экспонат: задачи проекта (Kanban, Gantt, List, Calendar)
--- Выполняется после 003_projects_module.sql
+-- После 000004_projects_demo_relations.
 
 -- 1) Задачи
 CREATE TABLE IF NOT EXISTS project_tasks (
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS project_milestones (
 
 CREATE INDEX IF NOT EXISTS idx_milestones_project ON project_milestones(project_id, milestone_date);
 
--- 5) Sequence для task_key (per-project counter stored via nextval)
+-- 5) Sequence для task_key
 CREATE SEQUENCE IF NOT EXISTS task_key_seq;
 
 -- 6) Trigger: auto updated_at
@@ -90,7 +90,7 @@ CREATE TRIGGER update_task_comments_updated_at
     BEFORE UPDATE ON project_task_comments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 7) Seed demo задачи для проекта aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+-- 7) Seed demo задачи
 INSERT INTO project_tasks (project_id, task_key, title, description, status, priority, assignee_id, group_name, start_date, due_date, progress, tags, order_num)
 VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'EXP-101', 'Согласование плана зала Б', 'Проверить и утвердить планировку с координатором площадки', 'backlog', 'high', '22222222-2222-2222-2222-222222222222', 'Логистика', '2026-03-20', '2026-03-28', 0, '[{"label":"Логистика","color":"#1A73E8"},{"label":"Срочно","color":"#EA4335"}]'::jsonb, 1),
@@ -106,7 +106,6 @@ VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'EXP-111', 'Создание таймлайна проекта', '', 'done', 'medium', '22222222-2222-2222-2222-222222222222', 'Планирование', '2026-03-01', '2026-03-10', 100, '[{"label":"Планирование","color":"#607D8B"}]'::jsonb, 3)
 ON CONFLICT DO NOTHING;
 
--- Подзадачи
 INSERT INTO project_subtasks (task_id, title, is_completed, order_num)
 SELECT t.id, s.title, s.done, s.ord
 FROM project_tasks t
@@ -124,7 +123,6 @@ CROSS JOIN (VALUES
 WHERE t.task_key = s.tkey
 ON CONFLICT DO NOTHING;
 
--- Milestone-ы
 INSERT INTO project_milestones (project_id, title, milestone_date) VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Старт проекта', '2026-03-01'),
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Площадка утверждена', '2026-03-20'),

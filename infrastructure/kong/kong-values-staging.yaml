@@ -1,15 +1,57 @@
 # Staging: мало ресурсов, одна реплика (малый кластер / экономия).
+# CPU request минимальный для планирования рядом с exponat + Postgres/Redis.
+#
+# API (https://api.staging…): Kong раньше был LoadBalancer:443 с дефолтным cert Kong → ERR_CERT_AUTHORITY_INVALID в браузере.
+# Прокси через тот же nginx Ingress + cert-manager (letsencrypt-prod), что и app. Важно: DNS A **api.staging.exponat.site**
+# должен указывать на **внешний IP Ingress nginx** (как app.staging), а не на старый IP LoadBalancer Kong.
 
 replicaCount: 1
+
+proxy:
+  type: ClusterIP
+  # TLS только на Ingress; иначе chart направляет Ingress backend на proxy:443 → снова самоподпись Kong.
+  tls:
+    enabled: false
+  http:
+    enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: api.staging.exponat.site
+    path: /
+    pathType: Prefix
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      # Браузеры часто ходят по HTTP/2; curl по умолчанию — HTTP/1.1. Редкие сочетания nginx↔клиент дают зависание на h2.
+      nginx.ingress.kubernetes.io/use-http2: "false"
+      # server-snippet (ssl_renegotiation off) нельзя: в кластере allow-snippet-annotations=false.
+      # При необходимости задайте ssl_renegotiation в ConfigMap ingress-nginx-controller (глобально).
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    tls:
+      - secretName: api-staging-exponat-tls
+        hosts:
+          - api.staging.exponat.site
+
+# Чарт Kong при admin.enabled=false сам подставляет addresses 127.0.0.1 + [::1] для TLS Admin.
+# На GKE/COS IPv6 loopback ([::1]) не доступен — nginx bind() падает с EADDRNOTAVAIL.
+# admin.addresses не работает в chart kong-3.1.0, поэтому задаём admin_listen через env.
+admin:
+  addresses:
+    - 127.0.0.1
 
 env:
   nginx_worker_processes: "2"
   nginx_worker_connections: "4096"
+  admin_listen: "127.0.0.1:8444 http2 ssl"
 
 resources:
   requests:
-    cpu: 150m
-    memory: 256Mi
+    cpu: 50m
+    memory: 384Mi
   limits:
     cpu: 1000m
-    memory: 512Mi
+    memory: 768Mi

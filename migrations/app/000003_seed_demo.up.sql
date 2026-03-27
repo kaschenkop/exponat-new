@@ -1,4 +1,4 @@
--- Демо-данные (идемпотентно по id)
+-- Демо-данные (идемпотентно по id). После 000002_projects_module.
 INSERT INTO organizations (id, name) VALUES
   ('11111111-1111-1111-1111-111111111111', 'Демо-организация')
 ON CONFLICT (id) DO NOTHING;
@@ -8,18 +8,20 @@ INSERT INTO users (id, name, avatar) VALUES
   ('33333333-3333-3333-3333-333333333333', 'Иван Смирнов', NULL)
 ON CONFLICT (id) DO NOTHING;
 
--- Совпадает с fallback в log_project_activity / log_project_changes (FK activity_log.user_id → users)
 INSERT INTO users (id, name, avatar) VALUES
   ('00000000-0000-0000-0000-000000000001', 'Система', NULL)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO projects (id, organization_id, name, status, start_date, end_date, total_budget, team_size, created_at) VALUES
+INSERT INTO projects (id, organization_id, name, status, start_date, end_date, total_budget, team_size, created_at, manager_id) VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111',
-   'Выставка «Искусство будущего»', 'active', '2026-04-01', '2026-06-30', 5000000, 8, NOW() - INTERVAL '20 days'),
+   'Выставка «Искусство будущего»', 'active', '2026-04-01', '2026-06-30', 5000000, 8, NOW() - INTERVAL '20 days',
+   '22222222-2222-2222-2222-222222222222'),
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111',
-   'Корпоративная экспозиция «Технологии»', 'active', '2026-03-15', '2026-05-15', 3000000, 5, NOW() - INTERVAL '10 days'),
+   'Корпоративная экспозиция «Технологии»', 'active', '2026-03-15', '2026-05-15', 3000000, 5, NOW() - INTERVAL '10 days',
+   '22222222-2222-2222-2222-222222222222'),
   ('cccccccc-cccc-cccc-cccc-cccccccccccc', '11111111-1111-1111-1111-111111111111',
-   'Архивный проект', 'archived', '2025-01-01', '2025-06-01', 1000000, 3, NOW() - INTERVAL '400 days')
+   'Архивный проект', 'completed', '2025-01-01', '2025-06-01', 1000000, 3, NOW() - INTERVAL '400 days',
+   '22222222-2222-2222-2222-222222222222')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO exhibits (id, project_id, created_at) VALUES

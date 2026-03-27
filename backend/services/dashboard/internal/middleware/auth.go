@@ -1,16 +1,18 @@
 package middleware
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
-	secret := []byte(os.Getenv("JWT_SECRET"))
+// GatewayContextMiddleware: JWT проверяет только Kong. Здесь только читаем payload.
+func GatewayContextMiddleware() gin.HandlerFunc {
 	skip := os.Getenv("SKIP_AUTH") == "true" || os.Getenv("SKIP_AUTH") == "1"
 
 	return func(c *gin.Context) {
@@ -35,6 +37,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 			c.Set("userId", uid)
 			c.Set("organizationId", org)
+			c.Set("roles", []string{})
+			c.Set("permissions", []string{})
 			c.Next()
 			return
 		}
@@ -45,43 +49,55 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 		raw := strings.TrimPrefix(h, "Bearer ")
-		if len(secret) == 0 {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "JWT_SECRET not configured"})
+		payload, err := decodeJWTPayload(raw)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token payload"})
 			return
 		}
-
-		tok, err := jwt.Parse(raw, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return secret, nil
-		})
-		if err != nil || !tok.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			return
-		}
-
-		claims, ok := tok.Claims.(jwt.MapClaims)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
-			return
-		}
-
-		uid, _ := claims["userId"].(string)
+		uid, _ := payload["sub"].(string)
 		if uid == "" {
-			uid, _ = claims["sub"].(string)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing sub"})
+			return
 		}
-		org, _ := claims["organizationId"].(string)
+		org := organizationFromPayload(payload)
 		if org == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "organizationId claim required"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "organization_id claim required"})
 			return
 		}
-		if uid == "" {
-			uid = "00000000-0000-0000-0000-000000000001"
-		}
-
 		c.Set("userId", uid)
 		c.Set("organizationId", org)
+		c.Set("roles", []string{})
+		c.Set("permissions", []string{})
 		c.Next()
 	}
+}
+
+func decodeJWTPayload(raw string) (map[string]any, error) {
+	parts := strings.Split(raw, ".")
+	if len(parts) != 3 {
+		return nil, errors.New("invalid jwt")
+	}
+	b, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func organizationFromPayload(payload map[string]any) string {
+	switch v := payload["organization_id"].(type) {
+	case string:
+		return strings.TrimSpace(v)
+	case []any:
+		if len(v) > 0 {
+			if s, ok := v[0].(string); ok {
+				return strings.TrimSpace(s)
+			}
+		}
+	}
+	return ""
 }

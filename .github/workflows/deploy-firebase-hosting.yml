@@ -1,0 +1,52 @@
+# Деплой статического лендинга (frontend/public/landing) в Firebase Hosting.
+#
+# Настройка (один раз):
+# 1. Firebase Console → создайте проект или привяжите существующий GCP-проект.
+# 2. Включите Hosting, при необходимости привяжите домен (например exponat.site).
+# 3. Замените YOUR_FIREBASE_PROJECT_ID в .firebaserc на реальный projectId.
+# 4. Сервисный аккаунт для CI: IAM → создать ключ JSON для аккаунта с ролями
+#    «Firebase Hosting Admin» и «Service Usage Consumer» (или роль «Editor» для теста).
+# 5. В GitHub (имя регистрозависимо): Settings → Secrets and variables → Actions →
+#    Repository secrets → New repository secret → имя ровно FIREBASE_SERVICE_ACCOUNT,
+#    значение — целиком JSON ключа (одна строка, без кавычек вокруг всего файла).
+#    Environment secrets не подхватятся, пока в job нет environment:.
+#    PR из форка: секреты базового репозитория не передаются — деплой только с ветки этого репо.
+#
+name: Deploy landing (Firebase Hosting)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "frontend/public/landing/**"
+      - "firebase.json"
+      - ".firebaserc"
+      - ".github/workflows/deploy-firebase-hosting.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Проверить секрет FIREBASE_SERVICE_ACCOUNT
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SA" ]; then
+            echo "::error title=Missing secret::В репозитории не задан секрет FIREBASE_SERVICE_ACCOUNT. GitHub → Settings → Secrets and variables → Actions → Repository secrets → New repository secret → имя: FIREBASE_SERVICE_ACCOUNT → значение: целиком JSON ключа (без обёртки в кавычки)."
+            exit 1
+          fi
+
+      - name: Deploy to Firebase Hosting (live)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live

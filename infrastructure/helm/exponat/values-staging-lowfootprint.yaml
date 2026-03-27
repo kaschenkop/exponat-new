@@ -1,4 +1,4 @@
-# Урезанные requests для микросервисов (80m CPU / 192Mi RAM) — 1–2× e2-medium.
+# Урезанные requests для микросервисов (70m CPU / 192Mi RAM) — узкий кластер.
 # Вместе с values-staging-gcp-incluster.yaml + values-staging-gcp-incluster-lowfootprint.yaml.
 # Полный staging без урезания: values-staging.yaml + values-staging-gcp-incluster.yaml.
 
@@ -14,18 +14,13 @@ services:
     replicas: 1
   aiDocumentGen:
     replicas: 1
-
-ingress:
-  hosts:
-    - host: api.staging.exponat.site
-      paths:
-        - path: /
-          pathType: Prefix
+  web:
+    replicas: 1
 
 resources:
   requests:
     memory: "192Mi"
-    cpu: "80m"
+    cpu: "70m"
   limits:
     memory: "512Mi"
     cpu: "1000m"

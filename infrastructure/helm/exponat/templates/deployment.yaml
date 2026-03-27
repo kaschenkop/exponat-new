@@ -2,6 +2,10 @@
 {{- if $svc.enabled }}
 {{- $dns := include "exponat.k8sServiceName" $name }}
 {{- $pullSecrets := (default dict $.Values.global).imagePullSecrets | default list }}
+{{- $imgPrefix := $.Values.image.repositoryPrefix | default "exponat" }}
+{{- $healthPath := $svc.healthPath | default "/health" }}
+{{- $imgTag := $svc.imageTag | default $.Values.image.tag }}
+{{- $res := $svc.resources | default $.Values.resources }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -26,23 +30,52 @@ spec:
       {{- end }}
       containers:
         - name: {{ $dns }}
-          image: "{{ $.Values.image.registry }}/exponat/{{ $dns }}:{{ $.Values.image.tag }}"
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          image: "{{ $.Values.image.registry }}/{{ $imgPrefix }}/{{ $dns }}:{{ $imgTag }}"
+          imagePullPolicy: {{ $svc.imagePullPolicy | default $.Values.image.pullPolicy }}
           ports:
             - containerPort: {{ $svc.port }}
+          {{- with $svc.workingDir }}
+          workingDir: {{ . | quote }}
+          {{- end }}
+          {{- with $svc.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $svc.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $svc.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $svc.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $svc.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $svc.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: {{ $healthPath }}
               port: {{ $svc.port }}
-            initialDelaySeconds: 15
+            initialDelaySeconds: {{ $svc.livenessInitialDelaySeconds | default 15 }}
             periodSeconds: 30
+          {{- end }}
+          {{- if $svc.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $svc.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
-              path: /health
+              path: {{ $healthPath }}
               port: {{ $svc.port }}
-            initialDelaySeconds: 5
+            initialDelaySeconds: {{ $svc.readinessInitialDelaySeconds | default 5 }}
             periodSeconds: 10
+          {{- end }}
           resources:
-            {{- toYaml $.Values.resources | nindent 12 }}
+            {{- toYaml $res | nindent 12 }}
 {{- end }}
 {{- end }}

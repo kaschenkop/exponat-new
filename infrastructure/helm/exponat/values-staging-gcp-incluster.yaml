@@ -1,8 +1,12 @@
 # GCP staging: PostgreSQL + Redis в кластере (Bitnami).
 # Пароли НЕ хранятся в Git — только имена Secret (см. docs/deployment/staging-gcp-k8s-db.md § «Секреты»).
 #
+# Обязательно создайте Secret **exponat-backend-env** (DATABASE_URL, REDIS_*, опционально SKIP_AUTH)
+# — см. staging-gcp-k8s-db.md § «Секрет для микросервисов». Без него projects/budget/dashboard падают на localhost:5432.
+#
 # imagePullSecrets:
-# - ghcr.io: при 403 на анонимный pull (приватный пакет) создайте PAT (read:packages) и Secret:
+# - ghcr.io: при 403 — PAT read:packages; в docker-username укажите логин владельца PAT (не обязательно имя org).
+#   В CI: секреты GHCR_READ_PACKAGES_TOKEN и при необходимости GHCR_DOCKER_USERNAME (см. deploy-staging.yml).
 #     kubectl create secret docker-registry ghcr-credentials -n staging \
 #       --docker-server=ghcr.io --docker-username=GITHUB_USER --docker-password=ghp_xxx
 #   затем:
@@ -18,6 +22,21 @@ global:
   # После: kubectl create secret docker-registry ghcr-credentials -n staging ...
   imagePullSecrets:
     - name: ghcr-credentials
+
+# Подключение к Postgres/Redis в кластере (секрет не в Git).
+services:
+  projects:
+    envFrom:
+      - secretRef:
+          name: exponat-backend-env
+  budget:
+    envFrom:
+      - secretRef:
+          name: exponat-backend-env
+  dashboard:
+    envFrom:
+      - secretRef:
+          name: exponat-backend-env
 
 # Образы Bitnami по умолчанию с docker.io — на GKE часто ImagePullBackOff из‑за лимита Hub.
 # AWS Public ECR — зеркало Bitnami без логина (теги совпадают с чартом 14.3.3 / 18.19.4).

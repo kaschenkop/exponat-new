@@ -15,13 +15,10 @@ services:
     replicas: 1
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
-  hosts:
-    - host: api.exponat.local
-      paths:
-        - path: /
-          pathType: Prefix
+  annotations: {}
+  rules: []
 
 resources:
   requests:

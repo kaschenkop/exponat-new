@@ -106,7 +106,8 @@
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://exponat.site",
-        "https://staging.exponat.site"
+        "https://staging.exponat.site",
+        "https://app.staging.exponat.site"
       ],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,

@@ -45,6 +45,7 @@ jobs:
             -f ./infrastructure/helm/exponat/values-production.yaml \
             --namespace production \
             --set image.tag=${{ steps.version.outputs.version }} \
+            --set image.repositoryPrefix=${{ github.repository_owner }} \
             --wait \
             --timeout 10m
 

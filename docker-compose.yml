@@ -3,8 +3,9 @@
 #   docker compose down -v
 # либо: docker volume ls → удалите том с exponat_pgdata в имени
 #
-# Keycloak (IAM) на том же Postgres, что и приложение (БД `keycloak` создаётся migrations/000_keycloak_database.sql при первом init).
-# Старый том без этой БД: `docker compose down -v` или вручную CREATE DATABASE keycloak (см. 000_keycloak_database.sql).
+# Keycloak (IAM) на том же Postgres, что и приложение (БД `keycloak` — только migrations/initdb/ при первом init).
+# Схема приложения: после первого старта postgres выполните `docker compose --profile migrate run --rm db-migrate`.
+# Старый том без keycloak: `docker compose down -v` или вручную CREATE DATABASE keycloak (см. migrations/initdb/000_keycloak_database.sql).
 # UI: http://localhost:8090 после `docker compose up -d`.
 # Отдельный только Keycloak: infrastructure/keycloak/docker-compose.keycloak.yml
 services:
@@ -19,7 +20,7 @@ services:
     volumes:
       # Имя тома с префиксом проекта: не reuse старого pgdata с чужим паролем
       - exponat_pgdata:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - ./migrations/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
@@ -165,7 +166,7 @@ services:
     ports:
       - "9200:9200"
 
-  # Keycloak: одна инстанция Postgres (см. postgres выше + migrations/000_keycloak_database.sql)
+  # Keycloak: одна инстанция Postgres (см. postgres + migrations/initdb)
   keycloak:
     image: quay.io/keycloak/keycloak:23.0
     command:
@@ -200,6 +201,23 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+
+  # Схема exponat_dev (golang-migrate): docker compose --profile migrate run --rm db-migrate
+  db-migrate:
+    image: migrate/migrate:v4.18.1
+    profiles:
+      - migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations/app:/migrations:ro
+    command:
+      - -path=/migrations
+      - -database
+      - postgres://postgres:postgres@postgres:5432/exponat_dev?sslmode=disable
+      - up
+    restart: "no"
 
 volumes:
   exponat_pgdata:

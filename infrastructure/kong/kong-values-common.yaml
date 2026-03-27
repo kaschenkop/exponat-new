@@ -23,10 +23,8 @@ dblessConfig:
 
 proxy:
   type: LoadBalancer
-  annotations:
-    # Yandex Cloud; для GCP удалите или замените (см. docs/deployment/staging-gcp.md)
-    yandex.cloud/load-balancer-type: external
-    yandex.cloud/subnet-id: "REPLACE_WITH_SUBNET_ID"
+  # GKE / AWS: пусто. Для Yandex Cloud добавьте аннотации вторым values-файлом (см. README в каталоге kong).
+  annotations: {}
 
 serviceMonitor:
   enabled: false

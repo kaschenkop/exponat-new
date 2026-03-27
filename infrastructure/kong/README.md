@@ -22,6 +22,12 @@ docker run --rm -e KONG_DATABASE=off -v "$PWD/kong.yml:/kong/kong.yml:ro" kong:3
 Файл `kong.yml` по умолчанию ориентирован на **Docker Compose** (короткие имена: `projects`, `dashboard`, `budget`, `redis`, …). Сервисы, которых нет в `docker-compose.yml`, дадут ошибки DNS в логах Kong при health check / проксировании.  
 Для Kubernetes замените цели upstream и `redis_host` на DNS вида `servicename.namespace.svc.cluster.local` (или используйте отдельный overlay / `deck`).
 
+**GKE staging (CI):** workflow [`.github/workflows/deploy-staging.yml`](../../.github/workflows/deploy-staging.yml) перед деплоем запускает [`render-kong-gke-staging.py`](render-kong-gke-staging.py) и кладёт в ConfigMap уже с FQDN в namespace `staging` (Kong при этом в `kong`). Upstream’ы **projects / dashboard / budget** должны указывать на **порт 80** сервиса Kubernetes (чарт exponat), не на containerPort.
+
+**Yandex Cloud Load Balancer:** в [`kong-values-common.yaml`](kong-values-common.yaml) аннотации proxy пустые; для Yandex передайте дополнительный values-файл с `yandex.cloud/load-balancer-type` и `yandex.cloud/subnet-id`.
+
+**GKE / COS без IPv6 на loopback:** если в логах `bind() to [::1]:8444 failed`, в staging задано **`admin.addresses: [127.0.0.1]`** (официальный чарт иначе добавляет `[::1]` к Admin TLS) — см. [`kong-values-staging.yaml`](kong-values-staging.yaml).
+
 ## Rate limiting
 
 В `kong.yml` для локальной разработки используется **`policy: local`** (счётчики в памяти процесса, без Redis на каждом запросе — иначе возможны многосекундные задержки при сбоях/особенностях сети к Redis). Для **нескольких реплик Kong** в Kubernetes задайте **`policy: redis`** и параметры `redis_host` / `redis_port` и т.д.

@@ -1,0 +1,127 @@
+# Bitnami Keycloak (Helm OCI: registry-1.docker.io/bitnamicharts/keycloak)
+# Staging GKE: Postgres = сервис exponat-postgresql в том же namespace (staging).
+#
+# Перед helm: python3 infrastructure/k8s/ensure_keycloak_staging.py staging
+# Секреты: keycloak-admin (ключ password), keycloak-db (ключ password) — создаётся скриптом + workflow.
+# DNS: A auth.staging → IP Ingress (nginx). TLS: cert-manager — prod LE (Node/web не доверяют staging LE).
+#
+# Установка:
+#   helm upgrade --install keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
+#     --version 24.0.5 -f infrastructure/keycloak/helm/values-staging-gke.yaml -n staging
+
+global:
+  imageRegistry: public.ecr.aws
+
+image:
+  repository: bitnami/keycloak
+
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: exponat-postgresql
+  port: 5432
+  user: keycloak
+  database: keycloak
+  existingSecret: keycloak-db
+  existingSecretPasswordKey: password
+
+auth:
+  adminUser: admin
+  existingSecret: keycloak-admin
+  passwordSecretKey: password
+
+production: true
+proxyHeaders: xforwarded
+httpEnabled: true
+hostnameStrict: false
+
+replicaCount: 1
+
+cache:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+
+# Кастомная тема login «exponat» (realm-export.json → loginTheme). В образ Bitnami тема не входит;
+# CI создаёт ConfigMap keycloak-theme-exponat; initContainer кладёт файлы в /opt/bitnami/keycloak/themes/exponat.
+extraVolumes:
+  - name: keycloak-theme-exponat-data
+    emptyDir: {}
+  - name: keycloak-theme-exponat-src
+    configMap:
+      name: keycloak-theme-exponat
+
+initContainers:
+  - name: install-exponat-theme
+    image: public.ecr.aws/docker/library/busybox:1.36
+    imagePullPolicy: IfNotPresent
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /out/login/resources/css /out/login/messages
+        cp /src/theme.properties /out/login/
+        cp /src/exponat.css /out/login/resources/css/
+        cp /src/messages_ru.properties /out/login/messages/
+        chown -R 1001:1001 /out
+    securityContext:
+      runAsUser: 0
+    volumeMounts:
+      - name: keycloak-theme-exponat-src
+        mountPath: /src
+        readOnly: true
+      - name: keycloak-theme-exponat-data
+        mountPath: /out
+
+extraVolumeMounts:
+  - name: keycloak-theme-exponat-data
+    mountPath: /opt/bitnami/keycloak/themes/exponat
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: auth.staging.exponat.site
+  path: /
+  pathType: Prefix
+  # Секрет TLS: Bitnami ожидает имя вида «<hostname>-tls»; cert-manager создаст его по аннотации.
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+keycloakConfigCli:
+  enabled: true
+  # Убрать helm hooks: иначе post-upgrade hook ждёт Job отдельно и часто «timed out waiting for the condition»,
+  # пока внутри контейнера ещё идёт KEYCLOAK_AVAILABILITYCHECK_TIMEOUT. null снимает ключи при merge с дефолтом чарта.
+  annotations:
+    helm.sh/hook: null
+    helm.sh/hook-delete-policy: null
+    helm.sh/hook-weight: null
+  existingConfigmap: keycloak-realm-export
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/keycloak-config-cli
+  # Чарт 24.0.5: AVAILABILITYCHECK включён, но без timeout — на слабом GKE Keycloak не готов → BackoffLimitExceeded.
+  backoffLimit: 4
+  cleanupAfterFinished:
+    enabled: true
+    seconds: 900
+  extraEnvVars:
+    - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
+      value: "1200"
+  # По умолчанию resourcesPreset: small — на 2–3× e2-medium с Kong/Postgres/Redis Job часто Unschedulable (0/1 nodes).
+  resourcesPreset: none
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi

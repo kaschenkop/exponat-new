@@ -1,0 +1,42 @@
+; =============================================================================
+; Zone: exponat.site — BIND zone file для импорта в DNS (GoDaddy и аналоги)
+;
+; Перед импортом:
+; 1) Firebase Console → Hosting → Custom domains: сверьте A-записи (сейчас 199.36.158.100).
+; 2) Если в Firebase для домена показан DNS ACME challenge: добавьте TXT вручную
+;    Host _acme-challenge, Value — строка из консоли (в этот файл не вшивайте устаревший токен).
+; 3) После правок увеличьте serial в SOA (формат ГГГГММДДnn).
+; 4) Убедитесь, что нет дублирующих A/AAAA на @ и www у других провайдеров (форвардинг).
+; =============================================================================
+
+$ORIGIN exponat.site.
+$TTL 3600
+
+; SOA — при импорте в GoDaddy часто подставляется свой; при конфликте оставьте значения провайдера
+@	IN	SOA	ns73.domaincontrol.com.	dns.jomax.net. (
+			2026032601	; Serial — увеличивайте при каждом изменении зоны
+			28800		; Refresh
+			7200		; Retry
+			604800		; Expire
+			3600		; Minimum
+			)
+
+; NS — имена серверов GoDaddy (как в вашем экспорте)
+@	IN	NS	ns73.domaincontrol.com.
+@	IN	NS	ns74.domaincontrol.com.
+
+; --- Firebase Hosting: привязка сайта к проекту (оставлять постоянно) ---
+@	IN	TXT	"hosting-site=exponat-79dd7"
+
+; --- Firebase Hosting: только эти A на корень и www (без других A/AAAA на @/www) ---
+@	IN	A	199.36.158.100
+www	IN	A	199.36.158.100
+
+; --- Staging (GKE / Ingress) — без изменений относительно вашей текущей схемы ---
+api.staging	IN	A	34.159.86.208
+app.staging	IN	A	34.159.86.208
+auth.staging	IN	A	34.159.86.208
+
+; --- Прочее ---
+_dmarc	IN	TXT	"v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;"
+_domainconnect	IN	CNAME	_domainconnect.gd.domaincontrol.com.
