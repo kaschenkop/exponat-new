@@ -31,7 +31,7 @@ export type NavItemType = {
 export const dashboardNavItems: NavItemType[] = [
   { titleKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
   { titleKey: 'projects', href: '/dashboard/projects', icon: Boxes },
-  { titleKey: 'budget', href: '/dashboard/budget', icon: Wallet },
+  { titleKey: 'budget', href: '/dashboard/budgets', icon: Wallet },
   { titleKey: 'logistics', href: '/dashboard/logistics', icon: Truck },
   { titleKey: 'construction', href: '/dashboard/construction', icon: Hammer },
   { titleKey: 'spacePlanning', href: '/dashboard/space-planning', icon: Map },
