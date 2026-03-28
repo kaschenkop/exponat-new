@@ -398,23 +398,6 @@ services:
           minute: 100
           policy: local
 
-  - name: logistics-service
-    url: http://logistics:8000
-    routes:
-      - name: logistics-api
-        paths:
-          - /api/v1/exhibits
-          - /api/v1/logistics
-        strip_path: false
-    plugins:
-      - name: jwt
-        config:
-          anonymous: exponat-anonymous
-      - name: rate-limiting
-        config:
-          minute: 100
-          policy: local
-
   - name: reporting-service
     url: http://reporting:8000
     connect_timeout: 300000
