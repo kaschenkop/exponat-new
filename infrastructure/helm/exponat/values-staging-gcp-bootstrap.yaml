@@ -15,6 +15,8 @@ services:
     enabled: false
   budget:
     enabled: false
+  logistics:
+    enabled: false
   dashboard:
     enabled: false
   aiDocumentGen:

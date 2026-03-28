@@ -9,6 +9,8 @@ services:
     replicas: 1
   budget:
     replicas: 1
+  logistics:
+    replicas: 1
   dashboard:
     replicas: 1
   aiDocumentGen:

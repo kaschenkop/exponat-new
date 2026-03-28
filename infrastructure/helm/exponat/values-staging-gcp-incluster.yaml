@@ -33,6 +33,10 @@ services:
     envFrom:
       - secretRef:
           name: exponat-backend-env
+  logistics:
+    envFrom:
+      - secretRef:
+          name: exponat-backend-env
   dashboard:
     envFrom:
       - secretRef:

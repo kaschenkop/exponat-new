@@ -24,6 +24,10 @@ services:
     enabled: true
     port: 8082
     replicas: 1
+  logistics:
+    enabled: true
+    port: 8083
+    replicas: 1
   dashboard:
     enabled: true
     port: 8080

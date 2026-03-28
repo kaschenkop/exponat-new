@@ -112,6 +112,15 @@ upstreams:
       - target: budget:8082
         weight: 100
 
+  - name: logistics-upstream
+    algorithm: round-robin
+    healthchecks:
+      active:
+        http_path: /health
+    targets:
+      - target: logistics:8083
+        weight: 100
+
 # -----------------------------------------------------------------------------
 # Services & routes
 # -----------------------------------------------------------------------------
@@ -188,6 +197,31 @@ services:
       - name: budgets-api
         paths:
           - /api/v1/budgets
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          claims_to_verify:
+            - exp
+          key_claim_name: iss
+          secret_is_base64: false
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 5000
+          policy: local
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+
+  - name: logistics-service
+    host: logistics-upstream
+    port: 80
+    protocol: http
+    routes:
+      - name: logistics-api
+        paths:
+          - /api/v1/logistics
         strip_path: false
     plugins:
       - name: jwt

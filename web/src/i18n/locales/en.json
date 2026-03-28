@@ -539,5 +539,165 @@
       "logs": "Log",
       "noLogs": "No entries yet"
     }
+  },
+  "logisticsModule": {
+    "title": "Logistics",
+    "tabs": {
+      "overview": "Overview",
+      "exhibits": "Exhibits",
+      "shipments": "Shipments",
+      "tracking": "Tracking",
+      "monitoring": "Monitoring",
+      "inventory": "Inventory",
+      "reports": "Reports"
+    },
+    "overview": {
+      "loadError": "Could not load summary",
+      "exhibits": "Exhibits",
+      "shipmentsActive": "Active shipments",
+      "trackingOnline": "Trackers online",
+      "sensorsWarning": "Sensors: warnings",
+      "openIncidents": "Open incidents",
+      "auditsOpen": "Audits in progress",
+      "hint": "Demo data; API: /api/v1/logistics"
+    },
+    "exhibits": {
+      "searchPlaceholder": "Search by title, inventory number…",
+      "viewGrid": "Grid",
+      "viewList": "List",
+      "add": "Add exhibit",
+      "open": "Open",
+      "delete": "Delete",
+      "columns": {
+        "name": "Title",
+        "inventory": "Inv. #",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "in_storage": "In storage",
+        "on_display": "On display",
+        "in_transit": "In transit",
+        "in_restoration": "In restoration",
+        "decommissioned": "Decommissioned"
+      },
+      "form": {
+        "createTitle": "New exhibit",
+        "editTitle": "Edit exhibit",
+        "name": "Title",
+        "inventoryNumber": "Inventory number",
+        "description": "Description",
+        "category": "Category",
+        "status": "Status",
+        "condition": "Condition",
+        "cancel": "Cancel",
+        "save": "Save",
+        "categories": {
+          "painting": "Painting",
+          "sculpture": "Sculpture",
+          "artifact": "Artifact",
+          "document": "Document",
+          "photo": "Photo",
+          "video": "Video",
+          "interactive": "Interactive",
+          "other": "Other"
+        },
+        "statuses": {
+          "in_storage": "In storage",
+          "on_display": "On display",
+          "in_transit": "In transit",
+          "in_restoration": "In restoration",
+          "decommissioned": "Decommissioned"
+        },
+        "conditions": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "fair": "Fair",
+          "poor": "Poor",
+          "damaged": "Damaged"
+        }
+      },
+      "detail": {
+        "notFound": "Exhibit not found",
+        "back": "Back to catalog",
+        "about": "About",
+        "location": "Location",
+        "value": "Estimated value",
+        "dimensions": "Dimensions",
+        "size": "W×H×D",
+        "cm": "cm",
+        "weight": "Weight",
+        "kg": "kg"
+      }
+    },
+    "shipments": {
+      "new": "New shipment",
+      "open": "Details",
+      "exhibitsCount": "Exhibits: {count}",
+      "status": {
+        "planned": "Planned",
+        "in_preparation": "Preparing",
+        "in_transit": "In transit",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      },
+      "detail": {
+        "notFound": "Shipment not found",
+        "back": "Back to list",
+        "route": "Route",
+        "from": "From:",
+        "to": "To:",
+        "kmh": "km/h",
+        "vehicle": "Vehicle",
+        "timeline": "Timeline"
+      },
+      "newForm": {
+        "title": "New shipment",
+        "origin": "Origin",
+        "destination": "Destination",
+        "pick": "Select…",
+        "transport": "Transport type",
+        "transportTypes": {
+          "truck": "Truck",
+          "van": "Van",
+          "car": "Car",
+          "air": "Air",
+          "rail": "Rail",
+          "sea": "Sea"
+        },
+        "plate": "License plate",
+        "submit": "Create",
+        "cancel": "Cancel"
+      }
+    },
+    "tracking": {
+      "mapTitle": "Map",
+      "mapPlaceholder": "Interactive map (Mapbox/Leaflet) can be wired separately. The device list on the right refreshes from the API.",
+      "devices": "Devices",
+      "coords": "Coordinates",
+      "speed": "Speed",
+      "kmh": "km/h",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "monitoring": {
+      "chartTitle": "History: {name}"
+    },
+    "inventory": {
+      "audits": "Audits",
+      "movements": "Movements",
+      "auditProgress": "Found {found} of {expected}",
+      "status": "Status",
+      "exhibit": "Exhibit",
+      "movement": "Route"
+    },
+    "reports": {
+      "summaryTitle": "Summary",
+      "export": "Export",
+      "exhibits": "Exhibits",
+      "shipments": "Active shipments",
+      "movements30": "Movements (period)",
+      "hint": "Full analytics and exports in a later iteration."
+    }
   }
 }
