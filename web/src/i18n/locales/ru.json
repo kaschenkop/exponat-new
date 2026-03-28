@@ -350,5 +350,194 @@
     },
     "empty": "Нет задач",
     "dragHint": "Перетащите задачи между колонками для смены статуса"
+  },
+  "budget": {
+    "title": "Бюджеты",
+    "create": "Новый бюджет",
+    "currency": {
+      "RUB": "₽ RUB",
+      "USD": "$ USD",
+      "EUR": "€ EUR"
+    },
+    "status": {
+      "draft": "Черновик",
+      "active": "Активен",
+      "completed": "Завершён",
+      "cancelled": "Отменён"
+    },
+    "views": {
+      "overview": "Обзор",
+      "categories": "Категории",
+      "expenses": "Расходы",
+      "approvals": "Согласования",
+      "analytics": "Аналитика",
+      "integration": "1С"
+    },
+    "detail": {
+      "back": "К списку бюджетов",
+      "progress": "Прогресс",
+      "spent": "Потрачено",
+      "notFound": "Бюджет не найден"
+    },
+    "list": {
+      "loadError": "Не удалось загрузить бюджеты",
+      "retry": "Повторить",
+      "empty": "Пока нет бюджетов",
+      "createFirst": "Создать бюджет",
+      "summary": {
+        "totalPlanned": "План всего",
+        "totalSpent": "Факт всего",
+        "active": "Активных",
+        "overBudget": "Сверх лимита"
+      }
+    },
+    "summary": {
+      "totalPlanned": "План всего",
+      "totalSpent": "Факт всего",
+      "active": "Активных",
+      "overBudget": "Сверх лимита"
+    },
+    "new": {
+      "title": "Новый бюджет",
+      "name": "Название",
+      "description": "Описание",
+      "currency": "Валюта",
+      "totalPlanned": "План (сумма)",
+      "startDate": "Начало",
+      "endDate": "Окончание",
+      "submit": "Создать"
+    },
+    "overview": {
+      "planned": "План",
+      "spent": "Факт",
+      "pending": "На согласовании",
+      "remaining": "Остаток",
+      "manager": "Менеджер",
+      "byCategory": "По категориям",
+      "noCategories": "Нет категорий верхнего уровня",
+      "distribution": "Распределение",
+      "noChart": "Нет данных для диаграммы",
+      "recent": "Последние расходы",
+      "noExpenses": "Нет расходов",
+      "alertOver": "Превышен бюджет",
+      "alertOverDesc": "Сумма расходов превысила запланированный объём.",
+      "alertWarning": "Приближение к лимиту",
+      "alertWarningDesc": "Использовано {pct}% бюджета — проверьте оставшиеся статьи."
+    },
+    "categories": {
+      "formTitle": "Категория",
+      "name": "Название",
+      "code": "Код",
+      "planned": "План",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "actions": "Действия",
+      "edit": "Редактировать",
+      "addChild": "Подкатегория",
+      "delete": "Удалить",
+      "searchPlaceholder": "Поиск категорий",
+      "addRoot": "Добавить категорию",
+      "export": "Экспорт",
+      "import1c": "Импорт из 1С",
+      "importSoon": "Скоро",
+      "colName": "Название",
+      "colPlanned": "План",
+      "colSpent": "Факт",
+      "colRemaining": "Остаток",
+      "empty": "Нет категорий",
+      "emptySearch": "Ничего не найдено",
+      "confirmDelete": "Удалить категорию и подкатегории?",
+      "dragHint": "Перетаскивание для сортировки будет доступно после подключения API порядка."
+    },
+    "expenses": {
+      "searchPlaceholder": "Поиск расходов",
+      "filters": "Фильтры",
+      "add": "Добавить расход",
+      "export": "Экспорт",
+      "loadMore": "Загрузить ещё",
+      "empty": "Расходов не найдено",
+      "edit": "Изменить",
+      "formTitle": "Новый расход",
+      "category": "Категория",
+      "title": "Название",
+      "amount": "Сумма",
+      "date": "Дата",
+      "vendor": "Поставщик",
+      "cancel": "Отмена",
+      "save": "Сохранить",
+      "bulkSoon": "Скоро",
+      "attachmentsSoon": "Вложения — в следующей версии"
+    },
+    "expense": {
+      "status": {
+        "draft": "Черновик",
+        "pending_approval": "На согласовании",
+        "approved": "Согласован",
+        "rejected": "Отклонён",
+        "paid": "Оплачен",
+        "cancelled": "Отменён"
+      }
+    },
+    "filters": {
+      "dateFrom": "С даты",
+      "dateTo": "По дату",
+      "period": "Период",
+      "reset": "Сбросить"
+    },
+    "approvals": {
+      "comment": "Комментарий",
+      "rejectReason": "Причина отклонения",
+      "approve": "Согласовать",
+      "reject": "Отклонить",
+      "noHistory": "Нет записей",
+      "workflowTitle": "Цепочка согласования",
+      "workflowHint": "Настройка многоуровневого согласования будет доступна в настройках бюджета.",
+      "rulesTitle": "Правила",
+      "rulesHint": "Пороги сумм и обязательные согласующие настраиваются в профиле организации.",
+      "notificationsHint": "Уведомления о заявках приходят на почту и в центр уведомлений.",
+      "stats": {
+        "pending": "Ожидают",
+        "approved": "Одобрено",
+        "rejected": "Отклонено"
+      },
+      "tabPending": "Ожидают",
+      "tabApproved": "Одобрено",
+      "tabRejected": "Отклонено",
+      "tabAll": "Все",
+      "empty": "Нет заявок",
+      "status": {
+        "pending": "В очереди согласования",
+        "approved": "Согласовано",
+        "rejected": "Отклонено",
+        "cancelled": "Отменено"
+      }
+    },
+    "analytics": {
+      "trends": "Динамика расходов",
+      "breakdown": "По категориям",
+      "monthly": "Месяцы",
+      "forecast": "Прогноз",
+      "top": "Крупнейшие расходы",
+      "export": "Экспорт",
+      "exportSoon": "Экспорт Excel/PDF — скоро",
+      "projected": "Прогноз итога",
+      "confidence": "Уверенность модели",
+      "colTitle": "Статья",
+      "colVendor": "Поставщик",
+      "colAmount": "Сумма"
+    },
+    "integration": {
+      "title": "Интеграция с 1С",
+      "connected": "Подключено",
+      "disconnected": "Не подключено",
+      "sync": "Синхронизировать",
+      "lastSync": "Последняя синхронизация",
+      "mapping": "Сопоставление",
+      "mappingCount": "Сопоставлено элементов: {count}",
+      "settings": "Подключение",
+      "baseUrl": "Базовый URL",
+      "logs": "Журнал",
+      "noLogs": "Записей пока нет"
+    }
   }
 }

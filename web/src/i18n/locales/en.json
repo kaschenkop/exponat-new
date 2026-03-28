@@ -350,5 +350,194 @@
     },
     "empty": "No tasks",
     "dragHint": "Drag tasks between columns to change status"
+  },
+  "budget": {
+    "title": "Budgets",
+    "create": "New budget",
+    "currency": {
+      "RUB": "₽ RUB",
+      "USD": "$ USD",
+      "EUR": "€ EUR"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "views": {
+      "overview": "Overview",
+      "categories": "Categories",
+      "expenses": "Expenses",
+      "approvals": "Approvals",
+      "analytics": "Analytics",
+      "integration": "1C"
+    },
+    "detail": {
+      "back": "Back to budgets",
+      "progress": "Progress",
+      "spent": "Spent",
+      "notFound": "Budget not found"
+    },
+    "list": {
+      "loadError": "Could not load budgets",
+      "retry": "Retry",
+      "empty": "No budgets yet",
+      "createFirst": "Create budget",
+      "summary": {
+        "totalPlanned": "Total planned",
+        "totalSpent": "Total spent",
+        "active": "Active",
+        "overBudget": "Over budget"
+      }
+    },
+    "summary": {
+      "totalPlanned": "Total planned",
+      "totalSpent": "Total spent",
+      "active": "Active",
+      "overBudget": "Over budget"
+    },
+    "new": {
+      "title": "New budget",
+      "name": "Name",
+      "description": "Description",
+      "currency": "Currency",
+      "totalPlanned": "Planned amount",
+      "startDate": "Start",
+      "endDate": "End",
+      "submit": "Create"
+    },
+    "overview": {
+      "planned": "Planned",
+      "spent": "Spent",
+      "pending": "Pending approval",
+      "remaining": "Remaining",
+      "manager": "Manager",
+      "byCategory": "By category",
+      "noCategories": "No top-level categories",
+      "distribution": "Distribution",
+      "noChart": "No chart data",
+      "recent": "Recent expenses",
+      "noExpenses": "No expenses",
+      "alertOver": "Budget exceeded",
+      "alertOverDesc": "Spending has exceeded the planned amount.",
+      "alertWarning": "Approaching limit",
+      "alertWarningDesc": "{pct}% of the budget is used — review remaining items."
+    },
+    "categories": {
+      "formTitle": "Category",
+      "name": "Name",
+      "code": "Code",
+      "planned": "Planned",
+      "save": "Save",
+      "cancel": "Cancel",
+      "actions": "Actions",
+      "edit": "Edit",
+      "addChild": "Add subcategory",
+      "delete": "Delete",
+      "searchPlaceholder": "Search categories",
+      "addRoot": "Add category",
+      "export": "Export",
+      "import1c": "Import from 1C",
+      "importSoon": "Coming soon",
+      "colName": "Name",
+      "colPlanned": "Planned",
+      "colSpent": "Spent",
+      "colRemaining": "Remaining",
+      "empty": "No categories",
+      "emptySearch": "No results",
+      "confirmDelete": "Delete category and subcategories?",
+      "dragHint": "Drag-and-drop sorting will be available when the ordering API is connected."
+    },
+    "expenses": {
+      "searchPlaceholder": "Search expenses",
+      "filters": "Filters",
+      "add": "Add expense",
+      "export": "Export",
+      "loadMore": "Load more",
+      "empty": "No expenses found",
+      "edit": "Edit",
+      "formTitle": "New expense",
+      "category": "Category",
+      "title": "Title",
+      "amount": "Amount",
+      "date": "Date",
+      "vendor": "Vendor",
+      "cancel": "Cancel",
+      "save": "Save",
+      "bulkSoon": "Coming soon",
+      "attachmentsSoon": "Attachments in a future release"
+    },
+    "expense": {
+      "status": {
+        "draft": "Draft",
+        "pending_approval": "Pending approval",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "paid": "Paid",
+        "cancelled": "Cancelled"
+      }
+    },
+    "filters": {
+      "dateFrom": "From",
+      "dateTo": "To",
+      "period": "Period",
+      "reset": "Reset"
+    },
+    "approvals": {
+      "comment": "Comment",
+      "rejectReason": "Rejection reason",
+      "approve": "Approve",
+      "reject": "Reject",
+      "noHistory": "No entries",
+      "workflowTitle": "Approval chain",
+      "workflowHint": "Multi-level approval will be configurable in budget settings.",
+      "rulesTitle": "Rules",
+      "rulesHint": "Amount thresholds and required approvers are managed in organization settings.",
+      "notificationsHint": "Notifications are sent by email and to the notification center.",
+      "stats": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "tabPending": "Pending",
+      "tabApproved": "Approved",
+      "tabRejected": "Rejected",
+      "tabAll": "All",
+      "empty": "No requests",
+      "status": {
+        "pending": "Awaiting approval",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      }
+    },
+    "analytics": {
+      "trends": "Spending trend",
+      "breakdown": "By category",
+      "monthly": "Monthly",
+      "forecast": "Forecast",
+      "top": "Top expenses",
+      "export": "Export",
+      "exportSoon": "Excel/PDF export coming soon",
+      "projected": "Projected total",
+      "confidence": "Model confidence",
+      "colTitle": "Item",
+      "colVendor": "Vendor",
+      "colAmount": "Amount"
+    },
+    "integration": {
+      "title": "1C integration",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "sync": "Synchronize",
+      "lastSync": "Last sync",
+      "mapping": "Mapping",
+      "mappingCount": "Mapped items: {count}",
+      "settings": "Connection",
+      "baseUrl": "Base URL",
+      "logs": "Log",
+      "noLogs": "No entries yet"
+    }
   }
 }
