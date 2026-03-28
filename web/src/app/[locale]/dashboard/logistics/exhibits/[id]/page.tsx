@@ -3,7 +3,7 @@ import { ExhibitDetail } from '@/features/logistics/components/exhibits/ExhibitD
 export default function LogisticsExhibitDetailPage({
   params,
 }: {
-  params: { locale: string; id: string };
+  params: { id: string };
 }): React.ReactElement {
-  return <ExhibitDetail locale={params.locale} id={params.id} />;
+  return <ExhibitDetail id={params.id} />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/shared/ui/button';
@@ -9,19 +9,13 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import { useShipment } from '../../hooks/useShipments';
 import { ShipmentStatusBadge } from '../shared/ShipmentStatusBadge';
 
-export function ShipmentDetail({
-  locale,
-  id,
-}: {
-  locale: string;
-  id: string;
-}): React.ReactElement {
+export function ShipmentDetail({ id }: { id: string }): React.ReactElement {
   const t = useTranslations('logisticsModule.shipments.detail');
   const ts = useTranslations('logisticsModule.shipments.status');
-  const { data, isLoading, isError } = useShipment(id);
-  const back = `/${locale}/dashboard/logistics/shipments`;
+  const { data, isLoading, isError, isPending } = useShipment(id);
+  const back = '/dashboard/logistics/shipments';
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return <Skeleton className="h-64 w-full rounded-lg" />;
   }
   if (isError || !data) {

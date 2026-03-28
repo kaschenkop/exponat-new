@@ -8,7 +8,7 @@ import { useTrackingDevices } from '../../hooks/useTracking';
 
 export function TrackingView(): React.ReactElement {
   const t = useTranslations('logisticsModule.tracking');
-  const { data, isLoading } = useTrackingDevices();
+  const { data, isLoading, isPending } = useTrackingDevices();
   const items = data?.items ?? [];
 
   return (
@@ -30,7 +30,7 @@ export function TrackingView(): React.ReactElement {
       </div>
       <div className="space-y-3 lg:col-span-4">
         <h2 className="font-display text-lg font-semibold">{t('devices')}</h2>
-        {isLoading ? (
+        {isLoading || isPending ? (
           <Skeleton className="h-24 w-full" />
         ) : (
           items.map((d) => (

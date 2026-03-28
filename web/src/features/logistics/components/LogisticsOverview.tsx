@@ -1,22 +1,18 @@
 'use client';
 
 import { Package, Truck, Navigation, Thermometer, AlertTriangle, ClipboardList } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useLogisticsSummary } from '../hooks/useLogisticsSummary';
 
-export function LogisticsOverview({
-  locale,
-}: {
-  locale: string;
-}): React.ReactElement {
+export function LogisticsOverview(): React.ReactElement {
   const t = useTranslations('logisticsModule.overview');
-  const { data, isLoading, isError } = useLogisticsSummary();
-  const base = `/${locale}/dashboard/logistics`;
+  const { data, isLoading, isError, isPending } = useLogisticsSummary();
+  const base = '/dashboard/logistics';
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (

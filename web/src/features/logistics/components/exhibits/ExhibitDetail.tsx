@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft, Package } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/shared/ui/button';
@@ -9,19 +9,13 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import { useExhibit } from '../../hooks/useExhibits';
 import { ExhibitStatusBadge } from '../shared/ExhibitStatusBadge';
 
-export function ExhibitDetail({
-  locale,
-  id,
-}: {
-  locale: string;
-  id: string;
-}): React.ReactElement {
+export function ExhibitDetail({ id }: { id: string }): React.ReactElement {
   const t = useTranslations('logisticsModule.exhibits.detail');
   const ts = useTranslations('logisticsModule.exhibits.status');
-  const { data, isLoading, isError } = useExhibit(id);
-  const back = `/${locale}/dashboard/logistics/exhibits`;
+  const { data, isLoading, isError, isPending } = useExhibit(id);
+  const back = '/dashboard/logistics/exhibits';
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-48" />

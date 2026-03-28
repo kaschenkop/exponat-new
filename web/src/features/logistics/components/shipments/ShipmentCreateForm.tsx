@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -34,11 +33,7 @@ function emptyLoc(): Location {
   };
 }
 
-export function ShipmentCreateForm({
-  locale,
-}: {
-  locale: string;
-}): React.ReactElement {
+export function ShipmentCreateForm(): React.ReactElement {
   const t = useTranslations('logisticsModule.shipments.newForm');
   const router = useRouter();
   const { create } = useShipmentMutations();
@@ -100,7 +95,7 @@ export function ShipmentCreateForm({
       completedAt: null,
     };
     const created = await create.mutateAsync(body);
-    router.push(`/${locale}/dashboard/logistics/shipments/${created.id}`);
+    router.push(`/dashboard/logistics/shipments/${created.id}`);
   };
 
   return (
@@ -179,7 +174,7 @@ export function ShipmentCreateForm({
             {t('submit')}
           </Button>
           <Button variant="outline" type="button" asChild>
-            <Link href={`/${locale}/dashboard/logistics/shipments`}>
+            <Link href="/dashboard/logistics/shipments">
               {t('cancel')}
             </Link>
           </Button>

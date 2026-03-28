@@ -12,6 +12,7 @@ export function useExhibits(filters?: {
     queryKey: ['logistics', 'exhibits', filters],
     queryFn: () => exhibitsApi.list(filters),
     staleTime: 20_000,
+    enabled: typeof window !== 'undefined',
   });
 }
 
@@ -19,7 +20,7 @@ export function useExhibit(id: string | undefined) {
   return useQuery({
     queryKey: ['logistics', 'exhibits', id],
     queryFn: () => exhibitsApi.get(id!),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && typeof window !== 'undefined',
     staleTime: 20_000,
   });
 }

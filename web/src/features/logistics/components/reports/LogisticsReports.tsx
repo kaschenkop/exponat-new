@@ -8,9 +8,9 @@ import { useLogisticsSummary } from '../../hooks/useLogisticsSummary';
 
 export function LogisticsReports(): React.ReactElement {
   const t = useTranslations('logisticsModule.reports');
-  const { data, isLoading } = useLogisticsSummary();
+  const { data, isLoading, isPending } = useLogisticsSummary();
 
-  if (isLoading || !data) {
+  if (isLoading || isPending || !data) {
     return <Skeleton className="h-48 w-full rounded-lg" />;
   }
 
