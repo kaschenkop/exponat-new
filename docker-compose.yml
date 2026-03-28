@@ -81,6 +81,8 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/exponat_dev?sslmode=disable
       PORT: "8082"
+      SKIP_AUTH: "true"
+      DEFAULT_ORGANIZATION_ID: 11111111-1111-1111-1111-111111111111
     depends_on:
       postgres:
         condition: service_healthy
