@@ -20,6 +20,10 @@ on:
         type: boolean
         required: false
         default: true
+      build_logistics:
+        type: boolean
+        required: false
+        default: true
       build_ai_document_gen:
         type: boolean
         required: false
@@ -60,11 +64,12 @@ jobs:
         run: |
           set -e
           if [ "${{ github.event_name }}" != "workflow_call" ]; then
-            bp=true bd=true bb=true ba=true bw=true
+            bp=true bd=true bb=true bl=true ba=true bw=true
           else
             bp="${{ inputs.build_projects }}"
             bd="${{ inputs.build_dashboard }}"
             bb="${{ inputs.build_budget }}"
+            bl="${{ inputs.build_logistics }}"
             ba="${{ inputs.build_ai_document_gen }}"
             bw="${{ inputs.build_web }}"
           fi
@@ -77,6 +82,7 @@ jobs:
           [ "$bp" = "true" ] && rows+=('{"service":"projects","context":"./backend","dockerfile":"./backend/services/projects/Dockerfile"}')
           [ "$bd" = "true" ] && rows+=('{"service":"dashboard","context":"./backend","dockerfile":"./backend/services/dashboard/Dockerfile"}')
           [ "$bb" = "true" ] && rows+=('{"service":"budget","context":"./backend/services/budget","dockerfile":"./backend/services/budget/Dockerfile"}')
+          [ "$bl" = "true" ] && rows+=('{"service":"logistics","context":"./backend/services/logistics","dockerfile":"./backend/services/logistics/Dockerfile"}')
           [ "$ba" = "true" ] && rows+=('{"service":"ai-document-gen","context":"./backend/services/ai-document-gen","dockerfile":"./backend/services/ai-document-gen/Dockerfile"}')
           [ "$bw" = "true" ] && rows+=('{"service":"web","context":"./web","dockerfile":"./web/Dockerfile"}')
           if [ "${#rows[@]}" -eq 0 ]; then

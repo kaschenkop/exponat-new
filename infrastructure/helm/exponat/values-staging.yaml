@@ -17,6 +17,8 @@ services:
         value: "https://app.staging.exponat.site"
   budget:
     replicas: 1
+  logistics:
+    replicas: 1
   dashboard:
     replicas: 1
     env:

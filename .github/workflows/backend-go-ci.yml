@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [projects, budget, dashboard]
+        service: [projects, budget, logistics, dashboard]
     steps:
       - uses: actions/checkout@v4
 
@@ -63,7 +63,7 @@ jobs:
 
     strategy:
       matrix:
-        service: [projects, budget, dashboard]
+        service: [projects, budget, logistics, dashboard]
     steps:
       - uses: actions/checkout@v4
 
@@ -85,7 +85,7 @@ jobs:
     needs: [lint, test]
     strategy:
       matrix:
-        service: [projects, budget, dashboard]
+        service: [projects, budget, logistics, dashboard]
     steps:
       - uses: actions/checkout@v4
 

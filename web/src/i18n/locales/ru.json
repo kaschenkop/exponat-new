@@ -539,5 +539,165 @@
       "logs": "Журнал",
       "noLogs": "Записей пока нет"
     }
+  },
+  "logisticsModule": {
+    "title": "Логистика",
+    "tabs": {
+      "overview": "Обзор",
+      "exhibits": "Экспонаты",
+      "shipments": "Перевозки",
+      "tracking": "Трекинг",
+      "monitoring": "Мониторинг",
+      "inventory": "Инвентарь",
+      "reports": "Отчёты"
+    },
+    "overview": {
+      "loadError": "Не удалось загрузить сводку",
+      "exhibits": "Экспонаты",
+      "shipmentsActive": "Активные перевозки",
+      "trackingOnline": "Онлайн трекеры",
+      "sensorsWarning": "Датчики: предупреждения",
+      "openIncidents": "Открытые инциденты",
+      "auditsOpen": "Инвентаризации в работе",
+      "hint": "Данные демонстрационные; API: /api/v1/logistics"
+    },
+    "exhibits": {
+      "searchPlaceholder": "Поиск по названию, инвентарному номеру…",
+      "viewGrid": "Сетка",
+      "viewList": "Список",
+      "add": "Добавить экспонат",
+      "open": "Открыть",
+      "delete": "Удалить",
+      "columns": {
+        "name": "Название",
+        "inventory": "Инв. №",
+        "status": "Статус",
+        "actions": "Действия"
+      },
+      "status": {
+        "in_storage": "На хранении",
+        "on_display": "На выставке",
+        "in_transit": "В пути",
+        "in_restoration": "На реставрации",
+        "decommissioned": "Списан"
+      },
+      "form": {
+        "createTitle": "Новый экспонат",
+        "editTitle": "Редактирование",
+        "name": "Название",
+        "inventoryNumber": "Инвентарный номер",
+        "description": "Описание",
+        "category": "Категория",
+        "status": "Статус",
+        "condition": "Состояние",
+        "cancel": "Отмена",
+        "save": "Сохранить",
+        "categories": {
+          "painting": "Живопись",
+          "sculpture": "Скульптура",
+          "artifact": "Артефакт",
+          "document": "Документ",
+          "photo": "Фото",
+          "video": "Видео",
+          "interactive": "Интерактив",
+          "other": "Прочее"
+        },
+        "statuses": {
+          "in_storage": "На хранении",
+          "on_display": "На выставке",
+          "in_transit": "В пути",
+          "in_restoration": "На реставрации",
+          "decommissioned": "Списан"
+        },
+        "conditions": {
+          "excellent": "Отличное",
+          "good": "Хорошее",
+          "fair": "Удовлетворительное",
+          "poor": "Плохое",
+          "damaged": "Повреждено"
+        }
+      },
+      "detail": {
+        "notFound": "Экспонат не найден",
+        "back": "К каталогу",
+        "about": "Описание",
+        "location": "Локация",
+        "value": "Оценочная стоимость",
+        "dimensions": "Габариты",
+        "size": "Размеры (Д×В×Г)",
+        "cm": "см",
+        "weight": "Вес",
+        "kg": "кг"
+      }
+    },
+    "shipments": {
+      "new": "Новая перевозка",
+      "open": "Подробнее",
+      "exhibitsCount": "Экспонатов: {count}",
+      "status": {
+        "planned": "Запланирована",
+        "in_preparation": "Подготовка",
+        "in_transit": "В пути",
+        "delivered": "Доставлена",
+        "cancelled": "Отменена"
+      },
+      "detail": {
+        "notFound": "Перевозка не найдена",
+        "back": "К списку",
+        "route": "Маршрут",
+        "from": "Откуда:",
+        "to": "Куда:",
+        "kmh": "км/ч",
+        "vehicle": "Транспорт",
+        "timeline": "Этапы"
+      },
+      "newForm": {
+        "title": "Новая перевозка",
+        "origin": "Пункт отправления",
+        "destination": "Пункт назначения",
+        "pick": "Выберите…",
+        "transport": "Тип транспорта",
+        "transportTypes": {
+          "truck": "Фура",
+          "van": "Фургон",
+          "car": "Легковой",
+          "air": "Авиа",
+          "rail": "Ж/д",
+          "sea": "Море"
+        },
+        "plate": "Госномер",
+        "submit": "Создать",
+        "cancel": "Отмена"
+      }
+    },
+    "tracking": {
+      "mapTitle": "Карта",
+      "mapPlaceholder": "Интерактивная карта (Mapbox/Leaflet) подключается отдельно. Список устройств справа обновляется с API.",
+      "devices": "Устройства",
+      "coords": "Координаты",
+      "speed": "Скорость",
+      "kmh": "км/ч",
+      "online": "Онлайн",
+      "offline": "Офлайн"
+    },
+    "monitoring": {
+      "chartTitle": "История: {name}"
+    },
+    "inventory": {
+      "audits": "Инвентаризации",
+      "movements": "Перемещения",
+      "auditProgress": "Найдено {found} из {expected}",
+      "status": "Статус",
+      "exhibit": "Экспонат",
+      "movement": "Маршрут"
+    },
+    "reports": {
+      "summaryTitle": "Сводка",
+      "export": "Экспорт",
+      "exhibits": "Экспонаты",
+      "shipments": "Активные перевозки",
+      "movements30": "Перемещения (период)",
+      "hint": "Полная аналитика и выгрузки — в следующих итерациях."
+    }
   }
 }

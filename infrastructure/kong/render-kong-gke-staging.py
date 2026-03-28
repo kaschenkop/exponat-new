@@ -109,6 +109,7 @@ def main() -> int:
         ("target: projects:8081", f"target: projects.{args.namespace}.svc.cluster.local:80"),
         ("target: dashboard:8080", f"target: dashboard.{args.namespace}.svc.cluster.local:80"),
         ("target: budget:8082", f"target: budget.{args.namespace}.svc.cluster.local:80"),
+        ("target: logistics:8083", f"target: logistics.{args.namespace}.svc.cluster.local:80"),
     ]
     for a, b in repl:
         if a not in src:
@@ -125,7 +126,7 @@ def main() -> int:
         indent, host, port = m.group(1), m.group(2), m.group(3)
         if "svc.cluster.local" in host:
             return m.group(0)
-        if host in ("projects", "dashboard", "budget"):
+        if host in ("projects", "dashboard", "budget", "logistics"):
             port = "80"
         return f"{indent}url: http://{host}.{ns}.svc.cluster.local:{port}"
 
@@ -140,7 +141,7 @@ def main() -> int:
         f"ai-document-gen.{ns}.svc.cluster.local:8090",
     )
 
-    for svc in ("projects", "dashboard", "budget"):
+    for svc in ("projects", "dashboard", "budget", "logistics"):
         fq = f"{svc}.{args.namespace}.svc.cluster.local"
         for bad in ("8080", "8081", "8082", "8083"):
             src = src.replace(f"{fq}:{bad}", f"{fq}:80")

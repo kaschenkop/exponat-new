@@ -50,6 +50,7 @@ jobs:
       projects: ${{ steps.resolve.outputs.projects }}
       dashboard: ${{ steps.resolve.outputs.dashboard }}
       budget: ${{ steps.resolve.outputs.budget }}
+      logistics: ${{ steps.resolve.outputs.logistics }}
       ai_document_gen: ${{ steps.resolve.outputs.ai_document_gen }}
       web: ${{ steps.resolve.outputs.web }}
       any_service: ${{ steps.resolve.outputs.any_service }}
@@ -67,6 +68,7 @@ jobs:
             echo "projects=true" >> "$GITHUB_OUTPUT"
             echo "dashboard=true" >> "$GITHUB_OUTPUT"
             echo "budget=true" >> "$GITHUB_OUTPUT"
+            echo "logistics=true" >> "$GITHUB_OUTPUT"
             echo "ai_document_gen=true" >> "$GITHUB_OUTPUT"
             echo "web=true" >> "$GITHUB_OUTPUT"
             echo "any_service=true" >> "$GITHUB_OUTPUT"
@@ -88,6 +90,7 @@ jobs:
           changed backend/services/projects/ && echo "projects=true" >> "$GITHUB_OUTPUT" || echo "projects=false" >> "$GITHUB_OUTPUT"
           changed backend/services/dashboard/ && echo "dashboard=true" >> "$GITHUB_OUTPUT" || echo "dashboard=false" >> "$GITHUB_OUTPUT"
           changed backend/services/budget/ && echo "budget=true" >> "$GITHUB_OUTPUT" || echo "budget=false" >> "$GITHUB_OUTPUT"
+          changed backend/services/logistics/ && echo "logistics=true" >> "$GITHUB_OUTPUT" || echo "logistics=false" >> "$GITHUB_OUTPUT"
           changed backend/services/ai-document-gen/ && echo "ai_document_gen=true" >> "$GITHUB_OUTPUT" || echo "ai_document_gen=false" >> "$GITHUB_OUTPUT"
           # Web: не только web/, иначе правки только Helm/проб → образ не пушится, на ноде старый latest → 404 на health.
           if changed web/ || changed web/Dockerfile || changed infrastructure/helm/exponat/values-staging.yaml || changed infrastructure/helm/exponat/templates/deployment.yaml || changed infrastructure/k8s/patches/web-deployment-probes-http.json || changed .github/workflows/deploy-staging.yml || changed .github/workflows/publish-backend-ghcr.yml; then
@@ -116,6 +119,7 @@ jobs:
       build_projects: ${{ needs.staging-changes.outputs.projects == 'true' }}
       build_dashboard: ${{ needs.staging-changes.outputs.dashboard == 'true' }}
       build_budget: ${{ needs.staging-changes.outputs.budget == 'true' }}
+      build_logistics: ${{ needs.staging-changes.outputs.logistics == 'true' }}
       build_ai_document_gen: ${{ needs.staging-changes.outputs.ai_document_gen == 'true' }}
       # web всегда вместе с любым publish: иначе built_web/outputs с reusable ломаются → deploy ставит latest → старый кэш на ноде и 404 на пробах.
       build_web: ${{ needs.staging-changes.outputs.any_service == 'true' }}

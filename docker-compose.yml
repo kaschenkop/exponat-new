@@ -94,6 +94,24 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  # Logistics API (Kong: /api/v1/logistics → logistics:8083)
+  logistics:
+    build:
+      context: ./backend/services/logistics
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      PORT: "8083"
+      DEFAULT_ORGANIZATION_ID: 11111111-1111-1111-1111-111111111111
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8083/health']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   # Единая точка входа API (см. infrastructure/kong/kong.yml)
   kong:
     image: kong:3.5
@@ -120,6 +138,8 @@ services:
       projects:
         condition: service_started
       budget:
+        condition: service_healthy
+      logistics:
         condition: service_healthy
     restart: unless-stopped
 
