@@ -538,12 +538,6 @@ func (m *Memory) ListCategoriesFlat(budgetID string) []Category {
 	return out
 }
 
-func (m *Memory) categoryDTO(c *Category) Category {
-	copy := *c
-	copy.Children = nil
-	return copy
-}
-
 // CreateCategory adds category.
 func (m *Memory) CreateCategory(budgetID string, body json.RawMessage) (Category, error) {
 	m.mu.Lock()
@@ -568,8 +562,8 @@ func (m *Memory) CreateCategory(budgetID string, body json.RawMessage) (Category
 	}
 	id := uuid.NewString()
 	level := 0
-	path := "1"
-	order := 0
+	var path string
+	var order int
 	if in.ParentID != nil && *in.ParentID != "" {
 		p := m.categories[*in.ParentID]
 		if p == nil || p.BudgetID != budgetID {
