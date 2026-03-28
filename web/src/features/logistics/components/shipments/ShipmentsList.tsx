@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -8,18 +8,14 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import { useShipments } from '../../hooks/useShipments';
 import { ShipmentStatusBadge } from '../shared/ShipmentStatusBadge';
 
-export function ShipmentsList({
-  locale,
-}: {
-  locale: string;
-}): React.ReactElement {
+export function ShipmentsList(): React.ReactElement {
   const t = useTranslations('logisticsModule.shipments');
   const ts = useTranslations('logisticsModule.shipments.status');
-  const { data, isLoading } = useShipments();
+  const { data, isLoading, isPending } = useShipments();
   const items = data?.items ?? [];
-  const base = `/${locale}/dashboard/logistics/shipments`;
+  const base = '/dashboard/logistics/shipments';
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (

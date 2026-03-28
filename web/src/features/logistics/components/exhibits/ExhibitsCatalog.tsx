@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Grid, List, Plus, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -15,18 +15,16 @@ import { ExhibitCard } from './ExhibitCard';
 import { ExhibitForm } from './ExhibitForm';
 import { ExhibitList } from './ExhibitList';
 
-export function ExhibitsCatalog({
-  locale,
-}: {
-  locale: string;
-}): React.ReactElement {
+export function ExhibitsCatalog(): React.ReactElement {
   const t = useTranslations('logisticsModule.exhibits');
   const router = useRouter();
   const exhibitView = useLogisticsStore((s) => s.exhibitView);
   const setExhibitView = useLogisticsStore((s) => s.setExhibitView);
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
-  const { data, isLoading } = useExhibits({ search: search || undefined });
+  const { data, isLoading, isPending } = useExhibits({
+    search: search || undefined,
+  });
   const { remove } = useExhibitMutations();
   const items = data?.items ?? [];
 
@@ -63,7 +61,7 @@ export function ExhibitsCatalog({
         </div>
       </div>
 
-      {isLoading ? (
+      {isLoading || isPending ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-72 w-full rounded-lg" />
@@ -76,7 +74,7 @@ export function ExhibitsCatalog({
               key={exhibit.id}
               exhibit={exhibit}
               onOpen={() =>
-                router.push(`/${locale}/dashboard/logistics/exhibits/${exhibit.id}`)
+                router.push(`/dashboard/logistics/exhibits/${exhibit.id}`)
               }
             />
           ))}
@@ -85,7 +83,7 @@ export function ExhibitsCatalog({
         <ExhibitList
           exhibits={items}
           onOpen={(id) =>
-            router.push(`/${locale}/dashboard/logistics/exhibits/${id}`)
+            router.push(`/dashboard/logistics/exhibits/${id}`)
           }
           onDelete={(id) => void remove.mutateAsync(id)}
         />

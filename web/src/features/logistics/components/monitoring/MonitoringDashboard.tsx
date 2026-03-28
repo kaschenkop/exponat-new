@@ -16,7 +16,7 @@ import { useSensors } from '../../hooks/useSensors';
 
 export function MonitoringDashboard(): React.ReactElement {
   const t = useTranslations('logisticsModule.monitoring');
-  const { data, isLoading } = useSensors();
+  const { data, isLoading, isPending } = useSensors();
   const items = data?.items ?? [];
   const first = items[0];
   const chartData =
@@ -28,7 +28,7 @@ export function MonitoringDashboard(): React.ReactElement {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
+        {isLoading || isPending ? (
           <>
             <Skeleton className="h-28 rounded-lg" />
             <Skeleton className="h-28 rounded-lg" />

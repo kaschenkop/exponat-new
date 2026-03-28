@@ -8,5 +8,7 @@ export function useLogisticsSummary() {
     queryKey: ['logistics', 'summary'],
     queryFn: () => reportsApi.summary(),
     staleTime: 30_000,
+    // На SSR нет localStorage/JWT — не дергаем API до гидратации
+    enabled: typeof window !== 'undefined',
   });
 }

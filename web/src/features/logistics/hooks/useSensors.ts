@@ -9,5 +9,6 @@ export function useSensors() {
     queryFn: () => sensorsApi.list(),
     staleTime: 10_000,
     refetchInterval: 20_000,
+    enabled: typeof window !== 'undefined',
   });
 }

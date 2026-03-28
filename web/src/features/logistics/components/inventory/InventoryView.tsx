@@ -7,8 +7,10 @@ import { useInventoryAudits, useMovements } from '../../hooks/useInventory';
 
 export function InventoryView(): React.ReactElement {
   const t = useTranslations('logisticsModule.inventory');
-  const { data: audits, isLoading: auditsLoading } = useInventoryAudits();
-  const { data: moves, isLoading: movesLoading } = useMovements();
+  const { data: audits, isLoading: al, isPending: ap } = useInventoryAudits();
+  const { data: moves, isLoading: ml, isPending: mp } = useMovements();
+  const auditsLoading = al || ap;
+  const movesLoading = ml || mp;
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">

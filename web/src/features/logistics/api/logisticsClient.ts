@@ -7,24 +7,35 @@ export function logisticsHeaders(): HeadersInit {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (typeof window !== 'undefined') {
-    const token = window.localStorage.getItem('access_token');
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
+  // Node/SSR: нет localStorage — те же заголовки, что у неавторизованного клиента в dev
+  if (typeof window === 'undefined') {
+    const devOrg =
+      process.env.NEXT_PUBLIC_DEV_ORGANIZATION_ID ??
+      (process.env.NODE_ENV !== 'production'
+        ? '11111111-1111-1111-1111-111111111111'
+        : undefined);
+    if (devOrg) {
+      headers['X-Organization-Id'] = devOrg;
     }
-    if (!token) {
-      const devOrg =
-        process.env.NEXT_PUBLIC_DEV_ORGANIZATION_ID ??
-        (process.env.NODE_ENV !== 'production'
-          ? '11111111-1111-1111-1111-111111111111'
-          : undefined);
-      if (devOrg) {
-        headers['X-Organization-Id'] = devOrg;
-      }
-      headers['X-User-Id'] =
-        window.localStorage.getItem('dev_user_id') ??
-        '22222222-2222-2222-2222-222222222222';
+    headers['X-User-Id'] = '22222222-2222-2222-2222-222222222222';
+    return headers;
+  }
+  const token = window.localStorage.getItem('access_token');
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  if (!token) {
+    const devOrg =
+      process.env.NEXT_PUBLIC_DEV_ORGANIZATION_ID ??
+      (process.env.NODE_ENV !== 'production'
+        ? '11111111-1111-1111-1111-111111111111'
+        : undefined);
+    if (devOrg) {
+      headers['X-Organization-Id'] = devOrg;
     }
+    headers['X-User-Id'] =
+      window.localStorage.getItem('dev_user_id') ??
+      '22222222-2222-2222-2222-222222222222';
   }
   return headers;
 }

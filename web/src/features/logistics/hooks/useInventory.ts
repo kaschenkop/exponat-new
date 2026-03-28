@@ -8,6 +8,7 @@ export function useLocations() {
     queryKey: ['logistics', 'locations'],
     queryFn: () => inventoryApi.locations(),
     staleTime: 60_000,
+    enabled: typeof window !== 'undefined',
   });
 }
 
@@ -16,6 +17,7 @@ export function useInventoryAudits() {
     queryKey: ['logistics', 'inventory', 'audits'],
     queryFn: () => inventoryApi.audits(),
     staleTime: 30_000,
+    enabled: typeof window !== 'undefined',
   });
 }
 
@@ -24,5 +26,6 @@ export function useMovements() {
     queryKey: ['logistics', 'movements'],
     queryFn: () => inventoryApi.movements(),
     staleTime: 30_000,
+    enabled: typeof window !== 'undefined',
   });
 }

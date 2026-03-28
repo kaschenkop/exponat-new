@@ -3,7 +3,7 @@ import { ShipmentDetail } from '@/features/logistics/components/shipments/Shipme
 export default function LogisticsShipmentDetailPage({
   params,
 }: {
-  params: { locale: string; id: string };
+  params: { id: string };
 }): React.ReactElement {
-  return <ShipmentDetail locale={params.locale} id={params.id} />;
+  return <ShipmentDetail id={params.id} />;
 }

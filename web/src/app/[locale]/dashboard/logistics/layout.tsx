@@ -15,7 +15,7 @@ export default async function LogisticsLayout({
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
-      <LogisticsSubnav locale={params.locale} />
+      <LogisticsSubnav />
       {children}
     </div>
   );
